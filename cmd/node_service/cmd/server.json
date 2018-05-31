@@ -1,0 +1,11 @@
+{
+    "RpcNodes" : ["127.0.0.1:55027"],
+    "WriteLog": true,
+    "LogLevel": "debug",
+    "LogFile": "node_service.log",
+    "DataBaseConnUrl":"127.0.0.1:27017",
+    "DataBaseName": "seele",
+    "Interval": 60,
+    "ExpireTime": 60
+}
+  
