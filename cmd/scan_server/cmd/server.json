@@ -1,0 +1,23 @@
+{
+    "GinMode":"debug",
+    "Addr": ":8888", 
+    "LimitConnection": 0,
+    "DefaultHammerTime": 30,
+    "RPCURL": "127.0.0.1:55027",
+    "WriteLog": true,
+    "LogLevel": "debug",
+    "LogFile": "scan-api.log",
+    "DisableConsoleColor": true,
+    "LimitConnections": 0,
+    "MaxHeaderBytes": 20, 
+    "ReadTimeout":300,
+    "IdleTimeout": 0,
+    "WriteTimeout":120,
+    "SyncSwitch":true,
+    "BlockCacheLimit":1024,
+    "TransCacheLimit":1024,
+    "DataBaseConnUrl":"127.0.0.1:27017",
+    "DataBaseName":"seele",
+    "Interval":30
+  }
+  
