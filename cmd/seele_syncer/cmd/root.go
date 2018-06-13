@@ -1,6 +1,6 @@
 /**
 *  @file
-*  @copyright defined in scan-api/LICENSE
+*  @copyright defined in go-seele/LICENSE
  */
 
 package cmd
@@ -12,38 +12,48 @@ import (
 
 	"github.com/seeleteam/scan-api/database"
 	"github.com/seeleteam/scan-api/log"
-	"github.com/seeleteam/scan-api/node"
+	"github.com/seeleteam/scan-api/syncer"
 
 	"github.com/spf13/cobra"
 )
 
+var (
+	serverConfigFile *string
+)
+
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "server command ",
+	Use:   "syncer command ",
 	Short: "start server",
 	Run: func(cmd *cobra.Command, args []string) {
-		config, err := LoadConfigFromFile(*configFile)
+		var g sync.WaitGroup
+		serverCfg, err := LoadConfigFromFile(*serverConfigFile)
 		if err != nil {
 			fmt.Printf("read config file failed %s", err.Error())
 			return
 		}
 
-		if log.NewLogger(config.LogLevel, config.WriteLog) == nil {
+		if log.NewLogger(serverCfg.LogLevel, serverCfg.WriteLog) == nil {
 			fmt.Println("Log init failed")
 			return
 		}
 
-		dbClient := database.NewDBClient(config.DataBaseName, config.DataBaseConnURL, 1)
+		dbClient := database.NewDBClient(serverCfg.DataBaseName, serverCfg.DataBaseConnURL, 1)
 		if dbClient == nil {
 			fmt.Printf("init database error")
 			return
 		}
 
-		var wg sync.WaitGroup
-		nodeService := node.New(&config, dbClient)
-		nodeService.StartFindNodeService()
-		wg.Add(1)
-		wg.Wait()
+		syncer := syncer.NewSyncer(dbClient, serverCfg.RpcURL, serverCfg.ShardNumber)
+		if syncer == nil {
+			fmt.Printf("can not connect to node")
+			return
+		}
+
+		syncer.StartSync(serverCfg.SyncInterval)
+		g.Add(1)
+		g.Wait()
+
 	},
 }
 
@@ -57,6 +67,6 @@ func Execute() {
 }
 
 func init() {
-	configFile = rootCmd.Flags().StringP("config", "c", "", "config file (required)")
+	serverConfigFile = rootCmd.Flags().StringP("config", "c", "", "server config file (required)")
 	rootCmd.MarkFlagRequired("config")
 }

@@ -6,10 +6,12 @@
 package topminers
 
 import (
-	"scan-api/database"
 	"sort"
 	"sync"
 	"time"
+
+	"github.com/seeleteam/scan-api/chart"
+	"github.com/seeleteam/scan-api/database"
 )
 
 const (
@@ -26,7 +28,7 @@ func (s MinerRankInfoSlice) Less(i, j int) bool { return s[i].Mined > s[j].Mined
 //Process set an timer to calculate top miners every day
 func Process(wg *sync.WaitGroup) {
 	defer wg.Done()
-	ProcessTopMiners()
+	PorcessAllShardTopMiners()
 
 	for {
 		now := time.Now()
@@ -36,20 +38,32 @@ func Process(wg *sync.WaitGroup) {
 		t := time.NewTimer(next.Sub(now))
 		<-t.C
 		//calcuate last day transactions
-		ProcessTopMiners()
+		PorcessAllShardTopMiners()
+	}
+}
+
+//PorcessAllShardTopMiners
+func PorcessAllShardTopMiners() {
+	chart.GChartDB.RemoveTopMinerInfo()
+	for i := 1; i <= chart.ShardCount; i++ {
+		ProcessTopMiners(i)
 	}
 }
 
 //ProcessTopMiners get the top miners who mined the most blocks in the last 7 days
-func ProcessTopMiners() bool {
+func ProcessTopMiners(shardNumber int) bool {
 	now := time.Now()
 
 	thisZeroTime := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
 	lastDayZeroTime := thisZeroTime.Add(-sevenDays)
 	var dbBlocks []*database.DBBlock
 	var err error
-	dbBlocks, err = database.GetBlocksByTime(lastDayZeroTime.Unix(), thisZeroTime.Unix())
+	dbBlocks, err = chart.GChartDB.GetBlocksByTime(shardNumber, lastDayZeroTime.Unix(), thisZeroTime.Unix())
 	if err != nil {
+		return false
+	}
+
+	if len(dbBlocks) == 0 {
 		return false
 	}
 
@@ -71,8 +85,12 @@ func ProcessTopMiners() bool {
 
 	sort.Stable(TopSevenDaysMiners)
 	dbRank := database.DBMinerRankInfo{Rank: TopSevenDaysMiners}
-	database.RemoveTopMinerInfo()
-	database.AddTopMinerInfo(&dbRank)
+
+	chart.GChartDB.AddTopMinerInfo(shardNumber, &dbRank)
 
 	return true
+}
+
+func init() {
+	chart.RegisterProcessFunc(Process)
 }

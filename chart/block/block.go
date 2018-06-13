@@ -6,11 +6,11 @@
 package block
 
 import (
-	"scan-api/database"
-	"strconv"
 	"sync"
 	"time"
 
+	"github.com/seeleteam/scan-api/chart"
+	"github.com/seeleteam/scan-api/database"
 	mgo "gopkg.in/mgo.v2"
 )
 
@@ -26,31 +26,38 @@ func Process(wg *sync.WaitGroup) {
 		t := time.NewTimer(next.Sub(now))
 		<-t.C
 		//calcuate last day transactions
-		ProcessOneDayBlocks(next)
+		for i := 1; i <= chart.ShardCount; i++ {
+			ProcessOneDayBlocks(i, next)
+		}
 	}
 }
 
 //ProcessOldBlocks Process block data mined in the past
 func ProcessOldBlocks() {
-	now := time.Now()
-	//lastZeroTime := now.Add(-time.Hour * 24)
-	todayZeroTime := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
-	for {
-		lastZeroTime := todayZeroTime.Add(-time.Hour * 24)
-		_, err := database.GetOneDayBlock(lastZeroTime.Unix())
-		if err != mgo.ErrNotFound {
-			break
+
+	for i := 1; i <= chart.ShardCount; i++ {
+		for {
+			now := time.Now()
+			//lastZeroTime := now.Add(-time.Hour * 24)
+			todayZeroTime := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+
+			lastZeroTime := todayZeroTime.Add(-time.Hour * 24)
+			_, err := chart.GChartDB.GetOneDayBlock(i, lastZeroTime.Unix())
+			if err != mgo.ErrNotFound {
+				break
+			}
+			if !ProcessOneDayBlocks(i, todayZeroTime) {
+				break
+			}
+			todayZeroTime = todayZeroTime.Add(-time.Hour * 24)
 		}
-		if !ProcessOneDayBlocks(todayZeroTime) {
-			break
-		}
-		todayZeroTime = todayZeroTime.Add(-time.Hour * 24)
 	}
+
 }
 
 //ProcessOneDayBlocks Process an single day block data
-func ProcessOneDayBlocks(day time.Time) bool {
-	secondBlock, err := database.GetBlockByHeight(1)
+func ProcessOneDayBlocks(shardNumber int, day time.Time) bool {
+	secondBlock, err := chart.GChartDB.GetBlockByHeight(shardNumber, 1)
 	if err != nil {
 		return false
 	}
@@ -62,7 +69,7 @@ func ProcessOneDayBlocks(day time.Time) bool {
 	thisZeroTime := time.Date(day.Year(), day.Month(), day.Day(), 0, 0, 0, 0, day.Location())
 	lastDayZeroTime := day.Add(-time.Hour * 24)
 	var dbBlocks []*database.DBBlock
-	dbBlocks, err = database.GetBlocksByTime(lastDayZeroTime.Unix(), thisZeroTime.Unix())
+	dbBlocks, err = chart.GChartDB.GetBlocksByTime(shardNumber, lastDayZeroTime.Unix(), thisZeroTime.Unix())
 	if err != nil {
 		return false
 	}
@@ -71,15 +78,18 @@ func ProcessOneDayBlocks(day time.Time) bool {
 
 	for i := 0; i < len(dbBlocks); i++ {
 		info.TotalBlocks++
-		if len(dbBlocks[i].Txs) > 0 {
-			amount, err := strconv.ParseInt(dbBlocks[i].Txs[0].Amount, 10, 64)
-			if err == nil {
-				info.Rewards += amount
-			}
+		txLen := len(dbBlocks[i].Txs)
+		if txLen > 0 {
+			tx := dbBlocks[i].Txs[txLen-1]
+			info.Rewards += tx.Amount
 		}
 	}
 
 	info.TimeStamp = lastDayZeroTime.Unix()
-	database.AddOneDayBlock(&info)
+	chart.GChartDB.AddOneDayBlock(shardNumber, &info)
 	return true
+}
+
+func init() {
+	chart.RegisterProcessFunc(Process)
 }

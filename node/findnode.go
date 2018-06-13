@@ -7,16 +7,17 @@ package node
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
-	"scan-api/database"
-	"scan-api/log"
-	"scan-api/rpc"
 	"strings"
 	"sync"
 	"time"
 
-	"gopkg.in/mgo.v2"
+	"github.com/seeleteam/scan-api/database"
+	"github.com/seeleteam/scan-api/log"
+	"github.com/seeleteam/scan-api/rpc"
+	mgo "gopkg.in/mgo.v2"
 )
 
 const (
@@ -46,10 +47,22 @@ type geoPluginRet struct {
 	GeopluginTimezone               string `json:"Geoplugin_timezone"`
 }
 
-var (
+//NodeService is the find node service
+type NodeService struct {
 	nodeMap     map[string]database.DBNodeInfo
 	nodeMapLock sync.Mutex
-)
+
+	nodeDB NodeDB
+	cfg    *Config
+}
+
+func New(cfg *Config, nodeDB NodeDB) *NodeService {
+	return &NodeService{
+		nodeDB:  nodeDB,
+		cfg:     cfg,
+		nodeMap: make(map[string]database.DBNodeInfo),
+	}
+}
 
 //getGeoInfoByHTTP get location information by node ip
 func getGeoInfoByHTTP(ip string) (*geoPluginRet, error) {
@@ -71,7 +84,7 @@ func getGeoInfoByHTTP(ip string) (*geoPluginRet, error) {
 }
 
 //ProcessSinglePeer convert a rpc.peerinfo to nodeinfo
-func ProcessSinglePeer(peer *rpc.PeerInfo, c chan int) {
+func (n *NodeService) ProcessSinglePeer(peer *rpc.PeerInfo, c chan int) {
 	defer func() {
 		c <- 1
 	}()
@@ -85,6 +98,7 @@ func ProcessSinglePeer(peer *rpc.PeerInfo, c chan int) {
 		caps += peer.Caps[i]
 	}
 	nodeInfo.Caps = caps
+	fmt.Println(peer.RemoteAddress)
 	ipAndPort := strings.Split(peer.RemoteAddress, ":")
 	nodeInfo.Host = ipAndPort[0]
 	nodeInfo.Port = ipAndPort[1]
@@ -97,41 +111,55 @@ func ProcessSinglePeer(peer *rpc.PeerInfo, c chan int) {
 	nodeInfo.City = geo.GeopluginCity
 	nodeInfo.LastSeen = time.Now().Unix()
 	nodeInfo.LongitudeAndLatitude = string('[') + geo.GeopluginLongitude + string(',') + geo.GeopluginLatitude + string(']')
-	nodeMapLock.Lock()
-	nodeMap[nodeInfo.Host] = nodeInfo
-	nodeMapLock.Unlock()
-	_, err = database.GetNodeInfo(nodeInfo.Host)
+	nodeInfo.ShardNumber = peer.ShardNumber
+	if nodeInfo.ShardNumber <= 0 {
+		nodeInfo.ShardNumber = 1
+	}
+
+	n.nodeMapLock.Lock()
+	n.nodeMap[nodeInfo.Host] = nodeInfo
+	n.nodeMapLock.Unlock()
+	_, err = n.nodeDB.GetNodeInfoByID(nodeInfo.ID)
 	if err == mgo.ErrNotFound {
-		database.AddNodeInfo(&nodeInfo)
+		n.nodeDB.AddNodeInfo(&nodeInfo)
 	}
 }
 
 //DeleteExpireNode if an node does not appear for a long time, remove ti from the database and nodemap
-func DeleteExpireNode(cfg *Config) {
+func (n *NodeService) DeleteExpireNode() {
 	now := time.Now().Unix()
-	for k, v := range nodeMap {
-		if now-v.LastSeen > cfg.ExpireTime {
-			database.DeleteNodeInfo(&v)
-			delete(nodeMap, k)
+	for k, v := range n.nodeMap {
+		if now-v.LastSeen > n.cfg.ExpireTime {
+			n.nodeDB.DeleteNodeInfo(&v)
+			delete(n.nodeMap, k)
 		}
 	}
 }
 
 //FindNode get all peers info and store them into database
-func FindNode(cfg *Config) {
+func (n *NodeService) FindNode() {
 
 	var allPeerInfos []rpc.PeerInfo
-	for i := 0; i < len(cfg.RPCNodes); i++ {
-		rpcURL := cfg.RPCNodes[i]
-		rpc.RPCURL = rpcURL
-		rpcSeeleRPC, err := rpc.GetSeeleRPC()
-		if err != nil {
-			rpc.ReleaseSeeleRPC()
-			log.Error(err)
+	for i := 0; i < len(n.cfg.RPCNodes); i++ {
+		rpcURL := n.cfg.RPCNodes[i]
+
+		rpc := rpc.NewRPC(rpcURL)
+		defer func() {
+			if rpc != nil {
+				rpc.Release()
+			}
+		}()
+
+		if rpc == nil {
 			continue
 		}
 
-		peerInfos, err := rpcSeeleRPC.GetPeersInfo()
+		if err := rpc.Connect(); err != nil {
+			fmt.Printf("rpc init failed, connurl:%v\n", rpcURL)
+			continue
+		}
+
+		peerInfos, err := rpc.GetPeersInfo()
 		if err != nil {
 			log.Fatal(err)
 			continue
@@ -147,13 +175,11 @@ func FindNode(cfg *Config) {
 	cnum := make(chan int, len(allPeerInfos))
 	for i := 0; i < len(allPeerInfos); i++ {
 		peer := allPeerInfos[i]
-		ipAndPort := strings.Split(peer.RemoteAddress, ":")
-		host := ipAndPort[0]
-		if v, ok := nodeMap[host]; ok {
+		if v, ok := n.nodeMap[peer.ID]; ok {
 			v.LastSeen = time.Now().Unix()
 			cnum <- 1
 		} else {
-			go ProcessSinglePeer(&peer, cnum)
+			go n.ProcessSinglePeer(&peer, cnum)
 		}
 	}
 
@@ -163,8 +189,8 @@ func FindNode(cfg *Config) {
 }
 
 //RestoreNodeFromDB restore data from database into nodemap
-func RestoreNodeFromDB() {
-	nodes, err := database.GetNodeInfos()
+func (n *NodeService) RestoreNodeFromDB() {
+	nodes, err := n.nodeDB.GetNodeInfos()
 	if err != nil {
 		return
 	}
@@ -172,28 +198,24 @@ func RestoreNodeFromDB() {
 	now := time.Now().Unix()
 	for i := 0; i < len(nodes); i++ {
 		nodes[i].LastSeen = now
-		nodeMap[nodes[i].Host] = *nodes[i]
+		n.nodeMap[nodes[i].ID] = *nodes[i]
 	}
 }
 
 //StartFindNodeService start the node map service
-func StartFindNodeService(cfg *Config) {
-	RestoreNodeFromDB()
-	FindNode(cfg)
+func (n *NodeService) StartFindNodeService() {
+	n.RestoreNodeFromDB()
+	n.FindNode()
 
-	ticks := time.NewTicker(cfg.Interval * time.Second)
+	ticks := time.NewTicker(n.cfg.Interval * time.Second)
 	tick := ticks.C
 	go func() {
 		for range tick {
-			FindNode(cfg)
+			n.FindNode()
 			_, ok := <-tick
 			if !ok {
 				break
 			}
 		}
 	}()
-}
-
-func init() {
-	nodeMap = make(map[string]database.DBNodeInfo)
 }

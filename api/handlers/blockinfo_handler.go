@@ -11,7 +11,6 @@ import (
 	"math"
 	"math/big"
 	"net/http"
-	"scan-api/database"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -22,9 +21,10 @@ const (
 	transItemNumsPrePage = 25
 	maxItemNumsPrePage   = 100
 
-	blockTypestr = "block"
-	transTypeStr = "transaction"
-	accTypeStr   = "account"
+	blockTypestr    = "block"
+	transTypeStr    = "transaction"
+	accTypeStr      = "account"
+	contractTypeStr = "contract"
 
 	apiOk            = 0
 	apiParmaInvalid  = 1
@@ -33,7 +33,6 @@ const (
 
 	avgCountBlockNum = 5000
 	txHashLength     = 66
-	addressLength    = 130
 )
 
 var (
@@ -43,6 +42,7 @@ var (
 	errGetBlockFromDB                   = errors.New("could not get block data from db")
 	errGetTxFromDB                      = errors.New("could not get tx data from db")
 	errGetAccountFromDB                 = errors.New("count not get account data from db")
+	errGetContractFromDB                = errors.New("count not get contract data from db")
 	errDBDataError                      = errors.New("db data is error")
 	errGetTxChartError                  = errors.New("could not get tx chart from db")
 	errGetAddressChartError             = errors.New("could not get address chart from db")
@@ -64,138 +64,141 @@ func responseError(c *gin.Context, err error, httpCode, code int) {
 	})
 }
 
-//GetLastBlock get current block height
-func GetLastBlock() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		curBlockHeight, err := database.GetBlockHeight()
-		if err != nil {
-			responseError(c, errGetBlockHeightFromDB, http.StatusInternalServerError, apiDBQueryError)
-			return
-		}
-
-		dbBlock, err := database.GetBlockByHeight(curBlockHeight - 1)
-		if err != nil {
-			responseError(c, errGetBlockFromDB, http.StatusInternalServerError, apiDBQueryError)
-			return
-		}
-
-		age := getElpasedTimeDesc(big.NewInt(dbBlock.Timestamp))
-		c.JSON(http.StatusOK, gin.H{
-			"code":    apiOk,
-			"message": "",
-			"data":    age,
-		})
-	}
+//BlockHandler handle all block request
+type BlockHandler struct {
+	DBClient BlockInfoDB
 }
+
+//GetLastBlock get current block height
+// func (h *BlockHandler) GetLastBlock() gin.HandlerFunc {
+// 	return func(c *gin.Context) {
+// 		dbClinet := h.DBClient
+// 		curBlockHeight, err := dbClinet.GetBlockHeight()
+// 		if err != nil {
+// 			responseError(c, errGetBlockHeightFromDB, http.StatusInternalServerError, apiDBQueryError)
+// 			return
+// 		}
+
+// 		dbBlock, err := dbClinet.GetBlockByHeight(curBlockHeight - 1)
+// 		if err != nil {
+// 			responseError(c, errGetBlockFromDB, http.StatusInternalServerError, apiDBQueryError)
+// 			return
+// 		}
+
+// 		age := getElpasedTimeDesc(big.NewInt(dbBlock.Timestamp))
+// 		c.JSON(http.StatusOK, gin.H{
+// 			"code":    apiOk,
+// 			"message": "",
+// 			"data":    age,
+// 		})
+// 	}
+// }
 
 //GetBestBlock get current block height
-func GetBestBlock() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		curBlockHeight, err := database.GetBlockHeight()
-		if err != nil {
-			responseError(c, errGetBlockHeightFromDB, http.StatusInternalServerError, apiDBQueryError)
-			return
-		}
+// func (h *BlockHandler) GetBestBlock() gin.HandlerFunc {
+// 	return func(c *gin.Context) {
+// 		dbClinet := h.DBClient
 
-		c.JSON(http.StatusOK, gin.H{
-			"code":    apiOk,
-			"message": "",
-			"data":    curBlockHeight,
-		})
-	}
-}
+// 		curBlockHeight, err := dbClinet.GetBlockHeight()
+// 		if err != nil {
+// 			responseError(c, errGetBlockHeightFromDB, http.StatusInternalServerError, apiDBQueryError)
+// 			return
+// 		}
 
-//GetHashRate get hash rate
-func GetHashRate() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"code":    apiOk,
-			"message": "",
-			"data":    database.Avg12HoursHashrate,
-		})
-	}
-}
+// 		c.JSON(http.StatusOK, gin.H{
+// 			"code":    apiOk,
+// 			"message": "",
+// 			"data":    curBlockHeight,
+// 		})
+// 	}
+// }
 
 //GetDifficulty get difficulty
-func GetDifficulty() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		curBlockHeight, err := database.GetBlockHeight()
-		if err != nil {
-			responseError(c, errGetBlockHeightFromDB, http.StatusInternalServerError, apiDBQueryError)
-			return
-		}
+// func (h *BlockHandler) GetDifficulty() gin.HandlerFunc {
+// 	return func(c *gin.Context) {
+// 		dbClinet := h.DBClient
 
-		var dbBlock *database.DBBlock
-		dbBlock, err = database.GetBlockByHeight(curBlockHeight - 1)
-		if err != nil {
-			responseError(c, errGetBlockFromDB, http.StatusInternalServerError, apiDBQueryError)
-			return
-		}
+// 		curBlockHeight, err := dbClinet.GetBlockHeight()
+// 		if err != nil {
+// 			responseError(c, errGetBlockHeightFromDB, http.StatusInternalServerError, apiDBQueryError)
+// 			return
+// 		}
 
-		ttDifficulty := big.NewInt(0)
-		var avgDifficulty float64
-		if ttDifficulty.UnmarshalText([]byte(dbBlock.TotalDifficulty)) == nil {
-			avg := ttDifficulty.Div(ttDifficulty, big.NewInt(dbBlock.Height+1))
-			avgDifficulty = float64(avg.Int64())
-		} else {
-			responseError(c, errDBDataError, http.StatusInternalServerError, apiInternalError)
-			return
-		}
+// 		var dbBlock *database.DBBlock
+// 		dbBlock, err = dbClinet.GetBlockByHeight(curBlockHeight - 1)
+// 		if err != nil {
+// 			responseError(c, errGetBlockFromDB, http.StatusInternalServerError, apiDBQueryError)
+// 			return
+// 		}
 
-		c.JSON(http.StatusOK, gin.H{
-			"code":    apiOk,
-			"message": "",
-			"data":    avgDifficulty,
-		})
-	}
-}
+// 		ttDifficulty := big.NewInt(0)
+// 		var avgDifficulty float64
+// 		if ttDifficulty.UnmarshalText([]byte(dbBlock.TotalDifficulty)) == nil {
+// 			avg := ttDifficulty.Div(ttDifficulty, big.NewInt(dbBlock.Height+1))
+// 			avgDifficulty = float64(avg.Int64())
+// 		} else {
+// 			responseError(c, errDBDataError, http.StatusInternalServerError, apiInternalError)
+// 			return
+// 		}
+
+// 		c.JSON(http.StatusOK, gin.H{
+// 			"code":    apiOk,
+// 			"message": "",
+// 			"data":    avgDifficulty,
+// 		})
+// 	}
+// }
 
 //GetAvgBlockTime get the latest 5000 blocks average time
-func GetAvgBlockTime() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		curBlockHeight, err := database.GetBlockHeight()
-		if err != nil {
-			responseError(c, errGetBlockHeightFromDB, http.StatusInternalServerError, apiDBQueryError)
-			return
-		}
+// func (h *BlockHandler) GetAvgBlockTime() gin.HandlerFunc {
+// 	return func(c *gin.Context) {
+// 		dbClinet := h.DBClient
 
-		curBlockHeight--
-		var endBlock, beginBlock *database.DBBlock
-		endBlock, err = database.GetBlockByHeight(curBlockHeight)
-		if err != nil {
-			responseError(c, errGetBlockFromDB, http.StatusInternalServerError, apiDBQueryError)
-			return
-		}
+// 		curBlockHeight, err := dbClinet.GetBlockHeight()
+// 		if err != nil {
+// 			responseError(c, errGetBlockHeightFromDB, http.StatusInternalServerError, apiDBQueryError)
+// 			return
+// 		}
 
-		var beginHeight uint64
-		if curBlockHeight < avgCountBlockNum {
-			beginHeight = 0
-		} else {
-			beginHeight = curBlockHeight - avgCountBlockNum
-		}
+// 		curBlockHeight--
+// 		var endBlock, beginBlock *database.DBBlock
+// 		endBlock, err = dbClinet.GetBlockByHeight(curBlockHeight)
+// 		if err != nil {
+// 			responseError(c, errGetBlockFromDB, http.StatusInternalServerError, apiDBQueryError)
+// 			return
+// 		}
 
-		if beginHeight <= 0 {
-			beginHeight = 1
-		}
-		beginBlock, err = database.GetBlockByHeight(beginHeight)
-		if err != nil {
-			responseError(c, errGetBlockFromDB, http.StatusInternalServerError, apiDBQueryError)
-			return
-		}
+// 		var beginHeight uint64
+// 		if curBlockHeight < avgCountBlockNum {
+// 			beginHeight = 0
+// 		} else {
+// 			beginHeight = curBlockHeight - avgCountBlockNum
+// 		}
 
-		timeElapsed := endBlock.Timestamp - beginBlock.Timestamp
-		avgTime := (timeElapsed) / int64(curBlockHeight-beginHeight)
-		c.JSON(http.StatusOK, gin.H{
-			"code":    apiOk,
-			"message": "",
-			"data":    avgTime,
-		})
-	}
-}
+// 		if beginHeight <= 0 {
+// 			beginHeight = 1
+// 		}
+// 		beginBlock, err = dbClinet.GetBlockByHeight(beginHeight)
+// 		if err != nil {
+// 			responseError(c, errGetBlockFromDB, http.StatusInternalServerError, apiDBQueryError)
+// 			return
+// 		}
 
-func getBlocksByBeginAndEnd(begin, end uint64) []*RetSimpleBlockInfo {
+// 		timeElapsed := endBlock.Timestamp - beginBlock.Timestamp
+// 		avgTime := (timeElapsed) / int64(curBlockHeight-beginHeight)
+// 		c.JSON(http.StatusOK, gin.H{
+// 			"code":    apiOk,
+// 			"message": "",
+// 			"data":    avgTime,
+// 		})
+// 	}
+// }
+
+func (h *BlockHandler) getBlocksByBeginAndEnd(shardNumber int, begin, end uint64) []*RetSimpleBlockInfo {
+	dbClinet := h.DBClient
+
 	var blocks []*RetSimpleBlockInfo
-	dbBlocks, err := database.GetBlocksByHeight(begin, end)
+	dbBlocks, err := dbClinet.GetBlocksByHeight(shardNumber, begin, end)
 	if err != nil {
 		return nil
 	}
@@ -228,10 +231,13 @@ func getBeginAndEndByPage(total, p, step uint64) (page, begin, end uint64) {
 }
 
 //GetBlocks handler for get block list
-func GetBlocks() gin.HandlerFunc {
+func (h *BlockHandler) GetBlocks() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		dbClinet := h.DBClient
+
 		p, _ := strconv.ParseUint(c.Query("p"), 10, 64)
 		ps, _ := strconv.ParseUint(c.Query("ps"), 10, 64)
+		s, _ := strconv.ParseInt(c.Query("s"), 10, 64)
 		if ps == 0 {
 			ps = blockItemNumsPrePage
 		} else if ps > maxItemNumsPrePage {
@@ -242,14 +248,19 @@ func GetBlocks() gin.HandlerFunc {
 			p--
 		}
 
-		curBlockHeight, err := database.GetBlockHeight()
+		if s <= 0 {
+			s = 1
+		}
+
+		shardNumber := int(s)
+		curBlockHeight, err := dbClinet.GetBlockHeight(shardNumber)
 		if err != nil {
 			responseError(c, errGetBlockHeightFromDB, http.StatusInternalServerError, apiDBQueryError)
 			return
 		}
 
 		page, begin, end := getBeginAndEndByPage(curBlockHeight, p, ps)
-		blocks := getBlocksByBeginAndEnd(begin, end)
+		blocks := h.getBlocksByBeginAndEnd(shardNumber, begin, end)
 
 		c.JSON(http.StatusOK, gin.H{
 			"code":    apiOk,
@@ -268,14 +279,18 @@ func GetBlocks() gin.HandlerFunc {
 }
 
 //GetBlock search block info by block height and block hash
-func GetBlock() gin.HandlerFunc {
+func (h *BlockHandler) GetBlock() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		hash := c.Query("hash")
-		height, err := strconv.ParseUint(c.Query("height"), 10, 64)
-		if len(hash) > 0 {
-			GetBlockDetailByHash(c, hash)
-		} else if err == nil {
-			GetBlockDetailByHeight(c, height)
+		hash, hashExist := c.GetQuery("hash")
+		height, heightExist := c.GetQuery("height")
+		s, _ := c.GetQuery("s")
+		if hashExist {
+			h.GetBlockDetailByHash(c, hash)
+		} else if heightExist {
+			blockheight, _ := strconv.ParseUint(height, 10, 64)
+			s, _ := strconv.ParseInt(s, 10, 64)
+			shaderNumber := int(s)
+			h.GetBlockDetailByHeight(c, blockheight, shaderNumber)
 		} else {
 			responseError(c, errParamInvalid, http.StatusBadRequest, apiParmaInvalid)
 		}
@@ -283,14 +298,16 @@ func GetBlock() gin.HandlerFunc {
 }
 
 //GetBlockDetailByHash get block by block hash
-func GetBlockDetailByHash(c *gin.Context, hash string) {
-	data, err := database.GetBlockByHash(hash)
+func (h *BlockHandler) GetBlockDetailByHash(c *gin.Context, hash string) {
+	dbClinet := h.DBClient
+
+	data, err := dbClinet.GetBlockByHash(hash)
 	if err != nil {
 		responseError(c, errGetBlockFromDB, http.StatusInternalServerError, apiDBQueryError)
 		return
 	}
 
-	maxHeight, _ := database.GetBlockHeight()
+	maxHeight, _ := dbClinet.GetBlockHeight(data.ShardNumber)
 
 	detailBlock := createRetDetailBlockInfo(data, maxHeight, 0)
 
@@ -302,14 +319,16 @@ func GetBlockDetailByHash(c *gin.Context, hash string) {
 }
 
 //GetBlockDetailByHeight get block by block height
-func GetBlockDetailByHeight(c *gin.Context, height uint64) {
-	data, err := database.GetBlockByHeight(height)
+func (h *BlockHandler) GetBlockDetailByHeight(c *gin.Context, height uint64, shaderNumber int) {
+	dbClinet := h.DBClient
+
+	data, err := dbClinet.GetBlockByHeight(shaderNumber, height)
 	if err != nil {
 		responseError(c, errGetBlockFromDB, http.StatusInternalServerError, apiDBQueryError)
 		return
 	}
 
-	maxHeight, _ := database.GetBlockHeight()
+	maxHeight, _ := dbClinet.GetBlockHeight(shaderNumber)
 	detailBlock := createRetDetailBlockInfo(data, maxHeight, 0)
 	c.JSON(http.StatusOK, gin.H{
 		"code":    apiOk,
@@ -319,9 +338,11 @@ func GetBlockDetailByHeight(c *gin.Context, height uint64) {
 }
 
 //GetTxCnt handler for get all transaction count
-func GetTxCnt() gin.HandlerFunc {
+func (h *BlockHandler) GetTxCnt() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		transCnt, err := database.GetTxCnt()
+		dbClinet := h.DBClient
+
+		transCnt, err := dbClinet.GetTxCnt()
 		if err != nil {
 			responseError(c, errGetTxCountFromDB, http.StatusInternalServerError, apiDBQueryError)
 		} else {
@@ -334,15 +355,83 @@ func GetTxCnt() gin.HandlerFunc {
 	}
 }
 
-//GetTxByHash handler for get transaction by hash
-func GetTxByHash() gin.HandlerFunc {
+//GetBlockCnt handler for get all transaction count
+func (h *BlockHandler) GetBlockCnt() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		dbClinet := h.DBClient
+
+		transCnt, err := dbClinet.GetBlockCnt()
+		if err != nil {
+			responseError(c, errGetTxCountFromDB, http.StatusInternalServerError, apiDBQueryError)
+		} else {
+			c.JSON(http.StatusOK, gin.H{
+				"code":    apiOk,
+				"message": "",
+				"data":    transCnt,
+			})
+		}
+	}
+}
+
+//GetAccountCnt get all account count
+func (h *BlockHandler) GetAccountCnt() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		dbClinet := h.DBClient
+
+		accountCnt, err := dbClinet.GetAccountCnt()
+		if err != nil {
+			responseError(c, errGetTxCountFromDB, http.StatusInternalServerError, apiDBQueryError)
+		} else {
+			c.JSON(http.StatusOK, gin.H{
+				"code":    apiOk,
+				"message": "",
+				"data":    accountCnt,
+			})
+		}
+	}
+}
+
+//GetContractCnt get all contract count
+func (h *BlockHandler) GetContractCnt() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		dbClinet := h.DBClient
+
+		contractCnt, err := dbClinet.GetContractCnt()
+		if err != nil {
+			responseError(c, errGetTxCountFromDB, http.StatusInternalServerError, apiDBQueryError)
+		} else {
+			c.JSON(http.StatusOK, gin.H{
+				"code":    apiOk,
+				"message": "",
+				"data":    contractCnt,
+			})
+		}
+	}
+}
+
+//GetTxByHash handler for get transaction by hash
+func (h *BlockHandler) GetTxByHash() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		dbClinet := h.DBClient
 		transHash := c.Query("txhash")
+
 		if len(transHash) != txHashLength {
 			responseError(c, errParamInvalid, http.StatusBadRequest, apiParmaInvalid)
 			return
 		}
-		data, err := database.GetTxByHash(transHash)
+		data, err := dbClinet.GetTxByHash(transHash)
+		if err == nil {
+			detailTx := createRetDetailTxInfo(data)
+
+			c.JSON(http.StatusOK, gin.H{
+				"code":    apiOk,
+				"message": "",
+				"data":    detailTx,
+			})
+			return
+		}
+
+		data, err = dbClinet.GetPendingTxByHash(transHash)
 		if err != nil {
 			responseError(c, errGetTxFromDB, http.StatusInternalServerError, apiDBQueryError)
 		} else {
@@ -353,14 +442,35 @@ func GetTxByHash() gin.HandlerFunc {
 				"message": "",
 				"data":    simpleTx,
 			})
+			return
 		}
 
 	}
 }
 
-func getTxsByBeginAndEnd(begin, end uint64) []*RetSimpleTxInfo {
+func (h *BlockHandler) getTxsByBeginAndEnd(shardNumber int, begin, end uint64) []*RetSimpleTxInfo {
+	dbClinet := h.DBClient
+
 	var txs []*RetSimpleTxInfo
-	dbTrans, err := database.GetTxsByIdx(begin, end)
+	dbTrans, err := dbClinet.GetTxsByIdx(shardNumber, begin, end)
+	if err != nil {
+		return nil
+	}
+	for i := 0; i < len(dbTrans); i++ {
+		data := dbTrans[i]
+
+		simpleTransaction := createRetSimpleTxInfo(data)
+		txs = append(txs, simpleTransaction)
+	}
+
+	return txs
+}
+
+func (h *BlockHandler) getPendingTxsByBeginAndEnd(shardNumber int, begin, end uint64) []*RetSimpleTxInfo {
+	dbClinet := h.DBClient
+
+	var txs []*RetSimpleTxInfo
+	dbTrans, err := dbClinet.GetPendingTxsByIdx(shardNumber, begin, end)
 	if err != nil {
 		return nil
 	}
@@ -375,8 +485,10 @@ func getTxsByBeginAndEnd(begin, end uint64) []*RetSimpleTxInfo {
 }
 
 //GetTxsInBlock get all transactions in block by height
-func GetTxsInBlock(c *gin.Context, height, p, ps uint64) {
-	block, err := database.GetBlockByHeight(height)
+func (h *BlockHandler) GetTxsInBlock(c *gin.Context, shardNumber int, height, p, ps uint64) {
+	dbClinet := h.DBClient
+
+	block, err := dbClinet.GetBlockByHeight(shardNumber, height)
 	if err != nil {
 		responseError(c, errGetBlockHeightFromDB, http.StatusInternalServerError, apiDBQueryError)
 		return
@@ -423,10 +535,13 @@ func GetTxsInBlock(c *gin.Context, height, p, ps uint64) {
 }
 
 //GetTxs get all transactions by order or by block
-func GetTxs() gin.HandlerFunc {
+func (h *BlockHandler) GetTxs() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		dbClinet := h.DBClient
+
 		p, _ := strconv.ParseUint(c.Query("p"), 10, 64)
 		ps, _ := strconv.ParseUint(c.Query("ps"), 10, 64)
+		s, _ := strconv.ParseInt(c.Query("s"), 10, 64)
 		if ps == 0 {
 			ps = transItemNumsPrePage
 		} else if ps > maxItemNumsPrePage {
@@ -437,25 +552,78 @@ func GetTxs() gin.HandlerFunc {
 			p--
 		}
 
-		block, flag := c.GetQuery("c")
+		if s <= 0 {
+			s = 1
+		}
+		shardNumber := int(s)
+
+		block, flag := c.GetQuery("block")
 		if flag {
 			height, err := strconv.ParseUint(block, 10, 64)
 			if err != nil {
 				responseError(c, errParamInvalid, http.StatusBadRequest, apiParmaInvalid)
 			} else {
-				GetTxsInBlock(c, height, p, ps)
+				h.GetTxsInBlock(c, shardNumber, height, p, ps)
 				return
 			}
 		}
 
-		txCnt, err := database.GetTxCnt()
+		txCnt, err := dbClinet.GetTxCntByShardNumber(shardNumber)
 		if err != nil {
 			responseError(c, errGetTxCountFromDB, http.StatusInternalServerError, apiDBQueryError)
 			return
 		}
 
 		page, begin, end := getBeginAndEndByPage(txCnt, p, ps)
-		txs := getTxsByBeginAndEnd(begin, end)
+		txs := h.getTxsByBeginAndEnd(shardNumber, begin, end)
+
+		c.JSON(http.StatusOK, gin.H{
+			"code":    apiOk,
+			"message": "",
+			"data": gin.H{
+				"pageInfo": gin.H{
+					"totalCount": txCnt,
+					"begin":      begin,
+					"end":        end,
+					"curPage":    page + 1,
+				},
+				"list": txs,
+			},
+		})
+	}
+}
+
+//GetPendingTxs get an pending tx list
+func (h *BlockHandler) GetPendingTxs() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		dbClinet := h.DBClient
+
+		p, _ := strconv.ParseUint(c.Query("p"), 10, 64)
+		ps, _ := strconv.ParseUint(c.Query("ps"), 10, 64)
+		s, _ := strconv.ParseInt(c.Query("s"), 10, 64)
+		if ps == 0 {
+			ps = transItemNumsPrePage
+		} else if ps > maxItemNumsPrePage {
+			ps = maxItemNumsPrePage
+		}
+
+		if p >= 1 {
+			p--
+		}
+
+		if s <= 0 {
+			s = 1
+		}
+		shardNumber := int(s)
+
+		txCnt, err := dbClinet.GetPendingTxCntByShardNumber(shardNumber)
+		if err != nil {
+			responseError(c, errGetTxCountFromDB, http.StatusInternalServerError, apiDBQueryError)
+			return
+		}
+
+		page, begin, end := getBeginAndEndByPage(txCnt, p, ps)
+		txs := h.getPendingTxsByBeginAndEnd(shardNumber, begin, end)
 
 		c.JSON(http.StatusOK, gin.H{
 			"code":    apiOk,
@@ -474,72 +642,26 @@ func GetTxs() gin.HandlerFunc {
 }
 
 //Search search something by transaction hash or block height
-func Search() gin.HandlerFunc {
+func (h *BlockHandler) Search(accHandler *AccountHandler, contractHanlder *ContractHandler) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		dbClinet := h.DBClient
+
 		content := c.Query("content")
 		if content == "" {
 			responseError(c, errParamInvalid, http.StatusBadRequest, apiParmaInvalid)
 			return
 		}
 
-		length := len(content)
-		switch {
-		case length == txHashLength:
-			//found in transaction
-			txHash := content
-			data, err := database.GetTxByHash(txHash)
-			if err != nil {
-				responseError(c, errGetTxFromDB, http.StatusInternalServerError, apiDBQueryError)
-			} else {
-				simpleTx := createRetSimpleTxInfo(data)
-
-				c.JSON(http.StatusOK, gin.H{
-					"code":    apiOk,
-					"message": "",
-					"data": gin.H{
-						"type": transTypeStr,
-						"info": simpleTx,
-					},
-				})
-			}
-		case length == addressLength:
-			data, err := database.GetAccountByAddress(content)
-			if err != nil {
-				responseError(c, errGetTxFromDB, http.StatusInternalServerError, apiDBQueryError)
-			} else {
-				detailAccount := createRetDetailAccountInfo(data)
-
-				c.JSON(http.StatusOK, gin.H{
-					"code":    apiOk,
-					"message": "",
-					"data": gin.H{
-						"type": accTypeStr,
-						"info": detailAccount,
-					},
-				})
-			}
-		default:
-			//found in block
-			blockNumber, err := strconv.ParseUint(content, 10, 64)
-			if err != nil {
-				responseError(c, errParamInvalid, http.StatusBadRequest, apiParmaInvalid)
-				return
-			}
-
-			data, err := database.GetBlockByHeight(blockNumber)
-			if err != nil {
-				responseError(c, errGetBlockFromDB, http.StatusInternalServerError, apiDBQueryError)
-				return
-			}
-
+		dbBlock, err := dbClinet.GetBlockByHash(content)
+		if err == nil {
 			var maxHeight uint64
-			maxHeight, err = database.GetBlockHeight()
+			maxHeight, err = dbClinet.GetBlockHeight(dbBlock.ShardNumber)
 			if err != nil {
 				responseError(c, errGetBlockHeightFromDB, http.StatusInternalServerError, apiDBQueryError)
 				return
 			}
 
-			detailBlock := createRetDetailBlockInfo(data, maxHeight, 0)
+			detailBlock := createRetDetailBlockInfo(dbBlock, maxHeight, 0)
 			c.JSON(http.StatusOK, gin.H{
 				"code":    apiOk,
 				"message": "",
@@ -548,83 +670,65 @@ func Search() gin.HandlerFunc {
 					"info": detailBlock,
 				},
 			})
-		}
-	}
-}
-
-//getAccountsByBeginAndEnd
-func getAccountsByBeginAndEnd(begin, end uint64) []*RetSimpleAccountInfo {
-	var accounts []*RetSimpleAccountInfo
-	dbAccounts := database.GetAccountsByIdx(begin, end)
-
-	for i := 0; i < len(dbAccounts); i++ {
-		data := dbAccounts[i]
-
-		simpleAccount := createRetSimpleAccountInfo(data)
-		simpleAccount.Rank = i + 1
-		accounts = append(accounts, simpleAccount)
-	}
-
-	return accounts
-}
-
-//GetAccounts handler for get block list
-func GetAccounts() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		p, _ := strconv.ParseUint(c.Query("p"), 10, 64)
-		ps, _ := strconv.ParseUint(c.Query("ps"), 10, 64)
-		if ps == 0 {
-			ps = blockItemNumsPrePage
-		} else if ps > maxItemNumsPrePage {
-			ps = maxItemNumsPrePage
-		}
-
-		if p >= 1 {
-			p--
-		}
-
-		accCnt := database.GetAccountCnt()
-
-		page, begin, end := getBeginAndEndByPage(uint64(accCnt), p, ps)
-		accounts := getAccountsByBeginAndEnd(begin, end)
-
-		c.JSON(http.StatusOK, gin.H{
-			"code":    apiOk,
-			"message": "",
-			"data": gin.H{
-				"pageInfo": gin.H{
-					"totalCount": accCnt,
-					"begin":      begin,
-					"end":        end,
-					"curPage":    page + 1,
-				},
-				"list": accounts,
-			},
-		})
-	}
-}
-
-//GetAccountByAddress get account detail info by address
-func GetAccountByAddress() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		address := c.Query("address")
-		if len(address) != addressLength {
-			responseError(c, errParamInvalid, http.StatusBadRequest, apiParmaInvalid)
 			return
 		}
 
-		data, err := database.GetAccountByAddress(address)
-		if err != nil {
-			responseError(c, errGetAccountFromDB, http.StatusInternalServerError, apiDBQueryError)
-		} else {
-			detailAccount := createRetDetailAccountInfo(data)
+		dbTx, err := dbClinet.GetTxByHash(content)
+		if err == nil {
+			detailTx := createRetDetailTxInfo(dbTx)
 
 			c.JSON(http.StatusOK, gin.H{
 				"code":    apiOk,
 				"message": "",
-				"data":    detailAccount,
+				"data": gin.H{
+					"type": transTypeStr,
+					"info": detailTx,
+				},
 			})
+			return
 		}
 
+		dbTx, err = dbClinet.GetPendingTxByHash(content)
+		if err == nil {
+			simpleTx := createRetSimpleTxInfo(dbTx)
+
+			c.JSON(http.StatusOK, gin.H{
+				"code":    apiOk,
+				"message": "",
+				"data": gin.H{
+					"type": transTypeStr,
+					"info": simpleTx,
+				},
+			})
+			return
+		}
+
+		dbAccount := accHandler.GetAccountByAddressImpl(content)
+		if dbAccount != nil {
+			c.JSON(http.StatusOK, gin.H{
+				"code":    apiOk,
+				"message": "",
+				"data": gin.H{
+					"type": accTypeStr,
+					"info": dbAccount,
+				},
+			})
+			return
+		}
+
+		dbContract := contractHanlder.GetContractByAddressImpl(content)
+		if dbAccount != nil {
+			c.JSON(http.StatusOK, gin.H{
+				"code":    apiOk,
+				"message": "",
+				"data": gin.H{
+					"type": contractTypeStr,
+					"info": dbContract,
+				},
+			})
+			return
+		}
+
+		responseError(c, errParamInvalid, http.StatusOK, apiDBQueryError)
 	}
 }

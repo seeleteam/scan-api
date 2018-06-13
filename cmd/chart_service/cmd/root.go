@@ -8,14 +8,18 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"scan-api/chart/address"
-	"scan-api/chart/block"
-	"scan-api/chart/blockdiffculty"
-	"scan-api/chart/blocktime"
-	"scan-api/chart/hashrate"
-	"scan-api/chart/topminers"
-	"scan-api/chart/tx_history"
 	"sync"
+
+	"github.com/seeleteam/scan-api/chart"
+	_ "github.com/seeleteam/scan-api/chart/address"
+	_ "github.com/seeleteam/scan-api/chart/block"
+	_ "github.com/seeleteam/scan-api/chart/blockdifficulty"
+	_ "github.com/seeleteam/scan-api/chart/blocktime"
+	_ "github.com/seeleteam/scan-api/chart/hashrate"
+	_ "github.com/seeleteam/scan-api/chart/topminers"
+	_ "github.com/seeleteam/scan-api/chart/txhistory"
+	"github.com/seeleteam/scan-api/database"
+	"github.com/seeleteam/scan-api/log"
 
 	"github.com/spf13/cobra"
 )
@@ -26,25 +30,31 @@ var rootCmd = &cobra.Command{
 	Short: "start server",
 	Run: func(cmd *cobra.Command, args []string) {
 		var wg sync.WaitGroup
-		_, err := LoadConfigFromFile(*configFile)
+		serverCfg, err := LoadConfigFromFile(*configFile)
 		if err != nil {
 			fmt.Printf("read config file failed %s", err.Error())
 			return
 		}
-		go address.Process(&wg)
-		wg.Add(1)
-		go block.Process(&wg)
-		wg.Add(1)
-		go blockdifficulty.Process(&wg)
-		wg.Add(1)
-		go blocktime.Process(&wg)
-		wg.Add(1)
-		go hashrate.Process(&wg)
-		wg.Add(1)
-		go txhistory.Process(&wg)
-		wg.Add(1)
-		go topminers.Process(&wg)
-		wg.Add(1)
+
+		if log.NewLogger(serverCfg.LogLevel, serverCfg.WriteLog) == nil {
+			fmt.Println("Log init failed")
+			return
+		}
+
+		chart.GChartDB = database.NewDBClient(serverCfg.DataBaseName, serverCfg.DataBaseConnURL, 1)
+		if chart.GChartDB == nil {
+			fmt.Printf("init database error")
+			return
+		}
+
+		chart.ShardCount = serverCfg.ShardCount
+		processFuncs := chart.GetProcessFuncs()
+
+		//start the all chart processor
+		for i := 0; i < len(processFuncs); i++ {
+			go processFuncs[i](&wg)
+			wg.Add(1)
+		}
 
 		wg.Wait()
 	},

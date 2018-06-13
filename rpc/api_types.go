@@ -28,9 +28,10 @@ type Transaction struct {
 	AccountNonce uint64   `json:"accountNonce"`
 	Payload      string   `json:"payload"`
 	Timestamp    uint64   `json:"timestamp"`
-
-	Block uint64
-	Idx   uint64
+	Fee          int64    `json:"fee"`
+	Block        uint64   `json:"block"`
+	Idx          uint64   `json:"idx"`
+	TxType       int      `json:"txtype"`
 }
 
 //BlockInfo is the block data send from seele node
@@ -60,4 +61,13 @@ type PeerInfo struct {
 	Caps          []string `json:"caps"`          // Sum-protocols advertised by this particular peer
 	LocalAddress  string   `json:"localAddress"`  // Local endpoint of the TCP data connection
 	RemoteAddress string   `json:"remoteAddress"` // Remote endpoint of the TCP data connection
+	ShardNumber   int      `json:"shardNumber"`
+}
+
+//Receipt
+type Receipt struct {
+	Result          string `json:"result"`
+	PostState       string `json:"result"`
+	TxHash          string `json:"txhash"`
+	ContractAddress string `json:"contractaddress"`
 }

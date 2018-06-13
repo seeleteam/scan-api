@@ -9,7 +9,6 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http/httptest"
-	"scan-api/log"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -388,38 +387,172 @@ func TestOnGetChartTopMinersRequest(t *testing.T) {
 	}
 }
 
-func init() {
-	// 初始化路由
-	router = gin.Default()
+// type TestBlockInfoDB struct {
+// }
 
-	log.NewLogger("debug", false)
+// func (db *TestBlockInfoDB) GetBlockHeight(shardNumber int) (uint64, error) {
+// 	return 1, nil
+// }
 
-	v1 := router.Group("/api/v1")
-	v1.GET("/lastblock", GetLastBlock())
-	v1.GET("/bestblock", GetBestBlock())
-	v1.GET("/avgblocktime", GetAvgBlockTime())
-	v1.GET("/block", GetBlock())
-	v1.GET("/blocks", GetBlocks())
-	v1.GET("/txcount", GetTxCnt())
-	v1.GET("/txs", GetTxs())
-	v1.GET("/tx", GetTxByHash())
-	v1.GET("/search", Search())
-	v1.GET("/accounts", GetAccounts())
-	v1.GET("/account", GetAccountByAddress())
+// func (db *TestBlockInfoDB) GetBlockByHeight(shardNumber int, height uint64) (*database.DBBlock, error) {
 
-	v1.GET("/difficulty", GetDifficulty())
-	v1.GET("/hashrate", GetHashRate())
+// }
 
-	v1.GET("./nodes", GetNodes())
-	v1.GET("./node", GetNode())
-	v1.GET("./nodemap", GetNodeMap())
+// func (db *TestBlockInfoDB) GetBlocksByHeight(shardNumber int, begin uint64, end uint64) ([]*database.DBBlock, error) {
 
-	chartGrp := v1.Group("/chart")
-	chartGrp.GET("/tx", GetTxHistory())
-	chartGrp.GET("/difficulty", GetEveryDayBlockDifficulty())
-	chartGrp.GET("/address", GetEveryDayAddress())
-	chartGrp.GET("/blocks", GetEveryDayBlock())
-	chartGrp.GET("/hashrate", GetEveryHashRate())
-	chartGrp.GET("/blocktime", GetEveryDayBlockTime())
-	chartGrp.GET("/miner", GetTopMiners())
-}
+// }
+
+// func (db *TestBlockInfoDB) GetBlockByHash(hash string) (*database.DBBlock, error) {
+
+// }
+
+// func (db *TestBlockInfoDB) GetTxCnt() (uint64, error) {
+
+// }
+
+// func (db *TestBlockInfoDB) GetBlockCnt() (uint64, error) {
+
+// }
+
+// func (db *TestBlockInfoDB) GetAccountCnt() (uint64, error) {
+
+// }
+
+// func (db *TestBlockInfoDB) GetContractCnt() (uint64, error) {
+
+// }
+
+// func (db *TestBlockInfoDB) GetTxCntByShardNumber(shardNumber int) (uint64, error) {
+
+// }
+
+// func (db *TestBlockInfoDB) GetPendingTxCntByShardNumber(shardNumber int) (uint64, error) {
+
+// }
+
+// func (db *TestBlockInfoDB) GetTxByHash(hash string) (*database.DBTx, error) {
+
+// }
+
+// func (db *TestBlockInfoDB) GetPendingTxByHash(hash string) (*database.DBTx, error) {
+
+// }
+
+// func (db *TestBlockInfoDB) GetTxsByIdx(shardNumber int, begin uint64, end uint64) ([]*database.DBTx, error) {
+
+// }
+
+// func (db *TestBlockInfoDB) GetPendingTxsByIdx(shardNumber int, begin uint64, end uint64) ([]*database.DBTx, error) {
+
+// }
+
+// func (db *TestBlockInfoDB) GetTxsByAddresss(address string, max int) ([]*database.DBTx, error) {
+
+// }
+
+// func (db *TestBlockInfoDB) GetPendingTxsByAddress(address string) ([]*database.DBTx, error) {
+
+// }
+
+// func (db *TestBlockInfoDB) GetAccountCntByShardNumber(shardNumber int) (uint64, error) {
+
+// }
+
+// func (db *TestBlockInfoDB) GetAccountByAddress(address string) (*database.DBAccount, error) {
+
+// }
+
+// func (db *TestBlockInfoDB) GetAccountsByShardNumber(shardNumber int, max int) ([]*database.DBAccount, error) {
+
+// }
+
+// func (db *TestBlockInfoDB) GetContractCntByShardNumber(shardNumber int) (uint64, error) {
+
+// }
+
+// func (db *TestBlockInfoDB) GetContractsByShardNumber(shardNumber int, max int) ([]*database.DBAccount, error) {
+
+// }
+
+// func (db *TestBlockInfoDB) GetTotalBalance() (map[int]int64, error) {
+
+// }
+
+// // ChartInfoDB Warpper for access mongodb.
+// type TestChartInfoDB struct {
+// }
+
+// func (db *TestChartInfoDB) GetTransInfoChart() ([]*database.DBOneDayTxInfo, error) {
+
+// }
+
+// func (db *TestChartInfoDB) GetOneDayAddressesChart() ([]*database.DBOneDayAddressInfo, error) {
+
+// }
+
+// func (db *TestChartInfoDB) GetOneDayBlockDifficultyChart() ([]*database.DBOneDayBlockDifficulty, error) {
+
+// }
+
+// func (db *TestChartInfoDB) GetOneDayBlocksChart() ([]*database.DBOneDayBlockInfo, error) {
+
+// }
+
+// func (db *TestChartInfoDB) GetHashRateChart() ([]*database.DBOneDayHashRate, error) {
+
+// }
+
+// func (db *TestChartInfoDB) GetOneDayBlockAvgTimeChart() ([]*database.DBOneDayBlockAvgTime, error) {
+
+// }
+
+// func (db *TestChartInfoDB) GetTopMinerChart() ([]*database.DBMinerRankInfo, error) {
+
+// }
+
+// func (db *TestChartInfoDB) GetTransInfoChartByShardNumber(shardNumber int) ([]*database.DBOneDayTxInfo, error) {
+
+// }
+
+// func (db *TestChartInfoDB) GetOneDayAddressesChartByShardNumber(shardNumber int) ([]*database.DBOneDayAddressInfo, error) {
+
+// }
+
+// func (db *TestChartInfoDB) GetOneDayBlockDifficultyChartByShardNumber(shardNumber int) ([]*database.DBOneDayBlockDifficulty, error) {
+
+// }
+
+// func (db *TestChartInfoDB) GetOneDayBlocksChartByShardNumber(shardNumber int) ([]*database.DBOneDayBlockInfo, error) {
+
+// }
+
+// func (db *TestChartInfoDB) GetHashRateChartByShardNumber(shardNumber int) ([]*database.DBOneDayHashRate, error) {
+
+// }
+
+// func (db *TestChartInfoDB) GetOneDayBlockAvgTimeChartByShardNumber(shardNumber int) ([]*database.DBOneDayBlockAvgTime, error) {
+
+// }
+
+// func (db *TestChartInfoDB) GetTopMinerChartByShardNumber(shardNumber int) ([]*database.DBMinerRankInfo, error) {
+
+// }
+
+// type TestNodeInfoDB struct {
+// }
+
+// func (db *TestNodeInfoDB) GetNodeInfosByShardNumber(shardNumber int) ([]*database.DBNodeInfo, error) {
+
+// }
+
+// func (db *TestNodeInfoDB) GetNodeCntByShardNumber(shardNumber int) (uint64, error) {
+
+// }
+
+// func (db *TestNodeInfoDB) GetNodeInfoByID(id string) (*database.DBNodeInfo, error) {
+
+// }
+
+// func init() {
+
+// }

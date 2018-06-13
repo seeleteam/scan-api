@@ -8,8 +8,9 @@ package handlers
 import (
 	"fmt"
 	"math/big"
-	"scan-api/database"
 	"strconv"
+
+	"github.com/seeleteam/scan-api/database"
 
 	"time"
 )
@@ -24,22 +25,24 @@ const (
 
 //RetSimpleBlockInfo describle the block info in the block list which send to the frontend
 type RetSimpleBlockInfo struct {
-	Height uint64 `json:"height"`
-	Age    string `json:"age"`
-	Txn    int    `json:"txn"`
-	Miner  string `json:"miner"`
+	ShardNumber int    `json:"shardnumber"`
+	Height      uint64 `json:"height"`
+	Age         string `json:"age"`
+	Txn         int    `json:"txn"`
+	Miner       string `json:"miner"`
 }
 
 //RetDetailBlockInfo describle the block info in the block detail page which send to the frontend
 type RetDetailBlockInfo struct {
-	HeadHash   string   `json:"headHash"`
-	PreHash    string   `json:"preBlockHash"`
-	Height     uint64   `json:"height"`
-	Age        string   `json:"age"`
-	Difficulty *big.Int `json:"difficulty"`
-	Miner      string   `json:"miner"`
-	Nonce      string   `json:"nonce"`
-	TxCount    int      `json:"txcount"`
+	ShardNumber int      `json:"shardnumber"`
+	HeadHash    string   `json:"headHash"`
+	PreHash     string   `json:"preBlockHash"`
+	Height      uint64   `json:"height"`
+	Age         string   `json:"age"`
+	Difficulty  *big.Int `json:"difficulty"`
+	Miner       string   `json:"miner"`
+	Nonce       string   `json:"nonce"`
+	TxCount     int      `json:"txcount"`
 
 	MaxHeight uint64 `json:"maxheight"`
 	MinHeight uint64 `json:"minheight"`
@@ -47,42 +50,69 @@ type RetDetailBlockInfo struct {
 
 //RetSimpleTxInfo describle the transaction info in the transaction detail page which send to the frontend
 type RetSimpleTxInfo struct {
-	TxHash string `json:"txHash"`
-	Block  uint64 `json:"block"`
-	Age    string `json:"age"`
-	From   string `json:"from"`
-	To     string `json:"to"`
-	Value  string `json:"value"`
+	TxType      int    `json:"txtype"`
+	ShardNumber int    `json:"shardnumber"`
+	TxHash      string `json:"txHash"`
+	Block       uint64 `json:"block"`
+	Age         string `json:"age"`
+	From        string `json:"from"`
+	To          string `json:"to"`
+	Value       int64  `json:"value"`
+	Pending     bool   `json:"pending"`
+	Fee         int64  `json:"fee"`
+}
+
+//RetDetailTxInfo describle the transaction detail info in the transaction detail page which send to the frontend
+type RetDetailTxInfo struct {
+	TxType       int    `json:"txtype"`
+	ShardNumber  int    `json:"shardnumber"`
+	TxHash       string `json:"txHash"`
+	Block        uint64 `json:"block"`
+	Age          string `json:"age"`
+	From         string `json:"from"`
+	To           string `json:"to"`
+	Value        int64  `json:"value"`
+	Pending      bool   `json:"pending"`
+	Fee          int64  `json:"fee"`
+	AccountNonce string `json:"accountNonce"`
+	Payload      string `json:"payload"`
 }
 
 //RetSimpleAccountInfo describle the account info in the account list page which send to the frontend
 type RetSimpleAccountInfo struct {
-	Rank       int     `json:"rank"`
-	Address    string  `json:"address"`
-	Balance    float64 `json:"balance"`
-	Percentage float64 `json:"percentage"`
-	TxCount    int     `json:"txcount"`
+	AccType     int     `json:"accType"`
+	ShardNumber int     `json:"shardnumber"`
+	Rank        int     `json:"rank"`
+	Address     string  `json:"address"`
+	Balance     int64   `json:"balance"`
+	Percentage  float64 `json:"percentage"`
+	TxCount     int64   `json:"txcount"`
 }
 
 //RetDetailAccountTxInfo describle the tx info contained by the RetDetailAccountInfo
 type RetDetailAccountTxInfo struct {
-	Hash    string  `json:"hash"`
-	Block   int64   `json:"block"`
-	From    string  `json:"from"`
-	To      string  `json:"to"`
-	Amount  int64   `json:"amount"`
-	Age     string  `json:"age"`
-	TxFee   float64 `json:"txfee"`
-	InOrOut bool    `json:"inorout"`
+	ShardNumber int    `json:"shardnumber"`
+	TxType      int    `json:"txtype"`
+	Hash        string `json:"hash"`
+	Block       string `json:"block"`
+	From        string `json:"from"`
+	To          string `json:"to"`
+	Value       int64  `json:"value"`
+	Age         string `json:"age"`
+	Fee         int64  `json:"fee"`
+	InOrOut     bool   `json:"inorout"`
+	Pending     bool   `json:"pending"`
 }
 
 //RetDetailAccountInfo describle the detail account info which send to the frontend
 type RetDetailAccountInfo struct {
-	Address    string                   `json:"address"`
-	Balance    float64                  `json:"balance"`
-	Percentage float64                  `json:"percentage"`
-	TxCount    int                      `json:"txcount"`
-	Txs        []RetDetailAccountTxInfo `json:"txs"`
+	AccType     int                      `json:"accType"`
+	ShardNumber int                      `json:"shardnumber"`
+	Address     string                   `json:"address"`
+	Balance     int64                    `json:"balance"`
+	Percentage  float64                  `json:"percentage"`
+	TxCount     int64                    `json:"txcount"`
+	Txs         []RetDetailAccountTxInfo `json:"txs"`
 }
 
 //createRetSimpleBlockInfo converts the given dbblock to the retsimpleblockinfo
@@ -93,7 +123,7 @@ func createRetSimpleBlockInfo(blockInfo *database.DBBlock) *RetSimpleBlockInfo {
 	ret.Txn = len(blockInfo.Txs)
 	timeStamp := big.NewInt(blockInfo.Timestamp)
 	ret.Age = getElpasedTimeDesc(timeStamp)
-
+	ret.ShardNumber = blockInfo.ShardNumber
 	return &ret
 }
 
@@ -117,54 +147,96 @@ func createRetDetailBlockInfo(blockInfo *database.DBBlock, maxHeight, minHeight 
 	ret.TxCount = len(blockInfo.Txs)
 	ret.MaxHeight = maxHeight
 	ret.MinHeight = minHeight
-
+	ret.ShardNumber = blockInfo.ShardNumber
 	return &ret
 }
 
 //createRetSimpleTxInfo converts the given dbtx to the retsimpletxinfo
 func createRetSimpleTxInfo(transaction *database.DBTx) *RetSimpleTxInfo {
 	var ret RetSimpleTxInfo
+	ret.TxType = transaction.TxType
 	ret.TxHash = transaction.Hash
 	ret.Block, _ = strconv.ParseUint(transaction.Block, 10, 64)
 	ret.From = transaction.From
 	ret.To = transaction.To
 	ret.Value = transaction.Amount
+	ret.Pending = transaction.Pending
+	ret.Fee = transaction.Fee
 	timeStamp := big.NewInt(0)
 	if timeStamp.UnmarshalText([]byte(transaction.Timestamp)) == nil {
-		ret.Age = getElpasedTimeDesc(timeStamp.Div(timeStamp, big.NewInt(1e9)))
+		ret.Age = getElpasedTimeDesc(timeStamp)
 	}
+	ret.ShardNumber = transaction.ShardNumber
+	return &ret
+}
+
+func createRetDetailTxInfo(transaction *database.DBTx) *RetDetailTxInfo {
+	var ret RetDetailTxInfo
+	ret.TxType = transaction.TxType
+	ret.TxHash = transaction.Hash
+	ret.Block, _ = strconv.ParseUint(transaction.Block, 10, 64)
+	ret.From = transaction.From
+	ret.To = transaction.To
+	ret.Value = transaction.Amount
+	ret.Pending = transaction.Pending
+	ret.Fee = transaction.Fee
+	timeStamp := big.NewInt(0)
+	if timeStamp.UnmarshalText([]byte(transaction.Timestamp)) == nil {
+		ret.Age = getElpasedTimeDesc(timeStamp)
+	}
+	ret.ShardNumber = transaction.ShardNumber
+	ret.AccountNonce = transaction.AccountNonce
+	ret.Payload = transaction.Payload
+
 	return &ret
 }
 
 //createRetSimpleAccountInfo converts the given dbaccount to the retsimpleaccountinfo
-func createRetSimpleAccountInfo(account *database.DBAccount) *RetSimpleAccountInfo {
+func createRetSimpleAccountInfo(account *database.DBAccount, ttBalance int64) *RetSimpleAccountInfo {
 	var ret RetSimpleAccountInfo
+	ret.AccType = account.AccType
 	ret.Address = account.Address
 	ret.Balance = account.Balance
 	ret.TxCount = account.TxCount
-	ret.Percentage = 0.0
+	ret.Percentage = (float64(ret.Balance) / float64(ttBalance))
+	ret.ShardNumber = account.ShardNumber
 	return &ret
 }
 
 //createRetDetailAccountInfo converts the given dbaccount to the tetdetailaccountInfo
-func createRetDetailAccountInfo(account *database.DBAccount) *RetDetailAccountInfo {
+func createRetDetailAccountInfo(account *database.DBAccount, txs []*database.DBTx, ttBalance int64) *RetDetailAccountInfo {
 	var ret RetDetailAccountInfo
+	ret.AccType = account.AccType
 	ret.Address = account.Address
 	ret.Balance = account.Balance
 	ret.TxCount = account.TxCount
-	ret.Percentage = 0.0
-	for i := 0; i < len(account.Txs); i++ {
+	ret.Percentage = (float64(ret.Balance) / float64(ttBalance))
+
+	for i := 0; i < len(txs); i++ {
 		var tx RetDetailAccountTxInfo
-		tx.Amount = account.Txs[i].Amount
-		tx.Block = account.Txs[i].Block
-		tx.From = account.Txs[i].From
-		tx.Hash = account.Txs[i].Hash
-		tx.To = account.Txs[i].To
-		tx.InOrOut = account.Txs[i].InOrOut
-		tx.Age = getElpasedTimeDesc(big.NewInt(account.Txs[i].Timestamp))
-		tx.TxFee = 0.0
+		tx.TxType = txs[i].TxType
+		tx.Value = txs[i].Amount
+		tx.Block = txs[i].Block
+		tx.From = txs[i].From
+		tx.Hash = txs[i].Hash
+		tx.To = txs[i].To
+		tx.ShardNumber = txs[i].ShardNumber
+		if tx.From == account.Address {
+			tx.InOrOut = false
+		} else {
+			tx.InOrOut = true
+		}
+		timeStamp := big.NewInt(0)
+		if timeStamp.UnmarshalText([]byte(txs[i].Timestamp)) == nil {
+			tx.Age = getElpasedTimeDesc(timeStamp)
+		}
+
+		tx.Fee = txs[i].Fee
+		tx.Pending = txs[i].Pending
 		ret.Txs = append(ret.Txs, tx)
 	}
+	ret.ShardNumber = account.ShardNumber
+
 	return &ret
 }
 

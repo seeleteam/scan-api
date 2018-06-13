@@ -1,10 +1,11 @@
 {
-    "RPCURL": "127.0.0.1:55028",
+    "RpcURL": "47.94.201.80:55026",
     "WriteLog": true,
     "LogLevel": "debug",
-    "LogFile": "scan-api.log",
+    "LogFile": "seele-syncer.log",
     "DataBaseConnUrl":"127.0.0.1:27017",
     "DataBaseName":"seele",
-    "ShardCount":20
-}
+    "SyncInterval":3,
+    "ShardNumber": 2
+  }
   

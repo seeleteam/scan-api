@@ -1,6 +1,6 @@
 /**
 *  @file
-*  @copyright defined in scan-api/LICENSE
+*  @copyright defined in go-seele/LICENSE
  */
 
 package common

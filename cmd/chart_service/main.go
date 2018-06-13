@@ -5,7 +5,7 @@
 
 package main
 
-import "scan-api/cmd/chart_service/cmd"
+import "github.com/seeleteam/scan-api/cmd/chart_service/cmd"
 
 func main() {
 	cmd.Execute()
