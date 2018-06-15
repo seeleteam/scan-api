@@ -7,16 +7,36 @@ package handlers
 
 import (
 	"net/http"
-	"scan-api/database"
 	"strconv"
+	"time"
+
+	"github.com/seeleteam/scan-api/database"
 
 	"github.com/gin-gonic/gin"
 )
 
-//getAccountsByBeginAndEnd
-func getNodesByBeginAndEnd(begin, end uint64) []*database.DBNodeInfo {
+//NodeHandler handle all block request
+type NodeHandler struct {
+	DBClient  NodeInfoDB
+	nodeInfos [][]*database.DBNodeInfo
+}
 
-	oneNodeInfos, _ := database.GetNodeInfos()
+//NewNodeHandler new an nodehandler
+func NewNodeHandler(nodeDB NodeInfoDB) *NodeHandler {
+	nodeInfos := make([][]*database.DBNodeInfo, shardCount, shardCount)
+	ret := &NodeHandler{
+		DBClient:  nodeDB,
+		nodeInfos: nodeInfos,
+	}
+
+	ret.UpdateImpl()
+
+	return ret
+}
+
+//getAccountsByBeginAndEnd
+func (h *NodeHandler) getNodesByBeginAndEnd(s int, begin, end uint64) []*database.DBNodeInfo {
+	oneNodeInfos := h.nodeInfos[s-1]
 
 	if end > uint64(len(oneNodeInfos)) {
 		end = uint64(len(oneNodeInfos)) - 1
@@ -28,10 +48,13 @@ func getNodesByBeginAndEnd(begin, end uint64) []*database.DBNodeInfo {
 }
 
 //GetNodes handler for get block list
-func GetNodes() gin.HandlerFunc {
+func (h *NodeHandler) GetNodes() gin.HandlerFunc {
 	return func(c *gin.Context) {
+
 		p, _ := strconv.ParseUint(c.Query("p"), 10, 64)
 		ps, _ := strconv.ParseUint(c.Query("ps"), 10, 64)
+		s, _ := strconv.ParseInt(c.Query("s"), 10, 64)
+
 		if ps == 0 {
 			ps = blockItemNumsPrePage
 		} else if ps > maxItemNumsPrePage {
@@ -42,14 +65,14 @@ func GetNodes() gin.HandlerFunc {
 			p--
 		}
 
-		nodeCnt, err := database.GetNodeCnt()
-		if err != nil {
-			responseError(c, errGetNodeCountFromDB, http.StatusInternalServerError, apiDBQueryError)
-			return
+		if s <= 0 || s > 20 {
+			responseError(c, errParamInvalid, http.StatusBadRequest, apiParmaInvalid)
 		}
 
+		nodeCnt := len(h.nodeInfos[s-1])
+
 		page, begin, end := getBeginAndEndByPage(uint64(nodeCnt), p, ps)
-		nodes := getNodesByBeginAndEnd(begin, end)
+		nodes := h.getNodesByBeginAndEnd(int(s), begin, end)
 
 		c.JSON(http.StatusOK, gin.H{
 			"code":    apiOk,
@@ -68,30 +91,33 @@ func GetNodes() gin.HandlerFunc {
 }
 
 //GetNode get node detail info by node id
-func GetNode() gin.HandlerFunc {
+func (h *NodeHandler) GetNode() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.Query("id")
-
-		data, err := database.GetNodeInfoByID(id)
-		if err != nil {
-			responseError(c, errGetNodeInfoFromDB, http.StatusInternalServerError, apiDBQueryError)
-		} else {
-			c.JSON(http.StatusOK, gin.H{
-				"code":    apiOk,
-				"message": "",
-				"data":    data,
-			})
+		for i := 0; i < shardCount; i++ {
+			for j := 0; j < len(h.nodeInfos[i]); j++ {
+				if h.nodeInfos[i][j].ID == id {
+					c.JSON(http.StatusOK, gin.H{
+						"code":    apiOk,
+						"message": "",
+						"data":    h.nodeInfos[i][j],
+					})
+					return
+				}
+			}
 		}
+		responseError(c, errGetNodeInfoFromDB, http.StatusInternalServerError, apiDBQueryError)
+		return
 	}
 }
 
 //GetNodeMap get node list
-func GetNodeMap() gin.HandlerFunc {
+func (h *NodeHandler) GetNodeMap() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		oneNodeInfos, err := database.GetNodeInfos()
-		if err != nil {
-			responseError(c, errGetNodeInfoFromDB, http.StatusInternalServerError, apiDBQueryError)
-			return
+
+		var oneNodeInfos []*database.DBNodeInfo
+		for i := 0; i < shardCount; i++ {
+			oneNodeInfos = append(oneNodeInfos, h.nodeInfos[i]...)
 		}
 
 		c.JSON(http.StatusOK, gin.H{
@@ -99,5 +125,45 @@ func GetNodeMap() gin.HandlerFunc {
 			"message": "",
 			"data":    oneNodeInfos,
 		})
+	}
+}
+
+//GetNodeCntChart get node count chart
+func (h *NodeHandler) GetNodeCntChart() gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		nodeCntMap := make(map[int]int, len(h.nodeInfos))
+		for i := 0; i < len(h.nodeInfos); i++ {
+			nodeCntMap[i+1] = len(h.nodeInfos[i])
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"code":    apiOk,
+			"message": "",
+			"data":    nodeCntMap,
+		})
+	}
+}
+
+//UpdateImpl cache nodes into memory
+func (h *NodeHandler) UpdateImpl() {
+	for i := 1; i <= shardCount; i++ {
+		nodeInfos, err := h.DBClient.GetNodeInfosByShardNumber(i)
+		if err == nil {
+			h.nodeInfos[i-1] = append(h.nodeInfos[i-1], nodeInfos...)
+		}
+	}
+}
+
+//Update set a timer to update node infos
+func (h *NodeHandler) Update() {
+	for {
+		now := time.Now()
+		// calcuate next zero hour
+		next := now.Add(time.Minute * 5)
+		t := time.NewTimer(next.Sub(now))
+		<-t.C
+
+		h.UpdateImpl()
 	}
 }

@@ -6,39 +6,73 @@
 package routers
 
 import (
-	"scan-api/api/handlers"
-
 	"github.com/gin-gonic/gin"
+	"github.com/seeleteam/scan-api/api/handlers"
 )
 
-//InitRouters init all http handlers here
-func InitRouters(e *gin.Engine) {
+//Router api router
+type Router struct {
+	*handlers.AccountHandler
+	*handlers.ContractHandler
+	*handlers.BlockHandler
+	*handlers.ChartHandler
+	*handlers.NodeHandler
+}
+
+//New return an router
+func New(blockDB handlers.BlockInfoDB, chartDB handlers.ChartInfoDB, nodeDB handlers.NodeInfoDB) *Router {
+	accHandler := handlers.NewAccHandler(blockDB)
+	contractHandler := handlers.NewContractHandler(blockDB)
+	nodeHandler := handlers.NewNodeHandler(nodeDB)
+
+	return &Router{
+		AccountHandler:  accHandler,
+		ContractHandler: contractHandler,
+		BlockHandler:    &handlers.BlockHandler{DBClient: blockDB},
+		ChartHandler:    &handlers.ChartHandler{DBClient: chartDB},
+		NodeHandler:     nodeHandler,
+	}
+}
+
+//Init init all http handlers here
+func (r *Router) Init(e *gin.Engine) {
 	v1 := e.Group("/api/v1")
-	v1.GET("/lastblock", handlers.GetLastBlock())
-	v1.GET("/bestblock", handlers.GetBestBlock())
-	v1.GET("/avgblocktime", handlers.GetAvgBlockTime())
-	v1.GET("/block", handlers.GetBlock())
-	v1.GET("/blocks", handlers.GetBlocks())
-	v1.GET("/txcount", handlers.GetTxCnt())
-	v1.GET("/txs", handlers.GetTxs())
-	v1.GET("/tx", handlers.GetTxByHash())
-	v1.GET("/search", handlers.Search())
-	v1.GET("/accounts", handlers.GetAccounts())
-	v1.GET("/account", handlers.GetAccountByAddress())
+	//v1.GET("/lastblock", r.BlockHandler.GetLastBlock())
+	//v1.GET("/bestblock", r.BlockHandler.GetBestBlock())
+	//v1.GET("/avgblocktime", r.BlockHandler.GetAvgBlockTime())
+	v1.GET("/block", r.BlockHandler.GetBlock())
+	v1.GET("/blocks", r.BlockHandler.GetBlocks())
+	v1.GET("/txcount", r.BlockHandler.GetTxCnt())
+	v1.GET("/blockcount", r.BlockHandler.GetBlockCnt())
+	v1.GET("/accountcount", r.BlockHandler.GetAccountCnt())
+	v1.GET("/contractcount", r.BlockHandler.GetContractCnt())
+	v1.GET("/txs", r.BlockHandler.GetTxs())
+	v1.GET("/pendingtxs", r.BlockHandler.GetPendingTxs())
+	v1.GET("/tx", r.BlockHandler.GetTxByHash())
+	//ugly fix this
+	v1.GET("/search", r.BlockHandler.Search(r.AccountHandler, r.ContractHandler))
+	v1.GET("/accounts", r.AccountHandler.GetAccounts())
+	v1.GET("/account", r.AccountHandler.GetAccountByAddress())
+	v1.GET("/contracts", r.ContractHandler.GetContracts())
+	v1.GET("/contract", r.ContractHandler.GetContractByAddress())
+	//v1.GET("/difficulty", r.BlockHandler.GetDifficulty())
+	//v1.GET("/hashrate", r.BlockHandler.GetHashRate())
 
-	v1.GET("/difficulty", handlers.GetDifficulty())
-	v1.GET("/hashrate", handlers.GetHashRate())
-
-	v1.GET("./nodes", handlers.GetNodes())
-	v1.GET("./node", handlers.GetNode())
-	v1.GET("./nodemap", handlers.GetNodeMap())
+	v1.GET("./nodes", r.NodeHandler.GetNodes())
+	v1.GET("./node", r.NodeHandler.GetNode())
+	v1.GET("./nodemap", r.NodeHandler.GetNodeMap())
 
 	chartGrp := v1.Group("/chart")
-	chartGrp.GET("/tx", handlers.GetTxHistory())
-	chartGrp.GET("/difficulty", handlers.GetEveryDayBlockDifficulty())
-	chartGrp.GET("/address", handlers.GetEveryDayAddress())
-	chartGrp.GET("/blocks", handlers.GetEveryDayBlock())
-	chartGrp.GET("/hashrate", handlers.GetEveryHashRate())
-	chartGrp.GET("/blocktime", handlers.GetEveryDayBlockTime())
-	chartGrp.GET("/miner", handlers.GetTopMiners())
+	chartGrp.GET("/tx", r.ChartHandler.GetTxHistory())
+	chartGrp.GET("/difficulty", r.ChartHandler.GetEveryDayBlockDifficulty())
+	chartGrp.GET("/address", r.ChartHandler.GetEveryDayAddress())
+	chartGrp.GET("/blocks", r.ChartHandler.GetEveryDayBlock())
+	chartGrp.GET("/hashrate", r.ChartHandler.GetEveryHashRate())
+	chartGrp.GET("/blocktime", r.ChartHandler.GetEveryDayBlockTime())
+	chartGrp.GET("/miner", r.ChartHandler.GetTopMiners())
+	chartGrp.GET("/node", r.NodeHandler.GetNodeCntChart())
+
+	go r.AccountHandler.Update()
+	go r.ContractHandler.Update()
+	go r.NodeHandler.Update()
 }

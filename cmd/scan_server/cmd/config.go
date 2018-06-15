@@ -8,9 +8,8 @@ package cmd
 import (
 	"encoding/json"
 	"io/ioutil"
-	"scan-api/database"
-	"scan-api/rpc"
-	"scan-api/server"
+
+	"github.com/seeleteam/scan-api/server"
 )
 
 // LoadConfigFromFile unmarshal config from a file
@@ -22,20 +21,6 @@ func LoadConfigFromFile(filepath string) (server.Config, error) {
 	}
 
 	err = json.Unmarshal(buff, &config)
-
-	//set database
-	if len(config.DataBaseConnURL) > 0 {
-		database.ConnURL = config.DataBaseConnURL
-	}
-
-	if len(config.DataBaseName) > 0 {
-		database.DataBaseName = config.DataBaseName
-	}
-
-	//set rpc
-	if len(config.RPCURL) > 0 {
-		rpc.RPCURL = config.RPCURL
-	}
 
 	return config, err
 }

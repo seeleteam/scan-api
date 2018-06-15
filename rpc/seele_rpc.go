@@ -72,6 +72,7 @@ func (rpc *SeeleRPC) GetBlockByHeight(h uint64, fullTx bool) (block *BlockInfo, 
 			tx.AccountNonce = uint64(rpcTx["accountNonce"].(float64))
 			tx.Payload = rpcTx["payload"].(string)
 			tx.Timestamp = uint64(rpcTx["timestamp"].(float64))
+			tx.Fee = int64(rpcTx["fee"].(float64))
 			Txs = append(Txs, tx)
 		}
 	}
@@ -125,4 +126,54 @@ func (rpc *SeeleRPC) GetPeersInfo() (result []PeerInfo, err error) {
 	}
 
 	return peerInfos, nil
+}
+
+//GetBalance get the balance of the account
+func (rpc *SeeleRPC) GetBalance(address string) (int64, error) {
+	var result interface{}
+	if err := rpc.call("seele.GetBalance", &address, &result); err != nil {
+		return 0, err
+	}
+
+	balance := int64(result.(float64))
+	return balance, nil
+}
+
+//GetReceiptByTxHash
+func (rpc *SeeleRPC) GetReceiptByTxHash(txhash string) (*Receipt, error) {
+
+	rpcOutputReceipt := make(map[string]interface{})
+	if err := rpc.call("txpool.GetReceiptByTxHash", &txhash, &rpcOutputReceipt); err != nil {
+		return nil, err
+	}
+
+	var receipt Receipt
+	return &receipt, nil
+}
+
+//GetPendingTransactions
+func (rpc *SeeleRPC) GetPendingTransactions() ([]Transaction, error) {
+	var rpcOutputTxs []interface{}
+	if err := rpc.call("txpool.GetPendingTransactions", nil, &rpcOutputTxs); err != nil {
+		return nil, err
+	}
+
+	var Txs []Transaction
+
+	for i := 0; i < len(rpcOutputTxs); i++ {
+		var tx Transaction
+		rpcTx := rpcOutputTxs[i].(map[string]interface{})
+		tx.Hash = rpcTx["hash"].(string)
+		tx.From = rpcTx["from"].(string)
+		tx.To = rpcTx["to"].(string)
+		amount := int64(rpcTx["amount"].(float64))
+		tx.Amount = big.NewInt(amount)
+		tx.AccountNonce = uint64(rpcTx["accountNonce"].(float64))
+		tx.Payload = rpcTx["payload"].(string)
+		tx.Timestamp = uint64(rpcTx["timestamp"].(float64))
+		tx.Fee = int64(rpcTx["fee"].(float64))
+		Txs = append(Txs, tx)
+	}
+
+	return Txs, nil
 }

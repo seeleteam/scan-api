@@ -6,10 +6,11 @@
 package blocktime
 
 import (
-	"scan-api/database"
 	"sync"
 	"time"
 
+	"github.com/seeleteam/scan-api/chart"
+	"github.com/seeleteam/scan-api/database"
 	mgo "gopkg.in/mgo.v2"
 )
 
@@ -29,31 +30,36 @@ func Process(wg *sync.WaitGroup) {
 		t := time.NewTimer(next.Sub(now))
 		<-t.C
 		//calcuate last day transactions
-		ProcessOneDayBlockAvgTime(next)
+		for i := 1; i <= chart.ShardCount; i++ {
+			ProcessOneDayBlockAvgTime(i, next)
+		}
 	}
 }
 
 //ProcessOldBlockAvgTime Calculate average block time in the past days
 func ProcessOldBlockAvgTime() {
-	now := time.Now()
-	//lastZeroTime := now.Add(-time.Hour * 24)
-	todayZeroTime := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
-	for {
-		lastZeroTime := todayZeroTime.Add(-time.Hour * 24)
-		_, err := database.GetOneDayBlockAvgTime(lastZeroTime.Unix())
-		if err != mgo.ErrNotFound {
-			break
+	for i := 1; i <= chart.ShardCount; i++ {
+		for {
+			now := time.Now()
+			//lastZeroTime := now.Add(-time.Hour * 24)
+			todayZeroTime := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+
+			lastZeroTime := todayZeroTime.Add(-time.Hour * 24)
+			_, err := chart.GChartDB.GetOneDayBlockAvgTime(i, lastZeroTime.Unix())
+			if err != mgo.ErrNotFound {
+				break
+			}
+			if !ProcessOneDayBlockAvgTime(i, todayZeroTime) {
+				break
+			}
+			todayZeroTime = todayZeroTime.Add(-time.Hour * 24)
 		}
-		if !ProcessOneDayBlockAvgTime(todayZeroTime) {
-			break
-		}
-		todayZeroTime = todayZeroTime.Add(-time.Hour * 24)
 	}
 }
 
 //ProcessOneDayBlockAvgTime Calculate the average time for all blocks of a day
-func ProcessOneDayBlockAvgTime(day time.Time) bool {
-	secondBlock, err := database.GetBlockByHeight(1)
+func ProcessOneDayBlockAvgTime(shardNumber int, day time.Time) bool {
+	secondBlock, err := chart.GChartDB.GetBlockByHeight(shardNumber, 1)
 	if err != nil {
 		return false
 	}
@@ -65,7 +71,7 @@ func ProcessOneDayBlockAvgTime(day time.Time) bool {
 	thisZeroTime := time.Date(day.Year(), day.Month(), day.Day(), 0, 0, 0, 0, day.Location())
 	lastDayZeroTime := day.Add(-time.Hour * 24)
 	var dbBlocks []*database.DBBlock
-	dbBlocks, err = database.GetBlocksByTime(lastDayZeroTime.Unix(), thisZeroTime.Unix())
+	dbBlocks, err = chart.GChartDB.GetBlocksByTime(shardNumber, lastDayZeroTime.Unix(), thisZeroTime.Unix())
 	if err != nil {
 		return false
 	}
@@ -79,6 +85,10 @@ func ProcessOneDayBlockAvgTime(day time.Time) bool {
 	}
 
 	info.TimeStamp = lastDayZeroTime.Unix()
-	database.AddOneDayBlockAvgTime(&info)
+	chart.GChartDB.AddOneDayBlockAvgTime(shardNumber, &info)
 	return true
+}
+
+func init() {
+	chart.RegisterProcessFunc(Process)
 }

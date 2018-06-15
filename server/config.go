@@ -15,7 +15,6 @@ type Config struct {
 	Addr                string
 	LimitConnection     int
 	DefaultHammerTime   time.Duration
-	RPCURL              string
 	WriteLog            bool
 	LogLevel            string
 	LogFile             string

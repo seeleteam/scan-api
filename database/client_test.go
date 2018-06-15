@@ -5,12 +5,11 @@
 package database
 
 import (
-	"scan-api/log"
 	"sort"
 	"testing"
 	"time"
 
-	"gopkg.in/mgo.v2"
+	"github.com/seeleteam/scan-api/log"
 )
 
 func TestOnGetBlockByHeight(t *testing.T) {

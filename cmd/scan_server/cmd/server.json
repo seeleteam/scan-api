@@ -3,7 +3,6 @@
     "Addr": ":8888", 
     "LimitConnection": 0,
     "DefaultHammerTime": 30,
-    "RPCURL": "127.0.0.1:55027",
     "WriteLog": true,
     "LogLevel": "debug",
     "LogFile": "scan-api.log",

@@ -1,6 +1,6 @@
 /**
 *  @file
-*  @copyright defined in scan-api/LICENSE
+*  @copyright defined in go-seele/LICENSE
  */
 
 package rpc
@@ -12,39 +12,8 @@ type SeeleRPC struct {
 	conn   *Client
 }
 
-var (
-	gSeeleRPC *SeeleRPC
-	//RPCURL address of the node which provided rpc service
-	RPCURL = "127.0.0.1:55028"
-)
-
-//GetSeeleRPC get rpc connection
-func GetSeeleRPC() (*SeeleRPC, error) {
-	if gSeeleRPC == nil {
-		gSeeleRPC = newSeeleRPC(RPCURL)
-	}
-
-	if gSeeleRPC.conn == nil {
-		conn, err := Dial(gSeeleRPC.scheme, gSeeleRPC.url)
-		if err != nil {
-			return nil, err
-		}
-		gSeeleRPC.conn = conn
-	}
-
-	return gSeeleRPC, nil
-}
-
-//ReleaseSeeleRPC free rpc connection
-func ReleaseSeeleRPC() {
-	if gSeeleRPC != nil && gSeeleRPC.conn != nil {
-		gSeeleRPC.conn.Close()
-		gSeeleRPC.conn = nil
-	}
-}
-
-// New create new json_rpc client with given url
-func newRPC(url string, options ...func(rpc *SeeleRPC)) *SeeleRPC {
+// NewRPC create new json_rpc client with given url
+func NewRPC(url string, options ...func(rpc *SeeleRPC)) *SeeleRPC {
 	rpc := &SeeleRPC{
 		url:    url,
 		scheme: "tcp",
@@ -55,8 +24,24 @@ func newRPC(url string, options ...func(rpc *SeeleRPC)) *SeeleRPC {
 	return rpc
 }
 
-func newSeeleRPC(url string, options ...func(rpc *SeeleRPC)) *SeeleRPC {
-	return newRPC(url, options...)
+//Connect Create tcp connect
+func (rpc *SeeleRPC) Connect() error {
+	if rpc.conn == nil {
+		conn, err := Dial(rpc.scheme, rpc.url)
+		if err != nil {
+			return err
+		}
+		rpc.conn = conn
+	}
+	return nil
+}
+
+//Release release current rpc
+func (rpc *SeeleRPC) Release() {
+	if rpc != nil && rpc.conn != nil {
+		rpc.conn.Close()
+		rpc.conn = nil
+	}
 }
 
 func (rpc *SeeleRPC) call(serviceMethod string, args interface{}, reply interface{}) error {

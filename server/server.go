@@ -6,17 +6,19 @@
 package server
 
 import (
+	"fmt"
 	"net/http"
 
-	"scan-api/log"
 	"time"
+
+	"github.com/seeleteam/scan-api/api/routers"
+	"github.com/seeleteam/scan-api/database"
+	"github.com/seeleteam/scan-api/log"
 
 	limit "github.com/aviddiviner/gin-limit"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/sync/errgroup"
-
-	"scan-api/api/routers"
 )
 
 //ScanServer hold instance of server
@@ -24,6 +26,7 @@ type ScanServer struct {
 	Server *http.Server
 	G      *errgroup.Group
 	config *Config
+	r      *routers.Router
 }
 
 //initGin init gin engine
@@ -57,8 +60,6 @@ func initGin(config *Config) *gin.Engine {
 		e.Use(limit.MaxAllowed(config.LimitConnections))
 	}
 
-	routers.InitRouters(e)
-
 	return e
 }
 
@@ -70,6 +71,15 @@ func GetServer(g *errgroup.Group, config *Config) (server *ScanServer) {
 
 	ginHandler := initGin(config)
 
+	dbClient := database.NewDBClient(config.DataBaseName, config.DataBaseConnURL, 1)
+	if dbClient == nil {
+		fmt.Printf("init database error")
+		return
+	}
+
+	router := routers.New(dbClient, dbClient, dbClient)
+	router.Init(ginHandler)
+
 	return &ScanServer{
 		Server: &http.Server{
 			Addr:           config.Addr,
@@ -80,6 +90,7 @@ func GetServer(g *errgroup.Group, config *Config) (server *ScanServer) {
 			MaxHeaderBytes: 1 << config.MaxHeaderBytes,
 		},
 		G: g,
+		r: router,
 	}
 }
 

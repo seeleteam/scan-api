@@ -8,9 +8,10 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"scan-api/database"
-	"scan-api/log"
-	"scan-api/server"
+
+	"github.com/seeleteam/scan-api/database"
+	"github.com/seeleteam/scan-api/log"
+	"github.com/seeleteam/scan-api/server"
 
 	"github.com/spf13/cobra"
 	"golang.org/x/sync/errgroup"
@@ -37,7 +38,8 @@ var rootCmd = &cobra.Command{
 			return
 		}
 
-		if !database.InitDB() {
+		dbClient := database.NewDBClient(serverCfg.DataBaseName, serverCfg.DataBaseConnURL, 1)
+		if dbClient == nil {
 			fmt.Printf("init database error")
 			return
 		}
@@ -45,11 +47,6 @@ var rootCmd = &cobra.Command{
 		scanServer := server.GetServer(&g, &serverCfg)
 		if scanServer != nil {
 			scanServer.RunServer()
-
-			if serverCfg.SyncSwitch {
-				database.BlockSync()
-				database.StartSync(serverCfg.Interval)
-			}
 
 			if err := g.Wait(); err != nil {
 				log.Error(err)

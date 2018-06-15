@@ -5,7 +5,7 @@
 
 package main
 
-import "scan-api/cmd/scan_server/cmd"
+import "github.com/seeleteam/scan-api/cmd/scan_server/cmd"
 
 func main() {
 	cmd.Execute()
