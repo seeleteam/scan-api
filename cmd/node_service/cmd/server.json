@@ -1,5 +1,5 @@
 {
-    "RpcNodes" : ["47.94.201.80:55026"],
+    "RpcNodes" : ["106.75.80.93:55026"],
     "WriteLog": true,
     "LogLevel": "debug",
     "LogFile": "node_service.log",

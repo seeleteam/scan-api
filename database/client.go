@@ -870,7 +870,7 @@ func (c *Client) AddNodeInfo(nodeInfo *DBNodeInfo) error {
 //DeleteNodeInfo delete node info from database
 func (c *Client) DeleteNodeInfo(nodeInfo *DBNodeInfo) error {
 	query := func(c *mgo.Collection) error {
-		return c.Remove(bson.M{"host": nodeInfo.Host})
+		return c.Remove(bson.M{"id": nodeInfo.ID})
 	}
 	err := c.withCollection(nodeInfoTbl, query)
 	return err
