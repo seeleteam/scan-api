@@ -23,6 +23,7 @@ mongo 3.6.3
 ├── cmd: app entrance
 |   ├── chart_service: chart service entrance
 |   ├── node_service: node service entrance
+|   ├── seele_syncer: seele syncer entrance
 │   └── scan_server:  http service entrance
 ├── database: mongodb database
 ├── log: third logger warpper
@@ -38,6 +39,8 @@ mongo 3.6.3
 cd scan-api
 # generate the executable file
 make
+# start seele_syncer
+./build/syncer/seele_syncer -c server.json
 # start scan_server
 ./build/server/scan_server -c server.json
 # start chart_service

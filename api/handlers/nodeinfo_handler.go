@@ -149,6 +149,7 @@ func (h *NodeHandler) GetNodeCntChart() gin.HandlerFunc {
 func (h *NodeHandler) UpdateImpl() {
 	for i := 1; i <= shardCount; i++ {
 		nodeInfos, err := h.DBClient.GetNodeInfosByShardNumber(i)
+		h.nodeInfos[i-1] = make([]*database.DBNodeInfo, 0, 0)
 		if err == nil {
 			h.nodeInfos[i-1] = append(h.nodeInfos[i-1], nodeInfos...)
 		}

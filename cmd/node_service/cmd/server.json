@@ -1,8 +1,8 @@
 {
-    "RpcNodes" : ["47.94.201.80:55026"],
+    "RpcNodes" : ["106.75.80.93:55026"],
     "WriteLog": true,
     "LogLevel": "debug",
-    "LogFile": "node_service.log",
+    "LogFile": "node_service",
     "DataBaseConnUrl":"127.0.0.1:27017",
     "DataBaseName": "seele",
     "Interval": 60,

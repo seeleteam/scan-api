@@ -13,7 +13,8 @@ func (s *Syncer) txSync(block *rpc.BlockInfo) error {
 		transIdx, err := s.db.GetTxCntByShardNumber(s.shardNumber)
 
 		//must be an create contract transaction
-		if trans.To == nullAddress {
+		if trans.To == "" {
+
 			trans.TxType = 1
 
 			receipt, err := s.rpc.GetReceiptByTxHash(trans.Hash)

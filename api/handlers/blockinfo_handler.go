@@ -33,6 +33,8 @@ const (
 
 	avgCountBlockNum = 5000
 	txHashLength     = 66
+
+	maxAccountTxCnt = 1000000
 )
 
 var (
@@ -490,7 +492,19 @@ func (h *BlockHandler) GetTxsInBlock(c *gin.Context, shardNumber int, height, p,
 
 	block, err := dbClinet.GetBlockByHeight(shardNumber, height)
 	if err != nil {
-		responseError(c, errGetBlockHeightFromDB, http.StatusInternalServerError, apiDBQueryError)
+		c.JSON(http.StatusOK, gin.H{
+			"code":    apiOk,
+			"message": "",
+			"data": gin.H{
+				"pageInfo": gin.H{
+					"totalCount": 0,
+					"begin":      0,
+					"end":        0,
+					"curPage":    0,
+				},
+				"list": nil,
+			},
+		})
 		return
 	}
 
@@ -534,6 +548,76 @@ func (h *BlockHandler) GetTxsInBlock(c *gin.Context, shardNumber int, height, p,
 	})
 }
 
+//GetTxsInAccount get tx list from this account
+func (h *BlockHandler) GetTxsInAccount(c *gin.Context, address string, p, ps uint64) {
+	dbClinet := h.DBClient
+
+	txs, err := dbClinet.GetTxsByAddresss(address, maxAccountTxCnt)
+	if err != nil {
+		responseError(c, errGetTxFromDB, http.StatusInternalServerError, apiDBQueryError)
+		return
+	}
+
+	pengdingTxs, err := dbClinet.GetPendingTxsByAddress(address)
+	if err != nil {
+		responseError(c, errGetTxFromDB, http.StatusInternalServerError, apiDBQueryError)
+		return
+	}
+
+	txs = append(pengdingTxs, txs...)
+
+	txCntInAccount := len(txs)
+	page, begin, end := getBeginAndEndByPage(uint64(txCntInAccount), p, ps)
+	txs = txs[begin:end]
+
+	var retTxs []*RetDetailAccountTxInfo
+	for i := 0; i < len(txs); i++ {
+		data := txs[i]
+
+		timeStamp := big.NewInt(0)
+		var age string
+		if timeStamp.UnmarshalText([]byte(data.Timestamp)) == nil {
+			age = getElpasedTimeDesc(timeStamp.Div(timeStamp, big.NewInt(1e9)))
+		}
+
+		var inOrOut bool
+		if data.To == address {
+			inOrOut = true
+		} else {
+			inOrOut = false
+		}
+
+		simpleTransaction := &RetDetailAccountTxInfo{
+			ShardNumber: data.ShardNumber,
+			TxType:      data.TxType,
+			Hash:        data.Hash,
+			Block:       data.Block,
+			From:        data.From,
+			To:          data.To,
+			Value:       data.Amount,
+			Age:         age,
+			Fee:         data.Fee,
+			InOrOut:     inOrOut,
+			Pending:     data.Pending,
+		}
+		retTxs = append(retTxs, simpleTransaction)
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"code":    apiOk,
+		"message": "",
+		"data": gin.H{
+			"pageInfo": gin.H{
+				"totalCount": txCntInAccount,
+				"begin":      begin,
+				"end":        end,
+				"curPage":    page + 1,
+			},
+			"list": retTxs,
+		},
+	})
+}
+
 //GetTxs get all transactions by order or by block
 func (h *BlockHandler) GetTxs() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -566,6 +650,12 @@ func (h *BlockHandler) GetTxs() gin.HandlerFunc {
 				h.GetTxsInBlock(c, shardNumber, height, p, ps)
 				return
 			}
+		}
+
+		address, flag := c.GetQuery("address")
+		if flag {
+			h.GetTxsInAccount(c, address, p, ps)
+			return
 		}
 
 		txCnt, err := dbClinet.GetTxCntByShardNumber(shardNumber)
@@ -717,7 +807,7 @@ func (h *BlockHandler) Search(accHandler *AccountHandler, contractHanlder *Contr
 		}
 
 		dbContract := contractHanlder.GetContractByAddressImpl(content)
-		if dbAccount != nil {
+		if dbContract != nil {
 			c.JSON(http.StatusOK, gin.H{
 				"code":    apiOk,
 				"message": "",

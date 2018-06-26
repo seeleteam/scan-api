@@ -117,7 +117,7 @@ func (n *NodeService) ProcessSinglePeer(peer *rpc.PeerInfo, c chan int) {
 	}
 
 	n.nodeMapLock.Lock()
-	n.nodeMap[nodeInfo.Host] = nodeInfo
+	n.nodeMap[nodeInfo.ID] = nodeInfo
 	n.nodeMapLock.Unlock()
 	_, err = n.nodeDB.GetNodeInfoByID(nodeInfo.ID)
 	if err == mgo.ErrNotFound {
@@ -160,6 +160,7 @@ func (n *NodeService) FindNode() {
 		}
 
 		peerInfos, err := rpc.GetPeersInfo()
+		fmt.Println(peerInfos)
 		if err != nil {
 			log.Fatal(err)
 			continue

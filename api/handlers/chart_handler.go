@@ -298,9 +298,6 @@ func (h *ChartHandler) GetEveryDayAddress() gin.HandlerFunc {
 func (h *ChartHandler) GetEveryDayBlockDifficulty() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		s, _ := strconv.ParseInt(c.Query("s"), 10, 64)
-		if s <= 0 {
-			s = 1
-		}
 		shardNumber := int(s)
 
 		dbClinet := h.DBClient
@@ -323,9 +320,6 @@ func (h *ChartHandler) GetEveryDayBlockDifficulty() gin.HandlerFunc {
 func (h *ChartHandler) GetEveryDayBlockTime() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		s, _ := strconv.ParseInt(c.Query("s"), 10, 64)
-		if s <= 0 {
-			s = 1
-		}
 		shardNumber := int(s)
 
 		dbClinet := h.DBClient
@@ -390,9 +384,6 @@ func (h *ChartHandler) GetEveryDayBlock() gin.HandlerFunc {
 func (h *ChartHandler) GetTopMiners() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		s, _ := strconv.ParseInt(c.Query("s"), 10, 64)
-		if s <= 0 {
-			s = 1
-		}
 		shardNumber := int(s)
 
 		dbClinet := h.DBClient
@@ -415,9 +406,6 @@ func (h *ChartHandler) GetTopMiners() gin.HandlerFunc {
 func (h *ChartHandler) GetEveryHashRate() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		s, _ := strconv.ParseInt(c.Query("s"), 10, 64)
-		if s <= 0 {
-			s = 1
-		}
 		shardNumber := int(s)
 
 		dbClinet := h.DBClient

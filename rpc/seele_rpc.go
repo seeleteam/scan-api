@@ -6,6 +6,7 @@
 package rpc
 
 import (
+	"fmt"
 	"math/big"
 )
 
@@ -111,15 +112,19 @@ func (rpc *SeeleRPC) GetPeersInfo() (result []PeerInfo, err error) {
 			capString := rpcCaps[j].(string)
 			caps = append(caps, capString)
 		}
-		prcPeerNetWork := rpcPeerInfo["network"].(map[string]interface{})
-		localAddress := prcPeerNetWork["localAddress"].(string)
-		remoteAddress := prcPeerNetWork["remoteAddress"].(string)
+		rpcPeerNetWork := rpcPeerInfo["network"].(map[string]interface{})
+		localAddress := rpcPeerNetWork["localAddress"].(string)
+		remoteAddress := rpcPeerNetWork["remoteAddress"].(string)
+		shardNumber := int(rpcPeerInfo["shard"].(float64))
+		fmt.Println(remoteAddress)
+		fmt.Println(localAddress)
 
 		peerInfo := PeerInfo{
 			ID:            id,
 			Caps:          caps,
 			LocalAddress:  localAddress,
 			RemoteAddress: remoteAddress,
+			ShardNumber:   shardNumber,
 		}
 
 		peerInfos = append(peerInfos, peerInfo)
@@ -147,7 +152,18 @@ func (rpc *SeeleRPC) GetReceiptByTxHash(txhash string) (*Receipt, error) {
 		return nil, err
 	}
 
-	var receipt Receipt
+	fmt.Println(rpcOutputReceipt)
+	result := rpcOutputReceipt["result"].(string)
+	postState := rpcOutputReceipt["poststate"].(string)
+	txHash := rpcOutputReceipt["txhash"].(string)
+	contractAddress := rpcOutputReceipt["contract"].(string)
+
+	receipt := Receipt{
+		Result:          result,
+		PostState:       postState,
+		TxHash:          txHash,
+		ContractAddress: contractAddress,
+	}
 	return &receipt, nil
 }
 

@@ -5,7 +5,7 @@
     "DefaultHammerTime": 30,
     "WriteLog": true,
     "LogLevel": "debug",
-    "LogFile": "scan-api.log",
+    "LogFile": "scan-api",
     "DisableConsoleColor": true,
     "LimitConnections": 0,
     "MaxHeaderBytes": 20, 
@@ -18,5 +18,5 @@
     "DataBaseConnUrl":"127.0.0.1:27017",
     "DataBaseName":"seele",
     "Interval":30
-  }
+}
   
