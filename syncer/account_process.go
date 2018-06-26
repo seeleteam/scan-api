@@ -49,16 +49,17 @@ func (s *Syncer) accountSync(b *rpc.BlockInfo) error {
 			s.db.UpdateAccount(tx.From, balance, txCnt)
 		}
 
-		if tx.To == nullAddress {
+		if tx.To == "" {
 			//create contract transaction
 			//Get contract address from receipt
 
 			receipt, err := s.rpc.GetReceiptByTxHash(tx.Hash)
-			if err != nil {
+			if err == nil {
 				contractAddress := receipt.ContractAddress
 				contractAccount := database.CreateEmptyAccount(contractAddress, s.shardNumber)
 				contractAccount.AccType = 1
 				err := s.db.AddAccount(contractAccount)
+
 				if err != nil {
 					log.Error("[DB] err : %v", err)
 					continue
@@ -76,7 +77,7 @@ func (s *Syncer) accountSync(b *rpc.BlockInfo) error {
 					balance = 0
 				}
 
-				txCnt, err := s.db.GetTxCntByShardNumberAndAddress(s.shardNumber, tx.From)
+				txCnt, err := s.db.GetTxCntByShardNumberAndAddress(s.shardNumber, contractAddress)
 				if err != nil {
 					log.Error(err)
 					txCnt = 0
@@ -108,7 +109,7 @@ func (s *Syncer) accountSync(b *rpc.BlockInfo) error {
 				balance = 0
 			}
 
-			txCnt, err := s.db.GetTxCntByShardNumberAndAddress(s.shardNumber, tx.From)
+			txCnt, err := s.db.GetTxCntByShardNumberAndAddress(s.shardNumber, tx.To)
 			if err != nil {
 				log.Error(err)
 				txCnt = 0

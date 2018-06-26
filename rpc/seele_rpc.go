@@ -152,7 +152,18 @@ func (rpc *SeeleRPC) GetReceiptByTxHash(txhash string) (*Receipt, error) {
 		return nil, err
 	}
 
-	var receipt Receipt
+	fmt.Println(rpcOutputReceipt)
+	result := rpcOutputReceipt["result"].(string)
+	postState := rpcOutputReceipt["poststate"].(string)
+	txHash := rpcOutputReceipt["txhash"].(string)
+	contractAddress := rpcOutputReceipt["contract"].(string)
+
+	receipt := Receipt{
+		Result:          result,
+		PostState:       postState,
+		TxHash:          txHash,
+		ContractAddress: contractAddress,
+	}
 	return &receipt, nil
 }
 

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"sync"
@@ -187,6 +188,12 @@ func (h *AccountHandler) GetAccountByAddressImpl(address string) *RetDetailAccou
 
 	data, err := dbClinet.GetAccountByAddress(address)
 	if err != nil {
+		return nil
+	}
+
+	fmt.Println(data)
+
+	if data.AccType != 0 {
 		return nil
 	}
 

@@ -492,7 +492,19 @@ func (h *BlockHandler) GetTxsInBlock(c *gin.Context, shardNumber int, height, p,
 
 	block, err := dbClinet.GetBlockByHeight(shardNumber, height)
 	if err != nil {
-		responseError(c, errGetBlockHeightFromDB, http.StatusInternalServerError, apiDBQueryError)
+		c.JSON(http.StatusOK, gin.H{
+			"code":    apiOk,
+			"message": "",
+			"data": gin.H{
+				"pageInfo": gin.H{
+					"totalCount": 0,
+					"begin":      0,
+					"end":        0,
+					"curPage":    0,
+				},
+				"list": nil,
+			},
+		})
 		return
 	}
 
@@ -795,7 +807,7 @@ func (h *BlockHandler) Search(accHandler *AccountHandler, contractHanlder *Contr
 		}
 
 		dbContract := contractHanlder.GetContractByAddressImpl(content)
-		if dbAccount != nil {
+		if dbContract != nil {
 			c.JSON(http.StatusOK, gin.H{
 				"code":    apiOk,
 				"message": "",

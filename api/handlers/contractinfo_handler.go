@@ -132,6 +132,10 @@ func (h *ContractHandler) GetContractByAddressImpl(address string) *RetDetailAcc
 		return nil
 	}
 
+	if data.AccType != 1 {
+		return nil
+	}
+
 	txs, err := dbClinet.GetTxsByAddresss(address, txCount)
 	if err != nil {
 		return nil

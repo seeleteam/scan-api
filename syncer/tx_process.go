@@ -1,6 +1,8 @@
 package syncer
 
 import (
+	"fmt"
+
 	"github.com/seeleteam/scan-api/database"
 	"github.com/seeleteam/scan-api/log"
 	"github.com/seeleteam/scan-api/rpc"
@@ -13,7 +15,9 @@ func (s *Syncer) txSync(block *rpc.BlockInfo) error {
 		transIdx, err := s.db.GetTxCntByShardNumber(s.shardNumber)
 
 		//must be an create contract transaction
-		if trans.To == nullAddress {
+		if trans.To == "" {
+
+			fmt.Println("null address")
 			trans.TxType = 1
 
 			receipt, err := s.rpc.GetReceiptByTxHash(trans.Hash)
