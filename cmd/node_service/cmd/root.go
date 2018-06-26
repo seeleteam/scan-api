@@ -28,7 +28,7 @@ var rootCmd = &cobra.Command{
 			return
 		}
 
-		if log.NewLogger(config.LogLevel, config.WriteLog) == nil {
+		if log.NewLogger(config.LogFile, config.LogLevel, config.WriteLog) == nil {
 			fmt.Println("Log init failed")
 			return
 		}

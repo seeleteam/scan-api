@@ -19,13 +19,12 @@ import (
 var logs *logrus.Logger
 
 const (
-	defaultLogPath       = "scan-api-log"
-	defaultLogErrorLevel = "scan-api-log/error.log"
-	defaultLogFile       = "all.logs"
+	errorLevel     = "scan-api-log/error.log"
+	defaultLogFile = "all.logs"
 )
 
 //NewLogger create the log instance
-func NewLogger(logLevel string, writeLog bool) *logrus.Logger {
+func NewLogger(logFile string, logLevel string, writeLog bool) *logrus.Logger {
 	if logs != nil {
 		return logs
 	}
@@ -39,9 +38,9 @@ func NewLogger(logLevel string, writeLog bool) *logrus.Logger {
 	}
 
 	if writeLog {
-		_ = os.Mkdir(defaultLogPath, 0777)
+		_ = os.Mkdir(logFile, 0777)
 
-		path := defaultLogPath + string(os.PathSeparator) + defaultLogFile
+		path := logFile + string(os.PathSeparator) + defaultLogFile
 		writer, err := rotatelogs.New(
 			path+".%Y%m%d%H%M",
 			rotatelogs.WithLinkName(path),
@@ -62,7 +61,7 @@ func NewLogger(logLevel string, writeLog bool) *logrus.Logger {
 		))
 
 		pathMap := lfshook.PathMap{
-			logrus.ErrorLevel: defaultLogErrorLevel,
+			logrus.ErrorLevel: logFile + string(os.PathSeparator) + defaultLogFile,
 		}
 		logs.AddHook(lfshook.NewHook(
 			pathMap,
