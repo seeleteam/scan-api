@@ -16,6 +16,10 @@ type Syncer struct {
 	db          Database
 	shardNumber int
 	syncCnt     int
+
+	cacheAccount  map[string]*database.DBAccount
+	updateAccount map[string]*database.DBAccount
+	newAccount    map[string]*database.DBAccount
 }
 
 //NewSyncer return a syncer to sync block data from seele node
@@ -31,10 +35,13 @@ func NewSyncer(db Database, rpcConnUrl string, shardNumber int) *Syncer {
 	}
 
 	return &Syncer{
-		db:          db,
-		rpc:         rpc,
-		shardNumber: shardNumber,
-		syncCnt:     0,
+		db:            db,
+		rpc:           rpc,
+		shardNumber:   shardNumber,
+		syncCnt:       0,
+		cacheAccount:  make(map[string]*database.DBAccount),
+		updateAccount: make(map[string]*database.DBAccount),
+		newAccount:    make(map[string]*database.DBAccount),
 	}
 }
 
@@ -190,6 +197,8 @@ func (s *Syncer) sync() error {
 			break
 		}
 	}
+
+	s.accountUpdateSync()
 
 	err = s.pendingTxsSync()
 	if err != nil {

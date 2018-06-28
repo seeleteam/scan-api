@@ -106,13 +106,14 @@ type RetDetailAccountTxInfo struct {
 
 //RetDetailAccountInfo describle the detail account info which send to the frontend
 type RetDetailAccountInfo struct {
-	AccType     int                      `json:"accType"`
-	ShardNumber int                      `json:"shardnumber"`
-	Address     string                   `json:"address"`
-	Balance     int64                    `json:"balance"`
-	Percentage  float64                  `json:"percentage"`
-	TxCount     int64                    `json:"txcount"`
-	Txs         []RetDetailAccountTxInfo `json:"txs"`
+	AccType              int                      `json:"accType"`
+	ShardNumber          int                      `json:"shardnumber"`
+	Address              string                   `json:"address"`
+	Balance              int64                    `json:"balance"`
+	Percentage           float64                  `json:"percentage"`
+	TxCount              int64                    `json:"txcount"`
+	ContractCreationCode string                   `json:"contractCreationCode"`
+	Txs                  []RetDetailAccountTxInfo `json:"txs"`
 }
 
 //createRetSimpleBlockInfo converts the given dbblock to the retsimpleblockinfo
@@ -234,6 +235,10 @@ func createRetDetailAccountInfo(account *database.DBAccount, txs []*database.DBT
 		tx.Fee = txs[i].Fee
 		tx.Pending = txs[i].Pending
 		ret.Txs = append(ret.Txs, tx)
+
+		if txs[i].TxType == 1 {
+			ret.ContractCreationCode = txs[i].Payload
+		}
 	}
 	ret.ShardNumber = account.ShardNumber
 

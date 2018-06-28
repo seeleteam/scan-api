@@ -7,31 +7,28 @@ import (
 )
 
 func (s *Syncer) txSync(block *rpc.BlockInfo) error {
+	transIdx, _ := s.db.GetTxCntByShardNumber(s.shardNumber)
+
 	for j := 0; j < len(block.Txs); j++ {
 		trans := block.Txs[j]
 		trans.Block = block.Height
-		transIdx, err := s.db.GetTxCntByShardNumber(s.shardNumber)
-
 		//must be an create contract transaction
 		if trans.To == "" {
 
 			trans.TxType = 1
 
 			receipt, err := s.rpc.GetReceiptByTxHash(trans.Hash)
-			if err != nil {
+			if err == nil {
 				trans.To = receipt.ContractAddress
 			}
 		}
 
-		if err == nil {
-			trans.Idx = transIdx
-			dbTx := database.CreateDbTx(trans)
-			dbTx.Pending = false
-			dbTx.ShardNumber = s.shardNumber
-			s.db.AddTx(dbTx)
-		} else {
-			return err
-		}
+		transIdx++
+		trans.Idx = transIdx
+		dbTx := database.CreateDbTx(trans)
+		dbTx.Pending = false
+		dbTx.ShardNumber = s.shardNumber
+		s.db.AddTx(dbTx)
 	}
 
 	return nil

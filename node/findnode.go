@@ -98,27 +98,38 @@ func (n *NodeService) ProcessSinglePeer(peer *rpc.PeerInfo, c chan int) {
 		caps += peer.Caps[i]
 	}
 	nodeInfo.Caps = caps
-	fmt.Println(peer.RemoteAddress)
 	ipAndPort := strings.Split(peer.RemoteAddress, ":")
 	nodeInfo.Host = ipAndPort[0]
 	nodeInfo.Port = ipAndPort[1]
 	geo, err := getGeoInfoByHTTP(nodeInfo.Host)
 	if err != nil {
-		return
+		nodeInfo.Country = "unknow"
+		nodeInfo.Region = "unknow"
+		nodeInfo.City = "unknow"
+		nodeInfo.LongitudeAndLatitude = "unknow"
+	} else {
+		nodeInfo.Country = geo.GeopluginCountryName
+		nodeInfo.Region = geo.GeopluginRegionName
+		nodeInfo.City = geo.GeopluginCity
+		nodeInfo.LongitudeAndLatitude = string('[') + geo.GeopluginLongitude + string(',') + geo.GeopluginLatitude + string(']')
 	}
-	nodeInfo.Country = geo.GeopluginCountryName
-	nodeInfo.Region = geo.GeopluginRegionName
-	nodeInfo.City = geo.GeopluginCity
+
 	nodeInfo.LastSeen = time.Now().Unix()
-	nodeInfo.LongitudeAndLatitude = string('[') + geo.GeopluginLongitude + string(',') + geo.GeopluginLatitude + string(']')
 	nodeInfo.ShardNumber = peer.ShardNumber
 	if nodeInfo.ShardNumber <= 0 {
 		nodeInfo.ShardNumber = 1
 	}
 
+	key := getNodeKey(peer)
 	n.nodeMapLock.Lock()
-	n.nodeMap[nodeInfo.ID] = nodeInfo
-	n.nodeMapLock.Unlock()
+	if _, ok := n.nodeMap[key]; !ok {
+		n.nodeMap[key] = nodeInfo
+		n.nodeMapLock.Unlock()
+	} else {
+		n.nodeMapLock.Unlock()
+		return
+	}
+
 	_, err = n.nodeDB.GetNodeInfoByID(nodeInfo.ID)
 	if err == mgo.ErrNotFound {
 		n.nodeDB.AddNodeInfo(&nodeInfo)
@@ -134,6 +145,16 @@ func (n *NodeService) DeleteExpireNode() {
 			delete(n.nodeMap, k)
 		}
 	}
+}
+
+func getNodeKey(p *rpc.PeerInfo) string {
+	ipAndPort := strings.Split(p.RemoteAddress, ":")
+	host := ipAndPort[0]
+	return p.ID + "-" + host
+}
+
+func getNodeKeyByNodeInfo(n *database.DBNodeInfo) string {
+	return n.ID + "-" + n.Host
 }
 
 //FindNode get all peers info and store them into database
@@ -160,7 +181,6 @@ func (n *NodeService) FindNode() {
 		}
 
 		peerInfos, err := rpc.GetPeersInfo()
-		fmt.Println(peerInfos)
 		if err != nil {
 			log.Fatal(err)
 			continue
@@ -176,7 +196,8 @@ func (n *NodeService) FindNode() {
 	cnum := make(chan int, len(allPeerInfos))
 	for i := 0; i < len(allPeerInfos); i++ {
 		peer := allPeerInfos[i]
-		if v, ok := n.nodeMap[peer.ID]; ok {
+		key := getNodeKey(&peer)
+		if v, ok := n.nodeMap[key]; ok {
 			v.LastSeen = time.Now().Unix()
 			cnum <- 1
 		} else {
@@ -199,7 +220,8 @@ func (n *NodeService) RestoreNodeFromDB() {
 	now := time.Now().Unix()
 	for i := 0; i < len(nodes); i++ {
 		nodes[i].LastSeen = now
-		n.nodeMap[nodes[i].ID] = *nodes[i]
+		key := getNodeKeyByNodeInfo(nodes[i])
+		n.nodeMap[key] = *nodes[i]
 	}
 }
 

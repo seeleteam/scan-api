@@ -6,7 +6,6 @@
 package rpc
 
 import (
-	"fmt"
 	"math/big"
 )
 
@@ -116,8 +115,6 @@ func (rpc *SeeleRPC) GetPeersInfo() (result []PeerInfo, err error) {
 		localAddress := rpcPeerNetWork["localAddress"].(string)
 		remoteAddress := rpcPeerNetWork["remoteAddress"].(string)
 		shardNumber := int(rpcPeerInfo["shard"].(float64))
-		fmt.Println(remoteAddress)
-		fmt.Println(localAddress)
 
 		peerInfo := PeerInfo{
 			ID:            id,
@@ -152,7 +149,6 @@ func (rpc *SeeleRPC) GetReceiptByTxHash(txhash string) (*Receipt, error) {
 		return nil, err
 	}
 
-	fmt.Println(rpcOutputReceipt)
 	result := rpcOutputReceipt["result"].(string)
 	postState := rpcOutputReceipt["poststate"].(string)
 	txHash := rpcOutputReceipt["txhash"].(string)
