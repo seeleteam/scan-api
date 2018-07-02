@@ -3,11 +3,16 @@ package syncer
 import (
 	"fmt"
 
+	"github.com/gammazero/workerpool"
 	"github.com/seeleteam/scan-api/database"
 	"github.com/seeleteam/scan-api/log"
 	"github.com/seeleteam/scan-api/rpc"
 
 	"time"
+)
+
+const (
+	maxInsertConn = 200
 )
 
 //Syncer
@@ -16,10 +21,10 @@ type Syncer struct {
 	db          Database
 	shardNumber int
 	syncCnt     int
+	workerpool  *workerpool.WorkerPool
 
 	cacheAccount  map[string]*database.DBAccount
 	updateAccount map[string]*database.DBAccount
-	newAccount    map[string]*database.DBAccount
 }
 
 //NewSyncer return a syncer to sync block data from seele node
@@ -41,7 +46,7 @@ func NewSyncer(db Database, rpcConnUrl string, shardNumber int) *Syncer {
 		syncCnt:       0,
 		cacheAccount:  make(map[string]*database.DBAccount),
 		updateAccount: make(map[string]*database.DBAccount),
-		newAccount:    make(map[string]*database.DBAccount),
+		workerpool:    workerpool.New(maxInsertConn),
 	}
 }
 
@@ -102,7 +107,8 @@ func (s *Syncer) checkOlderBlocks() bool {
 				txCnt = 0
 			}
 
-			s.db.UpdateAccount(tx.To, toAccount.Balance, txCnt)
+			toAccount.TxCount = int64(txCnt)
+			s.db.UpdateAccount(toAccount)
 
 			if tx.From != nullAddress {
 				fromAccount, err := s.db.GetAccountByAddress(tx.From)
@@ -119,7 +125,8 @@ func (s *Syncer) checkOlderBlocks() bool {
 					txCnt = 0
 				}
 
-				s.db.UpdateAccount(tx.To, fromAccount.Balance, txCnt)
+				fromAccount.TxCount = int64(txCnt)
+				s.db.UpdateAccount(fromAccount)
 			}
 		}
 

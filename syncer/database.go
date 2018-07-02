@@ -14,7 +14,7 @@ type Database interface {
 	AddPendingTx(tx *database.DBTx) error
 	GetAccountByAddress(address string) (*database.DBAccount, error)
 	AddAccount(account *database.DBAccount) error
-	UpdateAccount(address string, balance int64, txCnt int64) error
+	UpdateAccount(account *database.DBAccount) error
 	UpdateAccountMinedBlock(address string, mined int64) error
 	GetTxCntByShardNumber(shardNumber int) (uint64, error)
 	GetPendingTxCntByShardNumber(shardNumber int) (uint64, error)

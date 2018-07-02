@@ -41,9 +41,10 @@ func Process(wg *sync.WaitGroup) {
 //ProcessOldHashRate Calculate hashrate in the past days
 func ProcessOldHashRate() {
 	for i := 1; i <= chart.ShardCount; i++ {
+		now := time.Now()
+		todayZeroTime := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+
 		for {
-			now := time.Now()
-			todayZeroTime := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
 
 			lastZeroTime := todayZeroTime.Add(-time.Hour * 24)
 			_, err := chart.GChartDB.GetOneDayHashRate(i, lastZeroTime.Unix())

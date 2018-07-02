@@ -102,6 +102,8 @@ func NewAccHandler(DBClient BlockInfoDB) *AccountHandler {
 }
 
 func (h *AccountHandler) updateImpl() {
+	fmt.Println("here")
+
 	for i := 1; i < shardCount; i++ {
 		h.accTbls[i-1].ProcessGAccountTable()
 	}
@@ -190,8 +192,6 @@ func (h *AccountHandler) GetAccountByAddressImpl(address string) *RetDetailAccou
 	if err != nil {
 		return nil
 	}
-
-	fmt.Println(data)
 
 	if data.AccType != 0 {
 		return nil

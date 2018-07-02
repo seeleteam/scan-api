@@ -210,7 +210,7 @@ func createRetDetailAccountInfo(account *database.DBAccount, txs []*database.DBT
 	ret.AccType = account.AccType
 	ret.Address = account.Address
 	ret.Balance = account.Balance
-	ret.TxCount = int64(len(txs))
+	ret.TxCount = account.TxCount
 	ret.Percentage = (float64(ret.Balance) / float64(ttBalance))
 
 	for i := 0; i < len(txs); i++ {

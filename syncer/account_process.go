@@ -1,6 +1,8 @@
 package syncer
 
 import (
+	"sync"
+
 	"github.com/seeleteam/scan-api/log"
 	"github.com/seeleteam/scan-api/rpc"
 
@@ -19,15 +21,12 @@ func (s *Syncer) getAccountFromDBOrCache(address string) *database.DBAccount {
 	}
 
 	fromAccount, err := s.db.GetAccountByAddress(address)
-	if err == nil {
-		s.updateAccount[address] = account
-		s.cacheAccount[address] = fromAccount
-		return fromAccount
+	if err != nil {
+		fromAccount = database.CreateEmptyAccount(address, s.shardNumber)
 	}
 
-	fromAccount = database.CreateEmptyAccount(address, s.shardNumber)
+	s.updateAccount[address] = fromAccount
 	s.cacheAccount[address] = fromAccount
-	s.newAccount[address] = fromAccount
 	return fromAccount
 }
 
@@ -153,36 +152,32 @@ func (s *Syncer) accountSync(b *rpc.BlockInfo) error {
 }
 
 func (s *Syncer) accountUpdateSync() {
-	for _, v := range s.newAccount {
-		balance, err := s.rpc.GetBalance(v.Address)
-		if err != nil {
-			log.Error(err)
-			balance = 0
-		}
-		v.Balance = balance
+	// for _, v := range s.newAccount {
+	// 	balance, err := s.rpc.GetBalance(v.Address)
+	// 	if err != nil {
+	// 		log.Error(err)
+	// 		balance = 0
+	// 	}
+	// 	v.Balance = balance
 
-		// txCnt, err := s.db.GetTxCntByShardNumberAndAddress(s.shardNumber, v.Address)
-		// if err != nil {
-		// 	log.Error(err)
-		// 	txCnt = 0
-		// }
-		// v.TxCount = txCnt
+	// 	// txCnt, err := s.db.GetTxCntByShardNumberAndAddress(s.shardNumber, v.Address)
+	// 	// if err != nil {
+	// 	// 	log.Error(err)
+	// 	// 	txCnt = 0
+	// 	// }
+	// 	// v.TxCount = txCnt
 
-		err = s.db.AddAccount(v)
-		if err != nil {
-			log.Error("[DB] err : %v", err)
-			continue
-		}
-	}
+	// 	err = s.db.AddAccount(v)
+	// 	if err != nil {
+	// 		log.Error("[DB] err : %v", err)
+	// 		continue
+	// 	}
+	// }
+
+	var wg sync.WaitGroup
+	wg.Add(len(s.updateAccount))
 
 	for _, v := range s.updateAccount {
-		balance, err := s.rpc.GetBalance(v.Address)
-		if err != nil {
-			log.Error(err)
-			balance = 0
-		}
-
-		v.Balance = balance
 
 		// txCnt, err := s.db.GetTxCntByShardNumberAndAddress(s.shardNumber, v.Address)
 		// if err != nil {
@@ -192,9 +187,23 @@ func (s *Syncer) accountUpdateSync() {
 
 		// v.TxCount = txCnt
 
-		s.db.UpdateAccount(v.Address, balance, v.TxCount)
+		s.workerpool.Submit(func() {
+			account := v
+			balance, err := s.rpc.GetBalance(account.Address)
+			if err != nil {
+				log.Error(err)
+				balance = 0
+			}
+
+			account.Balance = balance
+
+			s.db.UpdateAccount(account)
+
+			wg.Done()
+		})
 	}
 
-	s.newAccount = make(map[string]*database.DBAccount)
+	wg.Wait()
+
 	s.updateAccount = make(map[string]*database.DBAccount)
 }

@@ -36,10 +36,11 @@ func Process(wg *sync.WaitGroup) {
 //ProcessOldTransactions Count transactions happened in the past days
 func ProcessOldTransactions() {
 	for i := 1; i <= chart.ShardCount; i++ {
+		now := time.Now()
+		//lastZeroTime := now.Add(-time.Hour * 24)
+		todayZeroTime := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+
 		for {
-			now := time.Now()
-			//lastZeroTime := now.Add(-time.Hour * 24)
-			todayZeroTime := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
 
 			lastZeroTime := todayZeroTime.Add(-time.Hour * 24)
 			_, err := chart.GChartDB.GetOneDayTransInfo(i, lastZeroTime.Unix())

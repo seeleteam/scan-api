@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	sevenDays = time.Hour * 24 * 7
+	sevenDays = time.Hour * 24 * 30
 )
 
 //MinerRankInfoSlice rank array
