@@ -1,38 +1,46 @@
 package syncer
 
 import (
+	"sync"
+
 	"github.com/seeleteam/scan-api/database"
 	"github.com/seeleteam/scan-api/log"
 	"github.com/seeleteam/scan-api/rpc"
 )
 
 func (s *Syncer) txSync(block *rpc.BlockInfo) error {
+	transIdx, _ := s.db.GetTxCntByShardNumber(s.shardNumber)
+
+	var wg sync.WaitGroup
+	wg.Add(len(block.Txs))
+
 	for j := 0; j < len(block.Txs); j++ {
 		trans := block.Txs[j]
 		trans.Block = block.Height
-		transIdx, err := s.db.GetTxCntByShardNumber(s.shardNumber)
-
 		//must be an create contract transaction
 		if trans.To == "" {
 
 			trans.TxType = 1
 
 			receipt, err := s.rpc.GetReceiptByTxHash(trans.Hash)
-			if err != nil {
+			if err == nil {
 				trans.To = receipt.ContractAddress
 			}
 		}
 
-		if err == nil {
-			trans.Idx = transIdx
-			dbTx := database.CreateDbTx(trans)
-			dbTx.Pending = false
-			dbTx.ShardNumber = s.shardNumber
+		transIdx++
+		trans.Idx = transIdx
+		dbTx := database.CreateDbTx(trans)
+		dbTx.Pending = false
+		dbTx.ShardNumber = s.shardNumber
+
+		s.workerpool.Submit(func() {
 			s.db.AddTx(dbTx)
-		} else {
-			return err
-		}
+			wg.Done()
+		})
 	}
+
+	wg.Wait()
 
 	return nil
 }
@@ -48,6 +56,7 @@ func (s *Syncer) pendingTxsSync() error {
 	}
 
 	for i := 0; i < len(txs); i++ {
+		transIdx++
 		txs[i].Idx = transIdx
 		dbTx := database.CreateDbTx(txs[i])
 		dbTx.ShardNumber = s.shardNumber

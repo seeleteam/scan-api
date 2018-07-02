@@ -7,9 +7,11 @@ package handlers
 
 import (
 	"net/http"
+	"sort"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/seeleteam/scan-api/chart/topminers"
 	"github.com/seeleteam/scan-api/database"
 )
 
@@ -117,6 +119,84 @@ func addUpOneDayBlockInfo(oneDayBlocks []*database.DBOneDayBlockInfo) []*databas
 			}
 		}
 
+		ret = append(ret, &info)
+	}
+	return ret
+}
+
+func averageOneDayBlockDifficulty(oneDayBlockDifficulties []*database.DBOneDayBlockDifficulty) []*database.DBOneDayBlockDifficulty {
+	var ret []*database.DBOneDayBlockDifficulty
+	set := NewSet()
+	for i := 0; i < len(oneDayBlockDifficulties); i++ {
+		if set.Has(oneDayBlockDifficulties[i].TimeStamp) {
+			continue
+		}
+
+		countShard := 0
+		var info database.DBOneDayBlockDifficulty
+		set.Add(oneDayBlockDifficulties[i].TimeStamp)
+		for j := 0; j < len(oneDayBlockDifficulties); j++ {
+			if oneDayBlockDifficulties[j].TimeStamp == oneDayBlockDifficulties[i].TimeStamp {
+				info.TimeStamp = oneDayBlockDifficulties[j].TimeStamp
+				info.ShardNumber = 1
+				info.Difficulty += oneDayBlockDifficulties[j].Difficulty
+				countShard++
+			}
+		}
+
+		info.Difficulty = info.Difficulty / float64(countShard)
+		ret = append(ret, &info)
+	}
+	return ret
+}
+
+func averageOneDayBlockTime(oneDayBlockTimes []*database.DBOneDayBlockAvgTime) []*database.DBOneDayBlockAvgTime {
+	var ret []*database.DBOneDayBlockAvgTime
+	set := NewSet()
+	for i := 0; i < len(oneDayBlockTimes); i++ {
+		if set.Has(oneDayBlockTimes[i].TimeStamp) {
+			continue
+		}
+
+		countShard := 0
+		var info database.DBOneDayBlockAvgTime
+		set.Add(oneDayBlockTimes[i].TimeStamp)
+		for j := 0; j < len(oneDayBlockTimes); j++ {
+			if oneDayBlockTimes[j].TimeStamp == oneDayBlockTimes[i].TimeStamp {
+				info.TimeStamp = oneDayBlockTimes[j].TimeStamp
+				info.ShardNumber = 1
+				info.AvgTime += oneDayBlockTimes[j].AvgTime
+				countShard++
+			}
+		}
+
+		info.AvgTime = info.AvgTime / float64(countShard)
+		ret = append(ret, &info)
+	}
+	return ret
+}
+
+func averageOneDayHashRate(oneDayHashRates []*database.DBOneDayHashRate) []*database.DBOneDayHashRate {
+	var ret []*database.DBOneDayHashRate
+	set := NewSet()
+	for i := 0; i < len(oneDayHashRates); i++ {
+		if set.Has(oneDayHashRates[i].TimeStamp) {
+			continue
+		}
+
+		countShard := 0
+		var info database.DBOneDayHashRate
+		set.Add(oneDayHashRates[i].TimeStamp)
+		for j := 0; j < len(oneDayHashRates); j++ {
+			if oneDayHashRates[j].TimeStamp == oneDayHashRates[i].TimeStamp {
+				info.TimeStamp = oneDayHashRates[j].TimeStamp
+				info.ShardNumber = 1
+				info.HashRate += oneDayHashRates[j].HashRate
+				countShard++
+			}
+		}
+
+		info.HashRate = info.HashRate / float64(countShard)
 		ret = append(ret, &info)
 	}
 	return ret
@@ -302,17 +382,33 @@ func (h *ChartHandler) GetEveryDayBlockDifficulty() gin.HandlerFunc {
 
 		dbClinet := h.DBClient
 
-		oneDayBlockDifficulties, err := dbClinet.GetOneDayBlockDifficultyChartByShardNumber(shardNumber)
-		if err != nil {
-			responseError(c, errGetBlockDifficultyChartError, http.StatusInternalServerError, apiDBQueryError)
-			return
+		if shardNumber == 0 {
+			oneDayBlockDifficulties, err := dbClinet.GetOneDayBlockDifficultyChart()
+			if err != nil {
+				responseError(c, errGetBlockDifficultyChartError, http.StatusInternalServerError, apiDBQueryError)
+				return
+			}
+			oneDayBlockDifficulties = averageOneDayBlockDifficulty(oneDayBlockDifficulties)
+
+			c.JSON(http.StatusOK, gin.H{
+				"code":    apiOk,
+				"message": "",
+				"data":    oneDayBlockDifficulties,
+			})
+		} else {
+			oneDayBlockDifficulties, err := dbClinet.GetOneDayBlockDifficultyChartByShardNumber(shardNumber)
+			if err != nil {
+				responseError(c, errGetBlockDifficultyChartError, http.StatusInternalServerError, apiDBQueryError)
+				return
+			}
+
+			c.JSON(http.StatusOK, gin.H{
+				"code":    apiOk,
+				"message": "",
+				"data":    oneDayBlockDifficulties,
+			})
 		}
 
-		c.JSON(http.StatusOK, gin.H{
-			"code":    apiOk,
-			"message": "",
-			"data":    oneDayBlockDifficulties,
-		})
 	}
 }
 
@@ -324,17 +420,33 @@ func (h *ChartHandler) GetEveryDayBlockTime() gin.HandlerFunc {
 
 		dbClinet := h.DBClient
 
-		oneDayBlockTimes, err := dbClinet.GetOneDayBlockAvgTimeChartByShardNumber(shardNumber)
-		if err != nil {
-			responseError(c, errGetBlockTimeChartError, http.StatusInternalServerError, apiDBQueryError)
-			return
+		if shardNumber == 0 {
+			oneDayBlockTimes, err := dbClinet.GetOneDayBlockAvgTimeChart()
+			if err != nil {
+				responseError(c, errGetBlockTimeChartError, http.StatusInternalServerError, apiDBQueryError)
+				return
+			}
+			oneDayBlockTimes = averageOneDayBlockTime(oneDayBlockTimes)
+
+			c.JSON(http.StatusOK, gin.H{
+				"code":    apiOk,
+				"message": "",
+				"data":    oneDayBlockTimes,
+			})
+		} else {
+			oneDayBlockTimes, err := dbClinet.GetOneDayBlockAvgTimeChartByShardNumber(shardNumber)
+			if err != nil {
+				responseError(c, errGetBlockTimeChartError, http.StatusInternalServerError, apiDBQueryError)
+				return
+			}
+
+			c.JSON(http.StatusOK, gin.H{
+				"code":    apiOk,
+				"message": "",
+				"data":    oneDayBlockTimes,
+			})
 		}
 
-		c.JSON(http.StatusOK, gin.H{
-			"code":    apiOk,
-			"message": "",
-			"data":    oneDayBlockTimes,
-		})
 	}
 }
 
@@ -388,17 +500,49 @@ func (h *ChartHandler) GetTopMiners() gin.HandlerFunc {
 
 		dbClinet := h.DBClient
 
-		topMiners, err := dbClinet.GetTopMinerChartByShardNumber(shardNumber)
-		if err != nil {
-			responseError(c, errGetTopMinerChartError, http.StatusInternalServerError, apiDBQueryError)
-			return
+		if shardNumber == 0 {
+			topMiners, err := dbClinet.GetTopMinerChart()
+			if err != nil {
+				responseError(c, errGetTopMinerChartError, http.StatusInternalServerError, apiDBQueryError)
+				return
+			}
+
+			allMined := 0
+			var TopMiners topminers.MinerRankInfoSlice
+			for i := 0; i < len(topMiners); i++ {
+				for j := 0; j < len(topMiners[i].Rank); j++ {
+					TopMiners = append(TopMiners, topMiners[i].Rank[j])
+					allMined += topMiners[i].Rank[j].Mined
+				}
+			}
+
+			for i := 0; i < len(TopMiners); i++ {
+				TopMiners[i].Percentage = float64(float64(TopMiners[i].Mined) / float64(allMined))
+			}
+
+			sort.Stable(TopMiners)
+			topMiners = topMiners[:0]
+			topMiners = append(topMiners, &database.DBMinerRankInfo{Rank: TopMiners, ShardNumber: 1})
+
+			c.JSON(http.StatusOK, gin.H{
+				"code":    apiOk,
+				"message": "",
+				"data":    topMiners,
+			})
+		} else {
+			topMiners, err := dbClinet.GetTopMinerChartByShardNumber(shardNumber)
+			if err != nil {
+				responseError(c, errGetTopMinerChartError, http.StatusInternalServerError, apiDBQueryError)
+				return
+			}
+
+			c.JSON(http.StatusOK, gin.H{
+				"code":    apiOk,
+				"message": "",
+				"data":    topMiners,
+			})
 		}
 
-		c.JSON(http.StatusOK, gin.H{
-			"code":    apiOk,
-			"message": "",
-			"data":    topMiners,
-		})
 	}
 }
 
@@ -410,16 +554,31 @@ func (h *ChartHandler) GetEveryHashRate() gin.HandlerFunc {
 
 		dbClinet := h.DBClient
 
-		oneDayHashRates, err := dbClinet.GetHashRateChartByShardNumber(shardNumber)
-		if err != nil {
-			responseError(c, errGetHashRateChartError, http.StatusInternalServerError, apiDBQueryError)
-			return
-		}
+		if shardNumber == 0 {
+			oneDayHashRates, err := dbClinet.GetHashRateChart()
+			if err != nil {
+				responseError(c, errGetHashRateChartError, http.StatusInternalServerError, apiDBQueryError)
+				return
+			}
+			oneDayHashRates = averageOneDayHashRate(oneDayHashRates)
 
-		c.JSON(http.StatusOK, gin.H{
-			"code":    apiOk,
-			"message": "",
-			"data":    oneDayHashRates,
-		})
+			c.JSON(http.StatusOK, gin.H{
+				"code":    apiOk,
+				"message": "",
+				"data":    oneDayHashRates,
+			})
+		} else {
+			oneDayHashRates, err := dbClinet.GetHashRateChartByShardNumber(shardNumber)
+			if err != nil {
+				responseError(c, errGetHashRateChartError, http.StatusInternalServerError, apiDBQueryError)
+				return
+			}
+
+			c.JSON(http.StatusOK, gin.H{
+				"code":    apiOk,
+				"message": "",
+				"data":    oneDayHashRates,
+			})
+		}
 	}
 }

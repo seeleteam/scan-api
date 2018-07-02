@@ -28,6 +28,18 @@
 			"revisionTime": "2017-01-09T17:00:31Z"
 		},
 		{
+			"checksumSHA1": "/k8o0e5ekReyt3SyfGG/sOnQdr4=",
+			"path": "github.com/gammazero/deque",
+			"revision": "b106e3c6d0a1c0aa9b236c635c0d799d4467ee63",
+			"revisionTime": "2018-05-18T20:02:14Z"
+		},
+		{
+			"checksumSHA1": "o6Bu4WFSzVU48EQEWH3HA4NWc2o=",
+			"path": "github.com/gammazero/workerpool",
+			"revision": "d9f490b52b8724669b5cfb1933cf1461e2a03b41",
+			"revisionTime": "2018-06-21T15:05:20Z"
+		},
+		{
 			"checksumSHA1": "37HJzhdVhezeIdE5RnFROr+nNtA=",
 			"path": "github.com/gin-contrib/cors",
 			"revision": "df6cfb7ff4a38d694dfebd0868ecb3e956171366",
@@ -633,5 +645,5 @@
 			"revision": ""
 		}
 	],
-	"rootPath": "scan-api"
+	"rootPath": "github.com/seeleteam/scan-api"
 }
