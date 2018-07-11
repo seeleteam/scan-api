@@ -443,7 +443,7 @@ func (c *Client) removeAccount(address string) error {
 func (c *Client) GetTxsByAddresss(address string, max int) ([]*DBTx, error) {
 	var trans []*DBTx
 	query := func(c *mgo.Collection) error {
-		return c.Find(bson.M{"$or": []bson.M{bson.M{"from": address}, bson.M{"to": address}}}).Sort("-timestamp").Limit(max).All(&trans)
+		return c.Find(bson.M{"$or": []bson.M{bson.M{"from": address}, bson.M{"to": address}, bson.M{"contractAddress": address}}}).Sort("-timestamp").Limit(max).All(&trans)
 	}
 	err := c.withCollection(txTbl, query)
 	return trans, err
@@ -453,7 +453,7 @@ func (c *Client) GetTxsByAddresss(address string, max int) ([]*DBTx, error) {
 func (c *Client) GetPendingTxsByAddress(address string) ([]*DBTx, error) {
 	var trans []*DBTx
 	query := func(c *mgo.Collection) error {
-		return c.Find(bson.M{"$or": []bson.M{bson.M{"from": address}, bson.M{"to": address}}}).Sort("-timestamp").All(&trans)
+		return c.Find(bson.M{"$or": []bson.M{bson.M{"from": address}, bson.M{"to": address}, bson.M{"contractAddress": address}}}).Sort("-timestamp").All(&trans)
 	}
 	err := c.withCollection(pendingTxTbl, query)
 	return trans, err
@@ -479,10 +479,13 @@ func (c *Client) AddAccount(account *DBAccount) error {
 }
 
 //UpdateAccount update account
-func (c *Client) UpdateAccount(account *DBAccount) error {
+func (c *Client) UpdateAccount(address string, balance int64, txCnt int64) error {
 	query := func(c *mgo.Collection) error {
-		_, err := c.Upsert(bson.M{"address": account.Address}, account)
-		return err
+		return c.Update(bson.M{"address": address},
+			bson.M{"$set": bson.M{
+				"balance": balance,
+				"txCount": txCnt,
+			}})
 	}
 	err := c.withCollection(accTbl, query)
 	if err != nil {

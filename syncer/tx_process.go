@@ -24,7 +24,7 @@ func (s *Syncer) txSync(block *rpc.BlockInfo) error {
 
 			receipt, err := s.rpc.GetReceiptByTxHash(trans.Hash)
 			if err == nil {
-				trans.To = receipt.ContractAddress
+				trans.ContractAddress = receipt.ContractAddress
 			}
 		}
 
