@@ -479,13 +479,10 @@ func (c *Client) AddAccount(account *DBAccount) error {
 }
 
 //UpdateAccount update account
-func (c *Client) UpdateAccount(address string, balance int64, txCnt int64) error {
+func (c *Client) UpdateAccount(account *DBAccount) error {
 	query := func(c *mgo.Collection) error {
-		return c.Update(bson.M{"address": address},
-			bson.M{"$set": bson.M{
-				"balance": balance,
-				"txCount": txCnt,
-			}})
+		_, err := c.Upsert(bson.M{"address": account.Address}, account)
+		return err
 	}
 	err := c.withCollection(accTbl, query)
 	if err != nil {
