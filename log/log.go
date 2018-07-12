@@ -2,7 +2,6 @@
 *  @file
 *  @copyright defined in scan-api/LICENSE
  */
-
 package log
 
 import (
@@ -19,7 +18,7 @@ import (
 var logs *logrus.Logger
 
 const (
-	errorLevel     = "scan-api-log/error.log"
+	errorLevel     = "error.log"
 	defaultLogFile = "all.logs"
 )
 
@@ -61,7 +60,7 @@ func NewLogger(logFile string, logLevel string, writeLog bool) *logrus.Logger {
 		))
 
 		pathMap := lfshook.PathMap{
-			logrus.ErrorLevel: logFile + string(os.PathSeparator) + defaultLogFile,
+			logrus.ErrorLevel: logFile + string(os.PathSeparator) + errorLevel,
 		}
 		logs.AddHook(lfshook.NewHook(
 			pathMap,
