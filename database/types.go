@@ -102,7 +102,6 @@ func CreateDbBlock(b *rpc.BlockInfo) *DBBlock {
 //CreateDbTx convert an rpc transaction to an dbtransaction
 func CreateDbTx(t rpc.Transaction) *DBTx {
 	var trans DBTx
-	trans.TxType = t.TxType
 	trans.Hash = t.Hash
 	trans.From = t.From
 	trans.To = t.To
