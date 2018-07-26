@@ -20,6 +20,8 @@ type Set struct {
 	m map[int64]bool
 }
 
+const showLimit  = 15
+
 //NewSet return an new set
 func NewSet() *Set {
 	return &Set{
@@ -521,8 +523,8 @@ func (h *ChartHandler) GetTopMiners() gin.HandlerFunc {
 			}
 
 			sort.Stable(TopMiners)
-			if len(TopMiners) > 15 {
-				TopMiners = TopMiners[:15]
+			if len(TopMiners) > showLimit {
+				TopMiners = TopMiners[:showLimit]
 			}
 
 			topMiners = topMiners[:0]
@@ -541,8 +543,8 @@ func (h *ChartHandler) GetTopMiners() gin.HandlerFunc {
 			}
 
 			if len(topMiners) > 0 {
-				if len(topMiners[0].Rank) > 15 {
-					topMiners[0].Rank = topMiners[0].Rank[:15]
+				if len(topMiners[0].Rank) > showLimit {
+					topMiners[0].Rank = topMiners[0].Rank[:showLimit]
 				}
 			}
 
