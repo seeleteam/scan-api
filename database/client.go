@@ -223,7 +223,7 @@ func (c *Client) removeTx(idx uint64) error {
 //RemoveTxs Txs by block height
 func (c *Client) RemoveTxs(shard int, blockHeight uint64) error {
 	query := func(c *mgo.Collection) error {
-		return c.Remove(bson.M{"block": strconv.FormatUint(blockHeight, 10), "txtype": shard})
+		return c.Remove(bson.M{"block": strconv.FormatUint(blockHeight, 10), "shardNumber": shard})
 	}
 	err := c.withCollection(txTbl, query)
 	return err
