@@ -6,8 +6,8 @@ import "github.com/seeleteam/scan-api/database"
 type Database interface {
 	GetBlockHeight(shardNumber int) (uint64, error)
 	AddBlock(b *database.DBBlock) error
-	RemoveBlock(height uint64) error
-	RemoveTxs(blockHeight uint64) error
+	RemoveBlock(shard int, height uint64) error
+	RemoveTxs(shard int, blockHeight uint64) error
 	GetBlockByHeight(shardNumber int, height uint64) (*database.DBBlock, error)
 	RemoveAllPendingTxs() error
 	AddTx(tx *database.DBTx) error

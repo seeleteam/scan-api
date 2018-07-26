@@ -17,22 +17,23 @@ func (s *Syncer) txSync(block *rpc.BlockInfo) error {
 	for j := 0; j < len(block.Txs); j++ {
 		trans := block.Txs[j]
 		trans.Block = block.Height
-		//must be an create contract transaction
-		if trans.To == "" {
-
-			trans.TxType = 1
-
-			receipt, err := s.rpc.GetReceiptByTxHash(trans.Hash)
-			if err == nil {
-				trans.ContractAddress = receipt.ContractAddress
-			}
-		}
 
 		transIdx++
 		trans.Idx = transIdx
 		dbTx := database.CreateDbTx(trans)
 		dbTx.Pending = false
 		dbTx.ShardNumber = s.shardNumber
+
+		//must be an create contract transaction
+		if trans.To == "" {
+
+			dbTx.TxType = 1
+
+			receipt, err := s.rpc.GetReceiptByTxHash(trans.Hash)
+			if err == nil {
+				trans.ContractAddress = receipt.ContractAddress
+			}
+		}
 
 		s.workerpool.Submit(func() {
 			s.db.AddTx(dbTx)

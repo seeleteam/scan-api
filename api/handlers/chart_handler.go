@@ -521,6 +521,10 @@ func (h *ChartHandler) GetTopMiners() gin.HandlerFunc {
 			}
 
 			sort.Stable(TopMiners)
+			if len(TopMiners) > 15 {
+				TopMiners = TopMiners[:15]
+			}
+
 			topMiners = topMiners[:0]
 			topMiners = append(topMiners, &database.DBMinerRankInfo{Rank: TopMiners, ShardNumber: 1})
 
@@ -534,6 +538,12 @@ func (h *ChartHandler) GetTopMiners() gin.HandlerFunc {
 			if err != nil {
 				responseError(c, errGetTopMinerChartError, http.StatusInternalServerError, apiDBQueryError)
 				return
+			}
+
+			if len(topMiners) > 0 {
+				if len(topMiners[0].Rank) > 15 {
+					topMiners[0].Rank = topMiners[0].Rank[:15]
+				}
 			}
 
 			c.JSON(http.StatusOK, gin.H{
