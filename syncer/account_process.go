@@ -179,13 +179,13 @@ func (s *Syncer) accountUpdateSync() {
 
 	for _, v := range s.updateAccount {
 
-		// txCnt, err := s.db.GetTxCntByShardNumberAndAddress(s.shardNumber, v.Address)
-		// if err != nil {
-		// 	log.Error(err)
-		// 	txCnt = 0
-		// }
+		txCnt, err := s.db.GetTxCntByShardNumberAndAddress(s.shardNumber, v.Address)
+		if err != nil {
+			log.Error(err)
+			txCnt = 0
+		}
 
-		// v.TxCount = txCnt
+		v.TxCount = txCnt
 
 		s.workerpool.Submit(func() {
 			account := v

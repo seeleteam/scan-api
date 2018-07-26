@@ -104,7 +104,7 @@ func (s *Syncer) checkOlderBlocks() bool {
 					toAccount.Balance = 0
 				}
 
-				txCnt, err := s.db.GetTxCntByShardNumberAndAddress(s.shardNumber, tx.From)
+				txCnt, err := s.db.GetTxCntByShardNumberAndAddress(s.shardNumber, tx.To)
 				if err != nil {
 					log.Error(err)
 					txCnt = 0
@@ -129,7 +129,7 @@ func (s *Syncer) checkOlderBlocks() bool {
 						contractAccount.Balance = 0
 					}
 
-					txCnt, err := s.db.GetTxCntByShardNumberAndAddress(s.shardNumber, tx.From)
+					txCnt, err := s.db.GetTxCntByShardNumberAndAddress(s.shardNumber, contractAddress)
 					if err != nil {
 						log.Error(err)
 						txCnt = 0
