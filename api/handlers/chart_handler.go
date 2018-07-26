@@ -20,6 +20,8 @@ type Set struct {
 	m map[int64]bool
 }
 
+const showLimit  = 15
+
 //NewSet return an new set
 func NewSet() *Set {
 	return &Set{
@@ -521,6 +523,10 @@ func (h *ChartHandler) GetTopMiners() gin.HandlerFunc {
 			}
 
 			sort.Stable(TopMiners)
+			if len(TopMiners) > showLimit {
+				TopMiners = TopMiners[:showLimit]
+			}
+
 			topMiners = topMiners[:0]
 			topMiners = append(topMiners, &database.DBMinerRankInfo{Rank: TopMiners, ShardNumber: 1})
 
@@ -534,6 +540,12 @@ func (h *ChartHandler) GetTopMiners() gin.HandlerFunc {
 			if err != nil {
 				responseError(c, errGetTopMinerChartError, http.StatusInternalServerError, apiDBQueryError)
 				return
+			}
+
+			if len(topMiners) > 0 {
+				if len(topMiners[0].Rank) > showLimit {
+					topMiners[0].Rank = topMiners[0].Rank[:showLimit]
+				}
 			}
 
 			c.JSON(http.StatusOK, gin.H{

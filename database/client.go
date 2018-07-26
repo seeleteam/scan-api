@@ -116,9 +116,9 @@ func (c *Client) AddBlock(b *DBBlock) error {
 }
 
 //RemoveBlock test use  remove block by height from database
-func (c *Client) RemoveBlock(height uint64) error {
+func (c *Client) RemoveBlock(shard int, height uint64) error {
 	query := func(c *mgo.Collection) error {
-		return c.Remove(bson.M{"height": height})
+		return c.Remove(bson.M{"height": height, "shardNumber": shard})
 	}
 	err := c.withCollection(blockTbl, query)
 	return err
@@ -221,9 +221,9 @@ func (c *Client) removeTx(idx uint64) error {
 }
 
 //RemoveTxs Txs by block height
-func (c *Client) RemoveTxs(blockHeight uint64) error {
+func (c *Client) RemoveTxs(shard int, blockHeight uint64) error {
 	query := func(c *mgo.Collection) error {
-		return c.Remove(bson.M{"block": strconv.FormatUint(blockHeight, 10)})
+		return c.Remove(bson.M{"block": strconv.FormatUint(blockHeight, 10), "txtype": shard})
 	}
 	err := c.withCollection(txTbl, query)
 	return err

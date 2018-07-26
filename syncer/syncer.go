@@ -63,7 +63,8 @@ func (s *Syncer) checkOlderBlocks() bool {
 	}
 
 	fallBack := false
-	for i := dbBlockHeight - 1; i >= 0; i-- {
+	log.Debug("checkOlderBlocks begin-------")
+	for i := dbBlockHeight; i >= 0; i-- {
 		rpcBlock, err := s.rpc.GetBlockByHeight(i, true)
 		if err != nil {
 			return fallBack
@@ -79,36 +80,65 @@ func (s *Syncer) checkOlderBlocks() bool {
 			return fallBack
 		}
 
+		log.Info("checkOlderBlocks remove block [%d]: %v", i, dbBlock)
 		//Delete dbBlock
-		s.db.RemoveBlock(i)
+		s.db.RemoveBlock(s.shardNumber, i)
 
 		//Delete txs
-		s.db.RemoveTxs(i)
+		s.db.RemoveTxs(s.shardNumber, i)
 
 		//Modify accounts
 		for j := 0; j < len(dbBlock.Txs); j++ {
 			tx := dbBlock.Txs[j]
 
-			toAccount, err := s.db.GetAccountByAddress(tx.To)
-			if err != nil {
-				log.Error(err)
-				return fallBack
-			}
+			if tx.To != "" {
+				toAccount, err := s.db.GetAccountByAddress(tx.To)
+				if err != nil {
+					log.Error(err)
+					return fallBack
+				}
 
-			toAccount.Balance, err = s.rpc.GetBalance(tx.To)
-			if err != nil {
-				log.Error(err)
-				toAccount.Balance = 0
-			}
+				toAccount.Balance, err = s.rpc.GetBalance(tx.To)
+				if err != nil {
+					log.Error(err)
+					toAccount.Balance = 0
+				}
 
-			txCnt, err := s.db.GetTxCntByShardNumberAndAddress(s.shardNumber, tx.From)
-			if err != nil {
-				log.Error(err)
-				txCnt = 0
-			}
+				txCnt, err := s.db.GetTxCntByShardNumberAndAddress(s.shardNumber, tx.From)
+				if err != nil {
+					log.Error(err)
+					txCnt = 0
+				}
 
-			toAccount.TxCount = int64(txCnt)
-			s.db.UpdateAccount(toAccount)
+				toAccount.TxCount = int64(txCnt)
+				s.db.UpdateAccount(toAccount)
+			} else {
+				receipt, err := s.rpc.GetReceiptByTxHash(tx.Hash)
+				if err == nil {
+					contractAddress := receipt.ContractAddress
+
+					contractAccount, err := s.db.GetAccountByAddress(contractAddress)
+					if err != nil {
+						log.Error(err)
+						return fallBack
+					}
+
+					contractAccount.Balance, err = s.rpc.GetBalance(contractAddress)
+					if err != nil {
+						log.Error(err)
+						contractAccount.Balance = 0
+					}
+
+					txCnt, err := s.db.GetTxCntByShardNumberAndAddress(s.shardNumber, tx.From)
+					if err != nil {
+						log.Error(err)
+						txCnt = 0
+					}
+
+					contractAccount.TxCount = int64(txCnt)
+					s.db.UpdateAccount(contractAccount)
+				}
+			}
 
 			if tx.From != nullAddress {
 				fromAccount, err := s.db.GetAccountByAddress(tx.From)
@@ -156,7 +186,7 @@ func (s *Syncer) checkOlderBlocks() bool {
 
 		fallBack = true
 	}
-
+	log.Info("checkOlderBlocks end-------")
 	return fallBack
 }
 
@@ -167,6 +197,7 @@ func (s *Syncer) sync() error {
 	s.checkOlderBlocks()
 
 	curBlock, err := s.rpc.CurrentBlock()
+
 	if err != nil {
 		log.Error(err)
 		return err
@@ -178,8 +209,11 @@ func (s *Syncer) sync() error {
 		return err
 	}
 
-	for i := dbBlockHeight; i <= curBlock.Height; i++ {
+	log.Info("sync begin-------")
+	log.Info("sync dbBlockHeight[%d]", dbBlockHeight)
+	for i := dbBlockHeight + 1; i <= curBlock.Height; i++ {
 		rpcBlock, err := s.rpc.GetBlockByHeight(i, true)
+		log.Info("sync add block[%d]: %v", i, rpcBlock)
 		if err != nil {
 			s.rpc.Release()
 			log.Error(err)
@@ -188,6 +222,7 @@ func (s *Syncer) sync() error {
 
 		err = s.blockSync(rpcBlock)
 		if err != nil {
+			log.Info("sync failed to add block[i], error: %v", err)
 			log.Error(err)
 			break
 		}
@@ -204,6 +239,7 @@ func (s *Syncer) sync() error {
 			break
 		}
 	}
+	log.Info("sync end-------")
 
 	s.accountUpdateSync()
 
@@ -222,9 +258,12 @@ func (s *Syncer) StartSync(interval time.Duration) {
 
 	ticks := time.NewTicker(interval * time.Second)
 	tick := ticks.C
+	i := 0
 	go func() {
 		for range tick {
+			log.Info("StartSync[%d].............", i)
 			s.sync()
+			i++
 			_, ok := <-tick
 			if !ok {
 				break
