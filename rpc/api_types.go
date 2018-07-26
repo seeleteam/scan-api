@@ -21,18 +21,17 @@ type CurrentBlock struct {
 
 //Transaction is the transaction data send from seele node
 type Transaction struct {
-	ContractAddress string   `json:"contractAddress"`
-	Hash            string   `json:"hash"`
-	From            string   `json:"from"`
-	To              string   `json:"to"`
-	Amount          *big.Int `json:"amount"`
-	AccountNonce    uint64   `json:"accountNonce"`
-	Payload         string   `json:"payload"`
-	Timestamp       uint64   `json:"timestamp"`
-	Fee             int64    `json:"fee"`
-	Block           uint64   `json:"block"`
-	Idx             uint64   `json:"idx"`
-	TxType          int      `json:"txtype"`
+	Hash         string   `json:"hash"`
+	From         string   `json:"from"`
+	To           string   `json:"to"`
+	Amount       *big.Int `json:"amount"`
+	AccountNonce uint64   `json:"accountNonce"`
+	Payload      string   `json:"payload"`
+	Timestamp    uint64   `json:"timestamp"`
+	Fee          int64    `json:"fee"`
+	Block        uint64   `json:"block"`
+	Idx          uint64   `json:"idx"`
+	TxType       int      `json:"txtype"`
 }
 
 //BlockInfo is the block data send from seele node

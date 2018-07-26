@@ -39,19 +39,20 @@ type DBBlock struct {
 
 //DBTx describle a transaction which stored in the database
 type DBTx struct {
-	TxType       int    `bson:"txtype"` // 0 is an normal transaction, 1 is an create contract transaction
-	Hash         string `bson:"hash"`
-	From         string `bson:"from"`
-	To           string `bson:"to"`
-	Amount       int64  `bson:"amount"`
-	AccountNonce string `bson:"accountNonce"`
-	Timestamp    string `bson:"timestamp"`
-	Payload      string `bson:"payload"`
-	Block        string `bson:"block"`
-	Idx          int64  `bson:"idx"`
-	ShardNumber  int    `bson:"shardNumber"`
-	Fee          int64  `bson:"fee"`
-	Pending      bool   `bson:"pending"`
+	TxType          int    `bson:"txtype"` // 0 is an normal transaction, 1 is an create contract transaction
+	Hash            string `bson:"hash"`
+	From            string `bson:"from"`
+	To              string `bson:"to"`
+	Amount          int64  `bson:"amount"`
+	AccountNonce    string `bson:"accountNonce"`
+	Timestamp       string `bson:"timestamp"`
+	Payload         string `bson:"payload"`
+	Block           string `bson:"block"`
+	Idx             int64  `bson:"idx"`
+	ShardNumber     int    `bson:"shardNumber"`
+	Fee             int64  `bson:"fee"`
+	Pending         bool   `bson:"pending"`
+	ContractAddress string `bson:"contractAddress"`
 }
 
 //DBAccount describle a account which stored in the database

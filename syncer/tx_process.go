@@ -26,12 +26,10 @@ func (s *Syncer) txSync(block *rpc.BlockInfo) error {
 
 		//must be an create contract transaction
 		if trans.To == "" {
-
 			dbTx.TxType = 1
-
 			receipt, err := s.rpc.GetReceiptByTxHash(trans.Hash)
 			if err == nil {
-				trans.ContractAddress = receipt.ContractAddress
+				dbTx.ContractAddress = receipt.ContractAddress
 			}
 		}
 
