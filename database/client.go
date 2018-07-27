@@ -409,7 +409,7 @@ func (c *Client) GetTxCntByShardNumberAndAddress(shardNumber int, address string
 		//TODO: fix this overflow
 		var temp int
 
-		temp, err = c.Find(bson.M{"shardNumber": shardNumber, "$or": []bson.M{bson.M{"from": address}, bson.M{"to": address}}}).Count()
+		temp, err = c.Find(bson.M{"shardNumber": shardNumber, "$or": []bson.M{bson.M{"from": address}, bson.M{"to": address}, bson.M{"contractAddress": address}}}).Count()
 		txCnt = int64(temp)
 		return err
 	}
