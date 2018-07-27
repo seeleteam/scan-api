@@ -187,7 +187,10 @@ func (s *Syncer) accountUpdateSync() {
 
 		v.TxCount = txCnt
 
+		v := v
+
 		s.workerpool.Submit(func() {
+
 			account := v
 			balance, err := s.rpc.GetBalance(account.Address)
 			if err != nil {
