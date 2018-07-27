@@ -9,10 +9,10 @@ import (
 	"fmt"
 	"math/big"
 	"strconv"
+	"time"
 
 	"github.com/seeleteam/scan-api/database"
-
-	"time"
+	"github.com/seeleteam/scan-api/rpc"
 )
 
 const (
@@ -50,32 +50,34 @@ type RetDetailBlockInfo struct {
 
 //RetSimpleTxInfo describle the transaction info in the transaction detail page which send to the frontend
 type RetSimpleTxInfo struct {
-	TxType      int    `json:"txtype"`
-	ShardNumber int    `json:"shardnumber"`
-	TxHash      string `json:"txHash"`
-	Block       uint64 `json:"block"`
-	Age         string `json:"age"`
-	From        string `json:"from"`
-	To          string `json:"to"`
-	Value       int64  `json:"value"`
-	Pending     bool   `json:"pending"`
-	Fee         int64  `json:"fee"`
+	TxType      int         `json:"txtype"`
+	ShardNumber int         `json:"shardnumber"`
+	TxHash      string      `json:"txHash"`
+	Block       uint64      `json:"block"`
+	Age         string      `json:"age"`
+	From        string      `json:"from"`
+	To          string      `json:"to"`
+	Value       int64       `json:"value"`
+	Pending     bool        `json:"pending"`
+	Fee         int64       `json:"fee"`
+	Receipt     rpc.Receipt `json:"receipt"`
 }
 
 //RetDetailTxInfo describle the transaction detail info in the transaction detail page which send to the frontend
 type RetDetailTxInfo struct {
-	TxType       int    `json:"txtype"`
-	ShardNumber  int    `json:"shardnumber"`
-	TxHash       string `json:"txHash"`
-	Block        uint64 `json:"block"`
-	Age          string `json:"age"`
-	From         string `json:"from"`
-	To           string `json:"to"`
-	Value        int64  `json:"value"`
-	Pending      bool   `json:"pending"`
-	Fee          int64  `json:"fee"`
-	AccountNonce string `json:"accountNonce"`
-	Payload      string `json:"payload"`
+	TxType       int         `json:"txtype"`
+	ShardNumber  int         `json:"shardnumber"`
+	TxHash       string      `json:"txHash"`
+	Block        uint64      `json:"block"`
+	Age          string      `json:"age"`
+	From         string      `json:"from"`
+	To           string      `json:"to"`
+	Value        int64       `json:"value"`
+	Pending      bool        `json:"pending"`
+	Fee          int64       `json:"fee"`
+	AccountNonce string      `json:"accountNonce"`
+	Payload      string      `json:"payload"`
+	Receipt      rpc.Receipt `json:"receipt"`
 }
 
 //RetSimpleAccountInfo describle the account info in the account list page which send to the frontend
@@ -168,6 +170,7 @@ func createRetSimpleTxInfo(transaction *database.DBTx) *RetSimpleTxInfo {
 		ret.Age = getElpasedTimeDesc(timeStamp)
 	}
 	ret.ShardNumber = transaction.ShardNumber
+	ret.Receipt = transaction.Receipt
 	return &ret
 }
 
@@ -188,7 +191,7 @@ func createRetDetailTxInfo(transaction *database.DBTx) *RetDetailTxInfo {
 	ret.ShardNumber = transaction.ShardNumber
 	ret.AccountNonce = transaction.AccountNonce
 	ret.Payload = transaction.Payload
-
+	ret.Receipt = transaction.Receipt
 	return &ret
 }
 
