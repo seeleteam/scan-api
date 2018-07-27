@@ -118,7 +118,8 @@ func (c *Client) AddBlock(b *DBBlock) error {
 //RemoveBlock test use  remove block by height from database
 func (c *Client) RemoveBlock(shard int, height uint64) error {
 	query := func(c *mgo.Collection) error {
-		return c.Remove(bson.M{"height": height, "shardNumber": shard})
+		_, err := c.RemoveAll(bson.M{"height": height, "shardNumber": shard})
+		return err
 	}
 	err := c.withCollection(blockTbl, query)
 	return err
@@ -214,7 +215,8 @@ func (c *Client) RemoveAllPendingTxs() error {
 //removeTx test use  remove tx by index from database
 func (c *Client) removeTx(idx uint64) error {
 	query := func(c *mgo.Collection) error {
-		return c.Remove(bson.M{"idx": strconv.FormatUint(idx, 10)})
+		_, err := c.RemoveAll(bson.M{"idx": strconv.FormatUint(idx, 10)})
+		return err
 	}
 	err := c.withCollection(txTbl, query)
 	return err
@@ -223,7 +225,8 @@ func (c *Client) removeTx(idx uint64) error {
 //RemoveTxs Txs by block height
 func (c *Client) RemoveTxs(shard int, blockHeight uint64) error {
 	query := func(c *mgo.Collection) error {
-		return c.Remove(bson.M{"block": strconv.FormatUint(blockHeight, 10), "shardNumber": shard})
+		_, err := c.RemoveAll(bson.M{"block": strconv.FormatUint(blockHeight, 10), "shardNumber": shard})
+		return err
 	}
 	err := c.withCollection(txTbl, query)
 	return err
@@ -406,7 +409,7 @@ func (c *Client) GetTxCntByShardNumberAndAddress(shardNumber int, address string
 		//TODO: fix this overflow
 		var temp int
 
-		temp, err = c.Find(bson.M{"shardNumber": shardNumber, "$or": []bson.M{bson.M{"from": address}, bson.M{"to": address}}}).Count()
+		temp, err = c.Find(bson.M{"shardNumber": shardNumber, "$or": []bson.M{bson.M{"from": address}, bson.M{"to": address}, bson.M{"contractAddress": address}}}).Count()
 		txCnt = int64(temp)
 		return err
 	}
