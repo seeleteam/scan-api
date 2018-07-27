@@ -30,6 +30,7 @@ func (s *Syncer) txSync(block *rpc.BlockInfo) error {
 			receipt, err := s.rpc.GetReceiptByTxHash(trans.Hash)
 			if err == nil {
 				dbTx.ContractAddress = receipt.ContractAddress
+				dbTx.Receipt = *receipt
 			}
 		}
 
