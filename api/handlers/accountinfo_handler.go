@@ -48,6 +48,18 @@ func (a *AccountTbl) GetAccountCnt() int {
 	return size
 }
 
+func (a *AccountTbl) GetAccountByAddress(address string) *database.DBAccount {
+	var retAccount *database.DBAccount
+	a.accMutex.RLock()
+	for i := 0; i < len(a.accountTbl); i++ {
+		if a.accountTbl[i].Address == address {
+			retAccount = a.accountTbl[i]
+		}
+	}
+	a.accMutex.RUnlock()
+	return retAccount
+}
+
 //GetAccountsByIdx get a transaction list from mongo by time period
 func (a *AccountTbl) GetAccountsByIdx(begin uint64, end uint64) []*database.DBAccount {
 	a.accMutex.RLock()
@@ -210,6 +222,18 @@ func (h *AccountHandler) GetAccountByAddressImpl(address string) *RetDetailAccou
 	var ttBalance int64
 	if data.ShardNumber >= 1 && data.ShardNumber <= shardCount {
 		ttBalance = h.accTbls[data.ShardNumber-1].totalBalance
+	}
+
+	data.TxCount, err = dbClinet.GetTxCntByShardNumberAndAddress(data.ShardNumber, address)
+	if err != nil {
+		return nil
+	}
+
+	if data.ShardNumber >= 1 && data.ShardNumber <= shardCount {
+		account := h.accTbls[data.ShardNumber-1].GetAccountByAddress(data.Address)
+		if account != nil && account.TxCount != data.TxCount {
+			account.TxCount = data.TxCount
+		}
 	}
 
 	detailAccount := createRetDetailAccountInfo(data, txs, ttBalance)

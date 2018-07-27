@@ -26,6 +26,7 @@ type BlockInfoDB interface {
 	GetContractCntByShardNumber(shardNumber int) (uint64, error)
 	GetContractsByShardNumber(shardNumber int, max int) ([]*database.DBAccount, error)
 	GetTotalBalance() (map[int]int64, error)
+	GetTxCntByShardNumberAndAddress(shardNumber int, address string) (int64, error)
 }
 
 // ChartInfoDB Warpper for access mongodb.

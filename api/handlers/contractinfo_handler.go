@@ -52,6 +52,18 @@ func (a *ContractTbl) GetContractsByIdx(begin uint64, end uint64) []*database.DB
 	return retAccounts
 }
 
+func (a *ContractTbl) GetAccountByAddress(address string) *database.DBAccount {
+	var retAccount *database.DBAccount
+	a.contractMutex.RLock()
+	for i := 0; i < len(a.contractTbl); i++ {
+		if a.contractTbl[i].Address == address {
+			retAccount = a.contractTbl[i]
+		}
+	}
+	a.contractMutex.RUnlock()
+	return retAccount
+}
+
 //getAccountsByBeginAndEnd
 func (a *ContractTbl) getContractsByBeginAndEnd(begin, end uint64) []*RetSimpleAccountInfo {
 	var accounts []*RetSimpleAccountInfo
@@ -152,6 +164,19 @@ func (h *ContractHandler) GetContractByAddressImpl(address string) *RetDetailAcc
 	}
 
 	txs = append(txs, pengdingTxs...)
+
+	data.TxCount, err = dbClinet.GetTxCntByShardNumberAndAddress(data.ShardNumber, address)
+	if err != nil {
+		return nil
+	}
+
+	if data.ShardNumber >= 1 && data.ShardNumber <= shardCount {
+		account := h.contractTbls[data.ShardNumber-1].GetAccountByAddress(data.Address)
+		if account != nil && account.TxCount != data.TxCount {
+			account.TxCount = data.TxCount
+		}
+	}
+
 	detailAccount := createRetDetailAccountInfo(data, txs, ttBalance)
 	return detailAccount
 }
