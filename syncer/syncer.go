@@ -211,6 +211,9 @@ func (s *Syncer) sync() error {
 
 	log.Info("sync begin-------")
 	log.Info("sync dbBlockHeight[%d]", dbBlockHeight)
+	if dbBlockHeight == 0{
+		dbBlockHeight = -1
+	}
 	for i := dbBlockHeight + 1; i <= curBlock.Height; i++ {
 		rpcBlock, err := s.rpc.GetBlockByHeight(i, true)
 		log.Info("sync add block[%d]: %v", i, rpcBlock)
