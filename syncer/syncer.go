@@ -64,7 +64,7 @@ func (s *Syncer) checkOlderBlocks() bool {
 
 	fallBack := false
 	log.Debug("checkOlderBlocks begin-------")
-	for i := dbBlockHeight; i >= 0; i-- {
+	for i := dbBlockHeight - 1; i >= 0; i-- {
 		rpcBlock, err := s.rpc.GetBlockByHeight(i, true)
 		if err != nil {
 			return fallBack
