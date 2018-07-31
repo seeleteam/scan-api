@@ -218,7 +218,7 @@ func (s *Syncer) sync() error {
 			log.Error(err)
 			return err
 		}
-		block.Timestamp = time.Now().Add(time.Hour).Unix()
+		block.Timestamp = time.Now().Add(-time.Hour).Unix()
 		s.db.UpdateBlock(s.shardNumber, 0, block)
 	} else {
 		for i := dbBlockHeight; i <= curBlock.Height; i++ {
