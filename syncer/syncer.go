@@ -218,10 +218,10 @@ func (s *Syncer) sync() error {
 			log.Error(err)
 			return err
 		}
-		block.Timestamp = time.Now().Unix() + time.Hour.Nanoseconds()
+		block.Timestamp = time.Now().Add(time.Hour).Unix()
 		s.db.UpdateBlock(s.shardNumber, 0, block)
 	} else {
-		for i := dbBlockHeight + 1; i <= curBlock.Height; i++ {
+		for i := dbBlockHeight; i <= curBlock.Height; i++ {
 			if s.SyncHandle(i) {
 				break
 			}
