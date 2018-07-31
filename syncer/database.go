@@ -7,6 +7,7 @@ type Database interface {
 	GetBlockHeight(shardNumber int) (uint64, error)
 	AddBlock(b *database.DBBlock) error
 	RemoveBlock(shard int, height uint64) error
+	UpdateBlock(shard int, height uint64, b *database.DBBlock) error
 	RemoveTxs(shard int, blockHeight uint64) error
 	GetBlockByHeight(shardNumber int, height uint64) (*database.DBBlock, error)
 	RemoveAllPendingTxs() error

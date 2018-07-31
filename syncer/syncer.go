@@ -211,32 +211,20 @@ func (s *Syncer) sync() error {
 
 	log.Info("sync begin-------")
 	log.Info("sync dbBlockHeight[%d]", dbBlockHeight)
-	for i := dbBlockHeight; i <= curBlock.Height; i++ {
-		rpcBlock, err := s.rpc.GetBlockByHeight(i, true)
-		log.Info("sync add block[%d]: %v", i, rpcBlock)
+	if dbBlockHeight == 0 {
+		s.SyncHandle(0)
+		block, err := s.db.GetBlockByHeight(s.shardNumber, 0)
 		if err != nil {
-			s.rpc.Release()
 			log.Error(err)
-			break
+			return err
 		}
-
-		err = s.blockSync(rpcBlock)
-		if err != nil {
-			log.Info("sync failed to add block[i], error: %v", err)
-			log.Error(err)
-			break
-		}
-
-		err = s.txSync(rpcBlock)
-		if err != nil {
-			log.Error(err)
-			break
-		}
-
-		err = s.accountSync(rpcBlock)
-		if err != nil {
-			log.Error(err)
-			break
+		block.Timestamp = time.Now().Add(-time.Hour).Unix()
+		s.db.UpdateBlock(s.shardNumber, 0, block)
+	} else {
+		for i := dbBlockHeight; i <= curBlock.Height; i++ {
+			if s.SyncHandle(i) {
+				break
+			}
 		}
 	}
 	log.Info("sync end-------")
@@ -250,6 +238,37 @@ func (s *Syncer) sync() error {
 	log.Info("[BlockSync syncCnt:%d]End Sync", s.syncCnt)
 	s.syncCnt++
 	return nil
+}
+
+//SyncHandle sync the block data from seele node, and handle tx or account
+func (s *Syncer) SyncHandle(i uint64) bool {
+	rpcBlock, err := s.rpc.GetBlockByHeight(i, true)
+	log.Info("sync add block[%d]: %v", i, rpcBlock)
+	if err != nil {
+		s.rpc.Release()
+		log.Error(err)
+		return true
+	}
+
+	err = s.blockSync(rpcBlock)
+	if err != nil {
+		log.Info("sync failed to add block[i], error: %v", err)
+		log.Error(err)
+		return true
+	}
+
+	err = s.txSync(rpcBlock)
+	if err != nil {
+		log.Error(err)
+		return true
+	}
+
+	err = s.accountSync(rpcBlock)
+	if err != nil {
+		log.Error(err)
+		return true
+	}
+	return false
 }
 
 //StartSync start an timer to sync block data from seele node
