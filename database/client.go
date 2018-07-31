@@ -125,6 +125,16 @@ func (c *Client) RemoveBlock(shard int, height uint64) error {
 	return err
 }
 
+//UpdateBlock update block by height and shard from database
+func (c *Client) UpdateBlock(shard int, height uint64, b *DBBlock) error {
+	query := func(c *mgo.Collection) error {
+		_, err := c.Upsert(bson.M{"height": height, "shardNumber": shard}, b)
+		return err
+	}
+	err := c.withCollection(blockTbl, query)
+	return err
+}
+
 //GetBlockByHeight get block from mongo by block height
 func (c *Client) GetBlockByHeight(shardNumber int, height uint64) (*DBBlock, error) {
 	b := new(DBBlock)
