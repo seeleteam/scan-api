@@ -101,18 +101,18 @@ func (n *NodeService) ProcessSinglePeer(peer *rpc.PeerInfo, c chan int) {
 	ipAndPort := strings.Split(peer.RemoteAddress, ":")
 	nodeInfo.Host = ipAndPort[0]
 	nodeInfo.Port = ipAndPort[1]
-	geo, err := getGeoInfoByHTTP(nodeInfo.Host)
-	if err != nil {
-		nodeInfo.Country = "unknow"
-		nodeInfo.Region = "unknow"
-		nodeInfo.City = "unknow"
-		nodeInfo.LongitudeAndLatitude = "unknow"
-	} else {
-		nodeInfo.Country = geo.GeopluginCountryName
-		nodeInfo.Region = geo.GeopluginRegionName
-		nodeInfo.City = geo.GeopluginCity
-		nodeInfo.LongitudeAndLatitude = string('[') + geo.GeopluginLongitude + string(',') + geo.GeopluginLatitude + string(']')
-	}
+	//geo, err := getGeoInfoByHTTP(nodeInfo.Host)
+	//if err != nil {
+	//	nodeInfo.Country = "unknow"
+	//	nodeInfo.Region = "unknow"
+	//	nodeInfo.City = "unknow"
+	//	nodeInfo.LongitudeAndLatitude = "unknow"
+	//} else {
+	//	nodeInfo.Country = geo.GeopluginCountryName
+	//	nodeInfo.Region = geo.GeopluginRegionName
+	//	nodeInfo.City = geo.GeopluginCity
+	//	nodeInfo.LongitudeAndLatitude = string('[') + geo.GeopluginLongitude + string(',') + geo.GeopluginLatitude + string(']')
+	//}
 
 	nodeInfo.LastSeen = time.Now().Unix()
 	nodeInfo.ShardNumber = peer.ShardNumber
@@ -130,7 +130,7 @@ func (n *NodeService) ProcessSinglePeer(peer *rpc.PeerInfo, c chan int) {
 		return
 	}
 
-	_, err = n.nodeDB.GetNodeInfoByID(nodeInfo.ID)
+	_, err := n.nodeDB.GetNodeInfoByID(nodeInfo.ID)
 	if err == mgo.ErrNotFound {
 		n.nodeDB.AddNodeInfo(&nodeInfo)
 	}
