@@ -8,7 +8,6 @@ package handlers
 import (
 	"fmt"
 	"math/big"
-	"strconv"
 	"time"
 
 	"github.com/seeleteam/scan-api/database"
@@ -159,7 +158,7 @@ func createRetSimpleTxInfo(transaction *database.DBTx) *RetSimpleTxInfo {
 	var ret RetSimpleTxInfo
 	ret.TxType = transaction.TxType
 	ret.TxHash = transaction.Hash
-	ret.Block, _ = strconv.ParseUint(transaction.Block, 10, 64)
+	ret.Block = transaction.Block
 	ret.From = transaction.From
 	ret.To = transaction.To
 	ret.Value = transaction.Amount
@@ -178,7 +177,7 @@ func createRetDetailTxInfo(transaction *database.DBTx) *RetDetailTxInfo {
 	var ret RetDetailTxInfo
 	ret.TxType = transaction.TxType
 	ret.TxHash = transaction.Hash
-	ret.Block, _ = strconv.ParseUint(transaction.Block, 10, 64)
+	ret.Block = transaction.Block
 	ret.From = transaction.From
 	ret.To = transaction.To
 	ret.Value = transaction.Amount
