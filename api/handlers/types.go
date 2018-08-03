@@ -95,7 +95,7 @@ type RetDetailAccountTxInfo struct {
 	ShardNumber int    `json:"shardnumber"`
 	TxType      int    `json:"txtype"`
 	Hash        string `json:"hash"`
-	Block       string `json:"block"`
+	Block       uint64 `json:"block"`
 	From        string `json:"from"`
 	To          string `json:"to"`
 	Value       int64  `json:"value"`
