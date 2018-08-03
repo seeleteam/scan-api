@@ -456,7 +456,7 @@ func (c *Client) removeAccount(address string) error {
 func (c *Client) GetTxsByAddresss(address string, max int) ([]*DBTx, error) {
 	var trans []*DBTx
 	query := func(c *mgo.Collection) error {
-		return c.Find(bson.M{"$or": []bson.M{bson.M{"from": address}, bson.M{"to": address}, bson.M{"contractAddress": address}}}).Sort("-timestamp").Limit(max).All(&trans)
+		return c.Find(bson.M{"$or": []bson.M{bson.M{"from": address}, bson.M{"to": address}, bson.M{"contractAddress": address}}}).Sort("-block", "-timestamp").Limit(max).All(&trans)
 	}
 	err := c.withCollection(txTbl, query)
 	return trans, err
@@ -466,7 +466,7 @@ func (c *Client) GetTxsByAddresss(address string, max int) ([]*DBTx, error) {
 func (c *Client) GetPendingTxsByAddress(address string) ([]*DBTx, error) {
 	var trans []*DBTx
 	query := func(c *mgo.Collection) error {
-		return c.Find(bson.M{"$or": []bson.M{bson.M{"from": address}, bson.M{"to": address}, bson.M{"contractAddress": address}}}).Sort("-timestamp").All(&trans)
+		return c.Find(bson.M{"$or": []bson.M{bson.M{"from": address}, bson.M{"to": address}, bson.M{"contractAddress": address}}}).Sort("-block", "-timestamp").All(&trans)
 	}
 	err := c.withCollection(pendingTxTbl, query)
 	return trans, err
