@@ -8,7 +8,6 @@ package handlers
 import (
 	"fmt"
 	"math/big"
-	"strconv"
 	"time"
 
 	"github.com/seeleteam/scan-api/database"
@@ -96,7 +95,7 @@ type RetDetailAccountTxInfo struct {
 	ShardNumber int    `json:"shardnumber"`
 	TxType      int    `json:"txtype"`
 	Hash        string `json:"hash"`
-	Block       string `json:"block"`
+	Block       uint64 `json:"block"`
 	From        string `json:"from"`
 	To          string `json:"to"`
 	Value       int64  `json:"value"`
@@ -159,7 +158,7 @@ func createRetSimpleTxInfo(transaction *database.DBTx) *RetSimpleTxInfo {
 	var ret RetSimpleTxInfo
 	ret.TxType = transaction.TxType
 	ret.TxHash = transaction.Hash
-	ret.Block, _ = strconv.ParseUint(transaction.Block, 10, 64)
+	ret.Block = transaction.Block
 	ret.From = transaction.From
 	ret.To = transaction.To
 	ret.Value = transaction.Amount
@@ -178,7 +177,7 @@ func createRetDetailTxInfo(transaction *database.DBTx) *RetDetailTxInfo {
 	var ret RetDetailTxInfo
 	ret.TxType = transaction.TxType
 	ret.TxHash = transaction.Hash
-	ret.Block, _ = strconv.ParseUint(transaction.Block, 10, 64)
+	ret.Block = transaction.Block
 	ret.From = transaction.From
 	ret.To = transaction.To
 	ret.Value = transaction.Amount

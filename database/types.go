@@ -47,7 +47,7 @@ type DBTx struct {
 	AccountNonce    string      `bson:"accountNonce"`
 	Timestamp       string      `bson:"timestamp"`
 	Payload         string      `bson:"payload"`
-	Block           string      `bson:"block"`
+	Block           uint64      `bson:"block"`
 	Idx             int64       `bson:"idx"`
 	ShardNumber     int         `bson:"shardNumber"`
 	Fee             int64       `bson:"fee"`
@@ -112,7 +112,7 @@ func CreateDbTx(t rpc.Transaction) *DBTx {
 	trans.Timestamp = strconv.FormatUint(t.Timestamp, 10)
 	trans.AccountNonce = strconv.FormatUint(t.AccountNonce, 10)
 	trans.Payload = t.Payload
-	trans.Block = strconv.FormatUint(t.Block, 10)
+	trans.Block = t.Block
 	trans.Idx = int64(t.Idx)
 	trans.Fee = t.Fee
 	return &trans
