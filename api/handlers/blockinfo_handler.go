@@ -215,6 +215,26 @@ func (h *BlockHandler) getBlocksByBeginAndEnd(shardNumber int, begin, end uint64
 	return blocks
 }
 
+func getBeginAndEndByPageAndOrder(total, p, step uint64) (page, begin, end uint64) {
+	totalPages := uint64(math.Ceil(float64(total) / float64(step)))
+	page = p
+	if page > (totalPages - 1) {
+		page = totalPages - 1
+	}
+
+	end = (page + 1) * step
+	if end >= total{
+		end = total - 1
+	}
+	if end < step {
+		begin = 0
+	} else {
+		begin = end - step
+	}
+
+	return page, begin, end
+}
+
 func getBeginAndEndByPage(total, p, step uint64) (page, begin, end uint64) {
 	totalPages := uint64(math.Ceil(float64(total) / float64(step)))
 	page = p
@@ -552,7 +572,7 @@ func (h *BlockHandler) GetTxsInBlock(c *gin.Context, shardNumber int, height, p,
 func (h *BlockHandler) GetTxsInAccount(c *gin.Context, address string, p, ps uint64) {
 	dbClinet := h.DBClient
 
-	txs, err := dbClinet.GetTxsByAddresss(address, maxAccountTxCnt)
+	txs, err := dbClinet.GetTxsByAddresss(address, maxAccountTxCnt, false)
 	if err != nil {
 		responseError(c, errGetTxFromDB, http.StatusInternalServerError, apiDBQueryError)
 		return
@@ -567,7 +587,7 @@ func (h *BlockHandler) GetTxsInAccount(c *gin.Context, address string, p, ps uin
 	txs = append(pengdingTxs, txs...)
 
 	txCntInAccount := len(txs)
-	page, begin, end := getBeginAndEndByPage(uint64(txCntInAccount), p, ps)
+	page, begin, end := getBeginAndEndByPageAndOrder(uint64(txCntInAccount), p, ps)
 	txs = txs[begin:end]
 
 	var retTxs []*RetDetailAccountTxInfo

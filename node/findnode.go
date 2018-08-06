@@ -50,7 +50,7 @@ type geoPluginRet struct {
 //NodeService is the find node service
 type NodeService struct {
 	nodeMap     map[string]database.DBNodeInfo
-	nodeMapLock sync.Mutex
+	nodeMapLock sync.RWMutex
 
 	nodeDB NodeDB
 	cfg    *Config
@@ -197,10 +197,13 @@ func (n *NodeService) FindNode() {
 	for i := 0; i < len(allPeerInfos); i++ {
 		peer := allPeerInfos[i]
 		key := getNodeKey(&peer)
+		n.nodeMapLock.RLock()
 		if v, ok := n.nodeMap[key]; ok {
+			n.nodeMapLock.RUnlock()
 			v.LastSeen = time.Now().Unix()
 			cnum <- 1
 		} else {
+			n.nodeMapLock.RUnlock()
 			go n.ProcessSinglePeer(&peer, cnum)
 		}
 	}

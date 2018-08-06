@@ -207,7 +207,7 @@ func (h *AccountHandler) GetAccountByAddressImpl(address string) *RetDetailAccou
 		return nil
 	}
 
-	txs, err := dbClinet.GetTxsByAddresss(address, txCount)
+	txs, err := dbClinet.GetTxsByAddresss(address, txCount, false)
 	if err != nil {
 		return nil
 	}
