@@ -457,9 +457,9 @@ func (c *Client) GetTxsByAddresss(address string, max int, order bool) ([]*DBTx,
 	var trans []*DBTx
 	query := func(c *mgo.Collection) error {
 		if !order {
-			return c.Find(bson.M{"$or": []bson.M{bson.M{"from": address}, bson.M{"to": address}, bson.M{"contractAddress": address}}}).Sort("-block").Limit(max).All(&trans)
+			return c.Find(bson.M{"$or": []bson.M{bson.M{"from": address}, bson.M{"to": address}, bson.M{"contractAddress": address}}}).Sort("-block", "-idx").Limit(max).All(&trans)
 		} else {
-			return c.Find(bson.M{"$or": []bson.M{bson.M{"from": address}, bson.M{"to": address}, bson.M{"contractAddress": address}}}).Sort("block").Limit(max).All(&trans)
+			return c.Find(bson.M{"$or": []bson.M{bson.M{"from": address}, bson.M{"to": address}, bson.M{"contractAddress": address}}}).Sort("block", "idx").Limit(max).All(&trans)
 		}
 	}
 	err := c.withCollection(txTbl, query)
@@ -470,7 +470,7 @@ func (c *Client) GetTxsByAddresss(address string, max int, order bool) ([]*DBTx,
 func (c *Client) GetPendingTxsByAddress(address string) ([]*DBTx, error) {
 	var trans []*DBTx
 	query := func(c *mgo.Collection) error {
-		return c.Find(bson.M{"$or": []bson.M{bson.M{"from": address}, bson.M{"to": address}, bson.M{"contractAddress": address}}}).Sort("-block").All(&trans)
+		return c.Find(bson.M{"$or": []bson.M{bson.M{"from": address}, bson.M{"to": address}, bson.M{"contractAddress": address}}}).Sort("-block", "-idx").All(&trans)
 	}
 	err := c.withCollection(pendingTxTbl, query)
 	return trans, err
