@@ -222,7 +222,7 @@ func getBeginAndEndByPageAndOrder(total, p, step uint64) (page, begin, end uint6
 		page = totalPages - 1
 	}
 
-	end = page * step
+	end = (page + 1) * step
 	if end < step {
 		begin = 0
 	} else {
@@ -569,7 +569,7 @@ func (h *BlockHandler) GetTxsInBlock(c *gin.Context, shardNumber int, height, p,
 func (h *BlockHandler) GetTxsInAccount(c *gin.Context, address string, p, ps uint64) {
 	dbClinet := h.DBClient
 
-	txs, err := dbClinet.GetTxsByAddresss(address, maxAccountTxCnt, true)
+	txs, err := dbClinet.GetTxsByAddresss(address, maxAccountTxCnt, false)
 	if err != nil {
 		responseError(c, errGetTxFromDB, http.StatusInternalServerError, apiDBQueryError)
 		return
