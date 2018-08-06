@@ -552,7 +552,7 @@ func (h *BlockHandler) GetTxsInBlock(c *gin.Context, shardNumber int, height, p,
 func (h *BlockHandler) GetTxsInAccount(c *gin.Context, address string, p, ps uint64) {
 	dbClinet := h.DBClient
 
-	txs, err := dbClinet.GetTxsByAddresss(address, maxAccountTxCnt)
+	txs, err := dbClinet.GetTxsByAddresss(address, maxAccountTxCnt, true)
 	if err != nil {
 		responseError(c, errGetTxFromDB, http.StatusInternalServerError, apiDBQueryError)
 		return
