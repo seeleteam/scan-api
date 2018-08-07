@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/seeleteam/scan-api/log"
+	"github.com/influxdata/influxdb/pkg/testing/assert"
 )
 
 // func TestOnGetBlockByHeight(t *testing.T) {
@@ -964,7 +965,7 @@ func TestSpeed(t *testing.T) {
 			AccountNonce: "0",
 			Timestamp:    "1526867474273961984",
 			Payload:      "",
-			Block:        "99999",
+			Block:        99999,
 			Idx:          10000000,
 		}
 
@@ -994,4 +995,62 @@ func TestSearch(t *testing.T) {
 
 	elpased := time.Now().UnixNano() - starttime
 	fmt.Println(elpased)
+}
+
+func TestRemoveAll(t *testing.T) {
+	if log.NewLogger("log", "debug", true) == nil {
+		return
+	}
+
+	dbClient := NewDBClient("seele", "117.50.0.225:27017", 1)
+	assert.Equal(t, dbClient  != nil, true)
+
+	err := dbClient.RemoveTxs(3, 666666)
+	assert.Equal(t, err, nil)
+}
+
+func TestAddTxs(t *testing.T) {
+	if log.NewLogger("log", "debug", true) == nil {
+		return
+	}
+
+	dbClient := NewDBClient("seele", "117.50.0.225:27017", 1)
+	assert.Equal(t, dbClient  != nil, true)
+
+	tx1 := &DBTx{
+			TxType : 0,
+			Hash: "0x5d148be1b0a58c82a45e5f6a19b0d5c89be11850abc7d52149347c924365f1c6",
+			From : "0x0000000000000000000000000000000000000000",
+			To: "0x2b26d5bf9a2778553d1ac6d09bbd686ea5185c71",
+			Amount: 150000000,
+			AccountNonce : "0",
+			Timestamp : "1533551588",
+			Payload : "",
+			Block: 666666,
+			Idx :1,
+			ShardNumber : 3,
+			Fee : 0,
+			Pending : false,
+			ContractAddress : "",
+		}
+		tx2 := &DBTx{
+			TxType : 0,
+			Hash: "0x5d148be1b0a58c82a45e5f6a19b0d5c89be11850abc7d52149347c924365f1c6",
+			From : "0x0000000000000000000000000000000000000000",
+			To: "0x2b26d5bf9a2778553d1ac6d09bbd686ea5185c71",
+			Amount: 150000000,
+			AccountNonce : "0",
+			Timestamp : "1533551588",
+			Payload : "",
+			Block: 666667,
+			Idx :2,
+			ShardNumber : 3,
+			Fee : 0,
+			Pending : false,
+			ContractAddress : "",
+	}
+
+	txs := []interface{}{tx1, tx2}
+	err := dbClient.AddTxs(txs...)
+	assert.Equal(t, err, nil)
 }

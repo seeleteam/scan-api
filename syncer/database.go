@@ -12,6 +12,7 @@ type Database interface {
 	GetBlockByHeight(shardNumber int, height uint64) (*database.DBBlock, error)
 	RemoveAllPendingTxs() error
 	AddTx(tx *database.DBTx) error
+	AddTxs(tx ...interface{}) error
 	AddPendingTx(tx *database.DBTx) error
 	GetAccountByAddress(address string) (*database.DBAccount, error)
 	AddAccount(account *database.DBAccount) error
