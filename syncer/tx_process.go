@@ -1,8 +1,6 @@
 package syncer
 
 import (
-	"sync"
-
 	"github.com/seeleteam/scan-api/database"
 	"github.com/seeleteam/scan-api/log"
 	"github.com/seeleteam/scan-api/rpc"
@@ -10,9 +8,9 @@ import (
 
 func (s *Syncer) txSync(block *rpc.BlockInfo) error {
 	transIdx, _ := s.db.GetTxCntByShardNumber(s.shardNumber)
-
-	var wg sync.WaitGroup
-	wg.Add(len(block.Txs))
+	txs := []interface{}{}
+	//var wg sync.WaitGroup
+	//wg.Add(len(block.Txs))
 
 	for j := 0; j < len(block.Txs); j++ {
 		trans := block.Txs[j]
@@ -34,14 +32,15 @@ func (s *Syncer) txSync(block *rpc.BlockInfo) error {
 			}
 		}
 
-		s.workerpool.Submit(func() {
-			s.db.AddTx(dbTx)
-			wg.Done()
-		})
+		txs = append(txs, dbTx)
+		//s.workerpool.Submit(func() {
+		//	s.db.AddTx(dbTx)
+		//	wg.Done()
+		//})
 	}
 
-	wg.Wait()
-
+	//wg.Wait()
+	s.db.AddTxs(txs...)
 	return nil
 }
 

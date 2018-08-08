@@ -203,6 +203,15 @@ func (c *Client) AddTx(tx *DBTx) error {
 	return err
 }
 
+//AddTxs insert a transaction into mongo
+func (c *Client) AddTxs(txs... interface{}) error {
+	query := func(c *mgo.Collection) error {
+		return c.Insert(txs...)
+	}
+	err := c.withCollection(txTbl, query)
+	return err
+}
+
 //AddPendingTx insert a pending transaction into mongo
 func (c *Client) AddPendingTx(tx *DBTx) error {
 	query := func(c *mgo.Collection) error {
