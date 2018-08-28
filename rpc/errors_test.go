@@ -26,13 +26,14 @@ func Test_NewError(t *testing.T) {
 			"oneoneone",
 		},
 	}
-	for i, test := range tests {
+
+	for _, test := range tests {
 		got := NewError(test.Code, test.Message)
-		if got.Code != test.Code && got.Message != test.Message {
-			t.Errorf(" case #%d: Code %v; Message: %v", i+1, test.Code, test.Message)
-		}
+		assert.Equal(t, got.Code, test.Code)
+		assert.Equal(t, got.Message, test.Message)
 	}
 }
+
 func Test_newError(t *testing.T) {
 	tests := []struct {
 		Message string
@@ -47,6 +48,7 @@ func Test_newError(t *testing.T) {
 			"rpc: can't find method",
 		},
 	}
+
 	for _, test := range tests {
 		got := newError(test.Message)
 		assert.Equal(t, got.Message, test.Message)
@@ -55,6 +57,7 @@ func Test_newError(t *testing.T) {
 	got1 := newError("sdsd")
 	assert.Equal(t, got1.Message, "sdsd")
 }
+
 func Test_ServerError(t *testing.T) {
 	err := ServerError(nil)
 	assert.Equal(t, err == nil, true)
@@ -64,6 +67,7 @@ func Test_ServerError(t *testing.T) {
 	assert.Equal(t, err.Message, "2323")
 	assert.Equal(t, err.Code, 12)
 }
+
 func Test_Error(t *testing.T) {
 	e := &Error{
 		110,
