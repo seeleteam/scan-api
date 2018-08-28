@@ -61,11 +61,11 @@ func Test_newError(t *testing.T) {
 func Test_ServerError(t *testing.T) {
 	err := ServerError(nil)
 	assert.Equal(t, err == nil, true)
-
 	rpcerr := errors.New(`{"code":-32603,"message":"Internal error","Data":"[]int{1, 2, 3}"}`)
 	err = ServerError(rpcerr)
-
-	assert.Equal(t, err.Code, errInternal.Code, err.Data != nil, true)
+	assert.Equal(t, err.Data != nil, true)
+	_, ok := err.Data.(*Error)
+	assert.Equal(t, ok, false)
 	assert.Equal(t, err.Message, "Internal error")
 	assert.Equal(t, err.Code, -32603)
 }
