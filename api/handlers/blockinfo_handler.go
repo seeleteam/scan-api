@@ -208,10 +208,9 @@ func (h *BlockHandler) getBlocksByBeginAndEnd(shardNumber int, begin, end uint64
 	for i := 0; i < len(dbBlocks); i++ {
 		data := dbBlocks[i]
 
-		simpleBlock := createRetSimpleBlockInfo(data)
+		simpleBlock := h.createRetSimpleBlockInfo(data)
 		blocks = append(blocks, simpleBlock)
 	}
-
 	return blocks
 }
 
@@ -223,7 +222,7 @@ func getBeginAndEndByPageAndOrder(total, p, step uint64) (page, begin, end uint6
 	}
 
 	end = (page + 1) * step
-	if end >= total{
+	if end >= total {
 		end = total - 1
 	}
 	if end < step {
@@ -283,7 +282,6 @@ func (h *BlockHandler) GetBlocks() gin.HandlerFunc {
 
 		page, begin, end := getBeginAndEndByPage(curBlockHeight, p, ps)
 		blocks := h.getBlocksByBeginAndEnd(shardNumber, begin, end)
-
 		c.JSON(http.StatusOK, gin.H{
 			"code":    apiOk,
 			"message": "",
