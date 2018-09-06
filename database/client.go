@@ -204,7 +204,7 @@ func (c *Client) AddTx(tx *DBTx) error {
 }
 
 //AddTxs insert a transaction into mongo
-func (c *Client) AddTxs(txs... interface{}) error {
+func (c *Client) AddTxs(txs ...interface{}) error {
 	query := func(c *mgo.Collection) error {
 		return c.Insert(txs...)
 	}
@@ -450,6 +450,24 @@ func (c *Client) GetMinedBlocksCntByShardNumberAndAddress(shardNumber int, addre
 	}
 	err := c.withCollection(blockTbl, query)
 	return blockCnt, err
+}
+
+//GetBlockfee
+func (c *Client) GetBlockfee(block uint64) (int64, error) {
+	var blockFee int64
+	query := func(c *mgo.Collection) error {
+		var err error
+		var trans []*DBTx
+		c.Find(bson.M{"block": block}).All(&trans)
+		blockFee = 0
+		for i := 0; i < len(trans); i++ {
+			data := trans[i]
+			blockFee += data.Fee
+		}
+		return err
+	}
+	err := c.withCollection(txTbl, query)
+	return blockFee, err
 }
 
 //removeAccount test use  remove account by address from database
