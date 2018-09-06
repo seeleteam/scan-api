@@ -114,7 +114,7 @@ func NewAccHandler(DBClient BlockInfoDB) *AccountHandler {
 
 func (h *AccountHandler) updateImpl() {
 
-	for i := 1; i < shardCount; i++ {
+	for i := 1; i <= shardCount; i++ {
 		h.accTbls[i-1].ProcessGAccountTable()
 	}
 
