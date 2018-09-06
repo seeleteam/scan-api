@@ -29,6 +29,8 @@ type RetSimpleBlockInfo struct {
 	Age         string `json:"age"`
 	Txn         int    `json:"txn"`
 	Miner       string `json:"miner"`
+	Reward      int64  `bson:"reward"`
+	Fee         int64  `bson:"fee"`
 }
 
 //RetDetailBlockInfo describle the block info in the block detail page which send to the frontend
@@ -60,6 +62,7 @@ type RetSimpleTxInfo struct {
 	Pending     bool        `json:"pending"`
 	Fee         int64       `json:"fee"`
 	Receipt     rpc.Receipt `json:"receipt"`
+	Nonce       string      `json:"nonce"`
 }
 
 //RetDetailTxInfo describle the transaction detail info in the transaction detail page which send to the frontend
@@ -118,14 +121,21 @@ type RetDetailAccountInfo struct {
 }
 
 //createRetSimpleBlockInfo converts the given dbblock to the retsimpleblockinfo
-func createRetSimpleBlockInfo(blockInfo *database.DBBlock) *RetSimpleBlockInfo {
+func (h *BlockHandler) createRetSimpleBlockInfo(blockInfo *database.DBBlock) *RetSimpleBlockInfo {
 	var ret RetSimpleBlockInfo
+	dbClient := h.DBClient
 	ret.Miner = blockInfo.Creator
 	ret.Height = uint64(blockInfo.Height)
 	ret.Txn = len(blockInfo.Txs)
 	timeStamp := big.NewInt(blockInfo.Timestamp)
 	ret.Age = getElpasedTimeDesc(timeStamp)
 	ret.ShardNumber = blockInfo.ShardNumber
+	ret.Reward = blockInfo.Reward
+	Totalfee, err := dbClient.GetBlockfee(ret.Height)
+	if err != nil {
+		return nil
+	}
+	ret.Fee = Totalfee
 	return &ret
 }
 
@@ -164,6 +174,7 @@ func createRetSimpleTxInfo(transaction *database.DBTx) *RetSimpleTxInfo {
 	ret.Value = transaction.Amount
 	ret.Pending = transaction.Pending
 	ret.Fee = transaction.Fee
+	ret.Nonce = transaction.AccountNonce
 	timeStamp := big.NewInt(0)
 	if timeStamp.UnmarshalText([]byte(transaction.Timestamp)) == nil {
 		ret.Age = getElpasedTimeDesc(timeStamp)
