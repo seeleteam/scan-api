@@ -223,7 +223,7 @@ func getBeginAndEndByPageAndOrder(total, p, step uint64) (page, begin, end uint6
 	}
 
 	end = (page + 1) * step
-	if end >= total{
+	if end >= total {
 		end = total - 1
 	}
 	if end < step {
