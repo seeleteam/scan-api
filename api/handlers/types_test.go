@@ -28,7 +28,6 @@ func Test_CreateRetSimpleBlockInfo(t *testing.T) {
 		TxFee += header.Txs[i].Fee
 	}
 	assert.Equal(t, got.Fee, TxFee)
-	gots := int64(got.Height)
-	assert.Equal(t, gots, header.Height)
+	assert.Equal(t, int64(got.Height), header.Height)
 	assert.Equal(t, got.Reward, header.Reward)
 }
