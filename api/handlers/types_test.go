@@ -19,6 +19,7 @@ func newTestDBBlock(t *testing.T) *database.DBBlock {
 		Txs:    []database.DBSimpleTxInBlock{{Fee: 99}},
 	}
 }
+
 func Test_CreateRetSimpleBlockInfo(t *testing.T) {
 	var TxFee int64
 	header := newTestDBBlock(t)
