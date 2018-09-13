@@ -18,6 +18,7 @@ type DBSimpleTxInBlock struct {
 	To        string `bson:"to"`
 	Amount    int64  `bson:"amount"`
 	Timestamp string `bson:"timestamp"`
+	Fee       int64  `bson:"fee"`
 }
 
 //DBBlock describle the block info which stored in the database
@@ -83,6 +84,7 @@ func CreateDbBlock(b *rpc.BlockInfo) *DBBlock {
 		simpleTx.Hash = b.Txs[i].Hash
 		simpleTx.From = b.Txs[i].From
 		simpleTx.To = b.Txs[i].To
+		simpleTx.Fee = b.Txs[i].Fee
 		simpleTx.Amount = b.Txs[i].Amount.Int64()
 		simpleTx.Timestamp = strconv.FormatUint(b.Txs[i].Timestamp, 10)
 		dbBlock.Txs = append(dbBlock.Txs, simpleTx)
