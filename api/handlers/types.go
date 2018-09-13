@@ -121,9 +121,9 @@ type RetDetailAccountInfo struct {
 }
 
 //createRetSimpleBlockInfo converts the given dbblock to the retsimpleblockinfo
-func (h *BlockHandler) createRetSimpleBlockInfo(blockInfo *database.DBBlock) *RetSimpleBlockInfo {
+func createRetSimpleBlockInfo(blockInfo *database.DBBlock) *RetSimpleBlockInfo {
 	var ret RetSimpleBlockInfo
-	dbClient := h.DBClient
+	var blockFee int64
 	ret.Miner = blockInfo.Creator
 	ret.Height = uint64(blockInfo.Height)
 	ret.Txn = len(blockInfo.Txs)
@@ -131,11 +131,11 @@ func (h *BlockHandler) createRetSimpleBlockInfo(blockInfo *database.DBBlock) *Re
 	ret.Age = getElpasedTimeDesc(timeStamp)
 	ret.ShardNumber = blockInfo.ShardNumber
 	ret.Reward = blockInfo.Reward
-	Totalfee, err := dbClient.GetBlockfee(ret.Height)
-	if err != nil {
-		return nil
+
+	for i := 0; i < len(blockInfo.Txs); i++ {
+		blockFee += blockInfo.Txs[i].Fee
 	}
-	ret.Fee = Totalfee
+	ret.Fee = blockFee
 	return &ret
 }
 
