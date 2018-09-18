@@ -93,6 +93,14 @@ type RetSimpleAccountInfo struct {
 	TxCount     int64   `json:"txcount"`
 }
 
+//RetSimpleAccountHome
+type RetSimpleAccountHome struct {
+	Number     int     `json:"number"`
+	Hash       string  `json:"hash"`
+	Balance    int64   `json:"balance"`
+	Percentage float64 `json:"percentage"`
+}
+
 //RetDetailAccountTxInfo describle the tx info contained by the RetDetailAccountInfo
 type RetDetailAccountTxInfo struct {
 	ShardNumber int    `json:"shardnumber"`
@@ -214,6 +222,15 @@ func createRetSimpleAccountInfo(account *database.DBAccount, ttBalance int64) *R
 	ret.TxCount = account.TxCount
 	ret.Percentage = (float64(ret.Balance) / float64(ttBalance))
 	ret.ShardNumber = account.ShardNumber
+	return &ret
+}
+
+//createHomeRetSimpleAccountInfo converts the given dbaccount to the RetSimpleAccountHome
+func createHomeRetSimpleAccountInfo(account *database.DBAccount, ttBalance int64) *RetSimpleAccountHome {
+	var ret RetSimpleAccountHome
+	ret.Hash = account.Address
+	ret.Balance = account.Balance
+	ret.Percentage = (float64(ret.Balance) / float64(ttBalance))
 	return &ret
 }
 

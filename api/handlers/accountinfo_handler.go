@@ -89,6 +89,23 @@ func (a *AccountTbl) getAccountsByBeginAndEnd(begin, end uint64) []*RetSimpleAcc
 	return accounts
 }
 
+//getHomebyAccounts
+func (a *AccountTbl) getHomebyAccounts(begin, end uint64) []*RetSimpleAccountHome {
+	var accounts []*RetSimpleAccountHome
+
+	dbAccounts := a.GetAccountsByIdx(begin, end)
+
+	for i := 0; i < len(dbAccounts); i++ {
+		data := dbAccounts[i]
+
+		simpleAccount := createHomeRetSimpleAccountInfo(data, a.totalBalance)
+		simpleAccount.Number = i + 1
+		accounts = append(accounts, simpleAccount)
+	}
+
+	return accounts
+}
+
 //AccountHandler handle all account request
 type AccountHandler struct {
 	accTbls  []*AccountTbl
@@ -188,6 +205,23 @@ func (h *AccountHandler) GetAccounts() gin.HandlerFunc {
 					"curPage":      page + 1,
 					"totalBalance": accTbl.totalBalance,
 				},
+				"list": accounts,
+			},
+		})
+	}
+}
+
+//GetHomeAccounts handler for get account list
+func (h *AccountHandler) GetHomeAccounts() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		shardNumber := 1
+		accTbl := h.accTbls[shardNumber-1]
+		accounts := accTbl.getHomebyAccounts(0, 10)
+
+		c.JSON(http.StatusOK, gin.H{
+			"code":    apiOk,
+			"message": "",
+			"data": gin.H{
 				"list": accounts,
 			},
 		})
