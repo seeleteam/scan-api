@@ -395,6 +395,23 @@ func (h *BlockHandler) GetBlockCnt() gin.HandlerFunc {
 	}
 }
 
+//GetBlockProtime
+func (h *BlockHandler) GetBlockProtime() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		dbClinet := h.DBClient
+		protime, err := dbClinet.GetBlockProTime()
+		if err != nil {
+			responseError(c, errGetTxCountFromDB, http.StatusInternalServerError, apiDBQueryError)
+		} else {
+			c.JSON(http.StatusOK, gin.H{
+				"code":    apiOk,
+				"message": "",
+				"data":    protime,
+			})
+		}
+	}
+}
+
 //GetAccountCnt get all account count
 func (h *BlockHandler) GetAccountCnt() gin.HandlerFunc {
 	return func(c *gin.Context) {

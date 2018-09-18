@@ -316,6 +316,25 @@ func (c *Client) GetTxCnt() (uint64, error) {
 	return txCnt, err
 }
 
+//GetBlockProTime
+func (c *Client) GetBlockProTime() (float64, error) {
+	var protime float64
+	var end, begin int64
+	query := func(c *mgo.Collection) error {
+		var err error
+		var blocks []*DBBlock
+		c.Find(bson.M{}).Sort("-timestamp").Limit(5).All(&blocks)
+		for i := 0; i < len(blocks); i++ {
+			begin = blocks[4].Timestamp
+			end = blocks[0].Timestamp
+		}
+		protime = float64((end - begin)) / 5
+		return err
+	}
+	err := c.withCollection(blockTbl, query)
+	return protime, err
+}
+
 //GetBlockCnt get row count of transaction table from mongo
 func (c *Client) GetBlockCnt() (uint64, error) {
 	var blockCnt uint64
