@@ -131,7 +131,6 @@ func createRetinfor(data int64, theTime string) *CountsTime {
 	var ret CountsTime
 	ret.TxCount = data
 	ret.Stime = theTime
-	//ret.TxCount = append(ret.TxCount, data)
 	return &ret
 }
 
