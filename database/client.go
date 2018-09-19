@@ -2,6 +2,7 @@ package database
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 
 	"github.com/seeleteam/scan-api/log"
@@ -299,6 +300,24 @@ func (c *Client) GetPendingTxByHash(hash string) (*DBTx, error) {
 	}
 	err := c.withCollection(pendingTxTbl, query)
 	return tx, err
+}
+
+//GetTxsDayCount get row count of transaction table from mongo
+func (c *Client) GetTxsDayCount(begin int64, end int64) (int64, error) {
+	var txCnt int64
+	beginTime := strconv.FormatInt(begin, 10)
+	endTime := strconv.FormatInt(end, 10)
+	query := func(c *mgo.Collection) error {
+		var err error
+		var temp int
+		temp, err = c.Find(bson.M{"timestamp": bson.M{"$gte": beginTime, "$lt": endTime}}).Count()
+		txCnt = int64(temp)
+		fmt.Println("txCnt: ", txCnt)
+		return err
+
+	}
+	err := c.withCollection(txTbl, query)
+	return txCnt, err
 }
 
 //GetTxCnt get row count of transaction table from mongo

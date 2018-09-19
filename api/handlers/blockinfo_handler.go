@@ -12,6 +12,7 @@ import (
 	"math/big"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -504,6 +505,43 @@ func (h *BlockHandler) getPendingTxsByBeginAndEnd(shardNumber int, begin, end ui
 	}
 
 	return txs
+}
+
+//GetTxsDayCount
+func (h *BlockHandler) GetTxsDayCount() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		dbClinet := h.DBClient
+		nTime := time.Now()
+		var data []*CountsTime
+		for i := 0; i < 30; i++ {
+			yesTime := nTime.AddDate(0, 0, -i)
+			yesTimeend := nTime.AddDate(0, 0, -i+1)
+			logDay := yesTime.Format("20060102")
+			logDayend := yesTimeend.Format("20060102")
+			timeLayout := "20060102"
+			loc, _ := time.LoadLocation("Local")
+			theTime, _ := time.ParseInLocation(timeLayout, logDay, loc)
+			theTimeend, _ := time.ParseInLocation(timeLayout, logDayend, loc)
+			begin := theTime.Unix()
+			end := theTimeend.Unix()
+			Txsdata, err := dbClinet.GetTxsDayCount(begin, end)
+			if err != nil {
+				responseError(c, errGetBlockFromDB, http.StatusInternalServerError, apiDBQueryError)
+				return
+			}
+			simpleAcc := createRetinfor(Txsdata, string(logDay))
+			fmt.Printf("printfsimpleAcc:%+v \n", simpleAcc)
+			fmt.Println("simpleAcc:", simpleAcc)
+			data = append(data, simpleAcc)
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"code":    apiOk,
+			"message": "",
+			"data":    data,
+		})
+
+	}
 }
 
 //GetTxsInBlock get all transactions in block by height
