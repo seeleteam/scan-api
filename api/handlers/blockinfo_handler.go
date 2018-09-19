@@ -530,8 +530,6 @@ func (h *BlockHandler) GetTxsDayCount() gin.HandlerFunc {
 				return
 			}
 			simpleAcc := createRetinfor(Txsdata, string(logDay))
-			fmt.Printf("printfsimpleAcc:%+v \n", simpleAcc)
-			fmt.Println("simpleAcc:", simpleAcc)
 			data = append(data, simpleAcc)
 		}
 
