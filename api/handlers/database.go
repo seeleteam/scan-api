@@ -11,6 +11,7 @@ type BlockInfoDB interface {
 	GetTxCnt() (uint64, error)
 	GetBlockCnt() (uint64, error)
 	GetBlockProTime() (float64, error)
+	GetBlockTxsTps() (float64, error)
 	GetAccountCnt() (uint64, error)
 	GetContractCnt() (uint64, error)
 	GetTxCntByShardNumber(shardNumber int) (uint64, error)
