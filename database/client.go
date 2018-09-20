@@ -316,23 +316,23 @@ func (c *Client) GetTxCnt() (uint64, error) {
 	return txCnt, err
 }
 
-//GetBlockProTime
+//GetBlockProTime from recent 10 average time to calculate the block
 func (c *Client) GetBlockProTime() (float64, error) {
-	var protime float64
+	var Blockprotime float64
 	var end, begin int64
 	query := func(c *mgo.Collection) error {
 		var err error
 		var blocks []*DBBlock
-		c.Find(bson.M{}).Sort("-timestamp").Limit(5).All(&blocks)
+		c.Find(bson.M{}).Sort("-timestamp").Limit(10).All(&blocks)
 		for i := 0; i < len(blocks); i++ {
-			begin = blocks[4].Timestamp
+			begin = blocks[9].Timestamp
 			end = blocks[0].Timestamp
 		}
-		protime = float64((end - begin)) / 5
+		Blockprotime = float64((end - begin)) / 10
 		return err
 	}
 	err := c.withCollection(blockTbl, query)
-	return protime, err
+	return Blockprotime, err
 }
 
 //GetBlockCnt get row count of transaction table from mongo
