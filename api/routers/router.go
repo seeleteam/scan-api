@@ -49,7 +49,6 @@ func (r *Router) Init(e *gin.Engine) {
 	v1.GET("/txs", r.BlockHandler.GetTxs())
 	v1.GET("/pendingtxs", r.BlockHandler.GetPendingTxs())
 	v1.GET("/tx", r.BlockHandler.GetTxByHash())
-	//Home page api
 	v1.GET("/Homeaccounts", r.AccountHandler.GetHomeAccounts())
 	//ugly fix this
 	v1.GET("/search", r.BlockHandler.Search(r.AccountHandler, r.ContractHandler))

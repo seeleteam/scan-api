@@ -96,7 +96,7 @@ type RetSimpleAccountInfo struct {
 //RetSimpleAccountHome
 type RetSimpleAccountHome struct {
 	Number     int     `json:"number"`
-	Hash       string  `json:"hash"`
+	Address    string  `json:"address"`
 	Balance    int64   `json:"balance"`
 	Percentage float64 `json:"percentage"`
 }
@@ -228,7 +228,7 @@ func createRetSimpleAccountInfo(account *database.DBAccount, ttBalance int64) *R
 //createHomeRetSimpleAccountInfo converts the given dbaccount to the RetSimpleAccountHome
 func createHomeRetSimpleAccountInfo(account *database.DBAccount, ttBalance int64) *RetSimpleAccountHome {
 	var ret RetSimpleAccountHome
-	ret.Hash = account.Address
+	ret.Address = account.Address
 	ret.Balance = account.Balance
 	ret.Percentage = (float64(ret.Balance) / float64(ttBalance))
 	return &ret

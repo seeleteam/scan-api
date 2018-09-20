@@ -214,7 +214,16 @@ func (h *AccountHandler) GetAccounts() gin.HandlerFunc {
 //GetHomeAccounts handler for get account list
 func (h *AccountHandler) GetHomeAccounts() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		shardNumber := 1
+		s, _ := strconv.ParseInt(c.Query("s"), 10, 64)
+		if s <= 0 {
+			s = 1
+		}
+		shardNumber := int(s)
+
+		if shardNumber < 1 || shardNumber > 20 {
+			responseError(c, errParamInvalid, http.StatusBadRequest, apiParmaInvalid)
+			return
+		}
 		accTbl := h.accTbls[shardNumber-1]
 		accounts := accTbl.getHomebyAccounts(0, 10)
 
