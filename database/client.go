@@ -323,10 +323,10 @@ func (c *Client) GetBlockProTime() (float64, error) {
 	query := func(c *mgo.Collection) error {
 		var err error
 		var blocks []*DBBlock
-		c.Find(bson.M{}).Sort("-timestamp").Limit(10).All(&blocks)
-		begin = blocks[9].Timestamp
+		c.Find(bson.M{}).Sort("-timestamp").Limit(2).All(&blocks)
+		begin = blocks[1].Timestamp
 		end = blocks[0].Timestamp
-		Blockprotime = float64((end - begin)) / 10
+		Blockprotime = float64((end - begin))
 		return err
 	}
 	err := c.withCollection(blockTbl, query)
