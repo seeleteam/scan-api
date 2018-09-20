@@ -316,23 +316,6 @@ func (c *Client) GetTxCnt() (uint64, error) {
 	return txCnt, err
 }
 
-//GetBlockProTime from recent 10 average time to calculate the block
-func (c *Client) GetBlockProTime() (float64, error) {
-	var Blockprotime float64
-	var begin, end int64
-	query := func(c *mgo.Collection) error {
-		var err error
-		var blocks []*DBBlock
-		c.Find(bson.M{}).Sort("-timestamp").Limit(2).All(&blocks)
-		begin = blocks[1].Timestamp
-		end = blocks[0].Timestamp
-		Blockprotime = float64((end - begin))
-		return err
-	}
-	err := c.withCollection(blockTbl, query)
-	return Blockprotime, err
-}
-
 //GetBlockTxsTps  From a block transaction throughput TPS
 func (c *Client) GetBlockTxsTps() (float64, error) {
 	var blocksTpx float64
