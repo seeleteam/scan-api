@@ -395,6 +395,22 @@ func (h *BlockHandler) GetBlockCnt() gin.HandlerFunc {
 	}
 }
 
+//GetBlockProtime average time calculation block
+func (h *BlockHandler) GetBlockProtime() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		Blockprotime, err := h.DBClient.GetBlockProTime()
+		if err != nil {
+			responseError(c, errGetTxCountFromDB, http.StatusInternalServerError, apiDBQueryError)
+		} else {
+			c.JSON(http.StatusOK, gin.H{
+				"code":    apiOk,
+				"message": "",
+				"data":    Blockprotime,
+			})
+		}
+	}
+}
+
 //GetAccountCnt get all account count
 func (h *BlockHandler) GetAccountCnt() gin.HandlerFunc {
 	return func(c *gin.Context) {
