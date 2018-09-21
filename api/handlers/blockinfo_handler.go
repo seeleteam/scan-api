@@ -513,7 +513,7 @@ func (h *BlockHandler) GetTxsDayCount() gin.HandlerFunc {
 		dbClinet := h.DBClient
 		nTime := time.Now()
 		var data []*CountsTime
-		for i := 0; i < 30; i++ {
+		for i := 0; i < 2; i++ {
 			yesTime := nTime.AddDate(0, 0, -i)
 			yesTimeend := nTime.AddDate(0, 0, -i+1)
 			logDay := yesTime.Format("20060102")
