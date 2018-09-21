@@ -18,9 +18,10 @@ const (
 	txCount           = 25
 	//exclude divide zero problem
 	remianTotalBalance = 1
+	MINERRANKSIZE = 10
 )
 
-var errGetMinerAccountsFromDB = errors.New("could not get miner data from db")
+var errGetAccountsFromDB = errors.New("could not get miner data from db")
 
 //AccountTbl represents an account list ordered by account balance
 type AccountTbl struct {
@@ -117,9 +118,9 @@ func NewAccHandler(DBClient BlockInfoDB) *AccountHandler {
 
 func (h *AccountHandler) GetMinerAccounts() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		miners, err := h.DBClient.GetMinerAccounts(10)
+		miners, err := h.DBClient.GetMinerAccounts(MINERRANKSIZE)
 		if err != nil {
-			responseError(c, errGetMinerAccountsFromDB, http.StatusInternalServerError, apiDBQueryError)
+			responseError(c, errGetAccountsFromDB, http.StatusInternalServerError, apiDBQueryError)
 			return
 		}
 
