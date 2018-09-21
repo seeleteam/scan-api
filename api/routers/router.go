@@ -46,6 +46,7 @@ func (r *Router) Init(e *gin.Engine) {
 	v1.GET("/blockcount", r.BlockHandler.GetBlockCnt())
 	v1.GET("/accountcount", r.BlockHandler.GetAccountCnt())
 	v1.GET("/contractcount", r.BlockHandler.GetContractCnt())
+	v1.GET("/Homeaccounts", r.AccountHandler.GetHomeAccounts())
 	v1.GET("/txs", r.BlockHandler.GetTxs())
 	v1.GET("/pendingtxs", r.BlockHandler.GetPendingTxs())
 	v1.GET("blockTxsTps", r.BlockHandler.GetBlockTxsTps())

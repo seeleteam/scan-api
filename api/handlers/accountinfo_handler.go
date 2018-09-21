@@ -194,6 +194,25 @@ func (h *AccountHandler) GetAccounts() gin.HandlerFunc {
 	}
 }
 
+//GetHomeAccounts handler for get account list
+func (h *AccountHandler) GetHomeAccounts() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var Account []*RetSimpleAccountHome
+		Accounts := h.DBClient.GetAccountsByHome()
+		for i := 0; i < len(Accounts); i++ {
+			data := Accounts[i]
+			simpleTx := createHomeRetSimpleAccountInfo(data)
+			Account = append(Account, simpleTx)
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"code":    apiOk,
+			"message": "",
+			"data":    Account,
+		})
+	}
+}
+
 //GetAccountByAddressImpl use account info, account tx list and account pending tx list to assembly account information
 func (h *AccountHandler) GetAccountByAddressImpl(address string) *RetDetailAccountInfo {
 	dbClinet := h.DBClient

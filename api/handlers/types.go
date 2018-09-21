@@ -8,6 +8,7 @@ package handlers
 import (
 	"fmt"
 	"math/big"
+	"strconv"
 	"time"
 
 	"github.com/seeleteam/scan-api/database"
@@ -97,6 +98,14 @@ type RetSimpleAccountInfo struct {
 	Balance     int64   `json:"balance"`
 	Percentage  float64 `json:"percentage"`
 	TxCount     int64   `json:"txcount"`
+}
+
+//RetSimpleAccountHome
+type RetSimpleAccountHome struct {
+	Number     int    `json:"number"`
+	Address    string `json:"address"`
+	Balance    int64  `json:"balance"`
+	Percentage string `json:"percentage"`
 }
 
 //RetDetailAccountTxInfo describle the tx info contained by the RetDetailAccountInfo
@@ -228,6 +237,16 @@ func createRetSimpleAccountInfo(account *database.DBAccount, ttBalance int64) *R
 	ret.TxCount = account.TxCount
 	ret.Percentage = (float64(ret.Balance) / float64(ttBalance))
 	ret.ShardNumber = account.ShardNumber
+	return &ret
+}
+
+//createHomeRetSimpleAccountInfo converts the given dbaccount to the RetSimpleAccountHome
+func createHomeRetSimpleAccountInfo(account *database.DBAccount) *RetSimpleAccountHome {
+	var ret RetSimpleAccountHome
+	ret.Address = account.Address
+	ret.Balance = account.Balance
+	AccountBalance := strconv.FormatFloat((float64(ret.Balance) / 1000000000), 'f', -1, 64)
+	ret.Percentage = AccountBalance
 	return &ret
 }
 

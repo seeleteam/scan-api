@@ -757,6 +757,16 @@ func (c *Client) GetOneDayBlockDifficulty(shardNumber int, zeroTime int64) (*DBO
 	return oneDayBlockDifficulty, err
 }
 
+//GetAccountsByHome get an dbaccount list sort by balance
+func (c *Client) GetAccountsByHome() []*DBAccount {
+	var accounts []*DBAccount
+	query := func(c *mgo.Collection) error {
+		return c.Find(bson.M{}).Sort("-balance").Limit(10).All(&accounts)
+	}
+	c.withCollection(accTbl, query)
+	return accounts
+}
+
 //GetOneDayBlockDifficultyChart get all rows int the hashrate table
 func (c *Client) GetOneDayBlockDifficultyChart() ([]*DBOneDayBlockDifficulty, error) {
 	var oneDayBlockDifficulties []*DBOneDayBlockDifficulty
