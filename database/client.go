@@ -2,7 +2,6 @@ package database
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 
 	"github.com/seeleteam/scan-api/log"
@@ -312,7 +311,6 @@ func (c *Client) GetTxsDayCount(begin int64, end int64) (int64, error) {
 		var temp int
 		temp, err = c.Find(bson.M{"timestamp": bson.M{"$gte": beginTime, "$lt": endTime}}).Count()
 		txCnt = int64(temp)
-		fmt.Println("txCnt: ", txCnt)
 		return err
 
 	}
