@@ -395,22 +395,6 @@ func (h *BlockHandler) GetBlockCnt() gin.HandlerFunc {
 	}
 }
 
-//GetBlockTxsTps TPS from block calculation
-func (h *BlockHandler) GetBlockTxsTps() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		data, err := h.DBClient.GetBlockTxsTps()
-		if err != nil {
-			responseError(c, errGetTxCountFromDB, http.StatusInternalServerError, apiDBQueryError)
-		} else {
-			c.JSON(http.StatusOK, gin.H{
-				"code":    apiOk,
-				"message": "",
-				"data":    data,
-			})
-		}
-	}
-}
-
 //GetAccountCnt get all account count
 func (h *BlockHandler) GetAccountCnt() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -442,6 +426,22 @@ func (h *BlockHandler) GetContractCnt() gin.HandlerFunc {
 				"code":    apiOk,
 				"message": "",
 				"data":    contractCnt,
+			})
+		}
+	}
+}
+
+//GetBlockTxsTps TPS from block calculation
+func (h *BlockHandler) GetBlockTxsTps() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		data, err := h.DBClient.GetBlockTxsTps()
+		if err != nil {
+			responseError(c, errGetTxCountFromDB, http.StatusInternalServerError, apiDBQueryError)
+		} else {
+			c.JSON(http.StatusOK, gin.H{
+				"code":    apiOk,
+				"message": "",
+				"data":    data,
 			})
 		}
 	}
