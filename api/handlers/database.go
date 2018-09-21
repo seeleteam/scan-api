@@ -7,6 +7,7 @@ type BlockInfoDB interface {
 	GetBlockTxsTps() (float64, error)
 	GetBlockHeight(shardNumber int) (uint64, error)
 	GetBlockByHeight(shardNumber int, height uint64) (*database.DBBlock, error)
+	GetTxsDayCount(begin, end int64) (int64, error)
 	GetBlocksByHeight(shardNumber int, begin uint64, end uint64) ([]*database.DBBlock, error)
 	GetBlockByHash(hash string) (*database.DBBlock, error)
 	GetTxCnt() (uint64, error)

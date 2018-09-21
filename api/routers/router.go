@@ -54,6 +54,7 @@ func (r *Router) Init(e *gin.Engine) {
 	//ugly fix this
 	v1.GET("/search", r.BlockHandler.Search(r.AccountHandler, r.ContractHandler))
 	v1.GET("/accounts", r.AccountHandler.GetAccounts())
+	v1.GET("/Txstat", r.BlockHandler.GetTxsDayCount())
 	v1.GET("/account", r.AccountHandler.GetAccountByAddress())
 	v1.GET("/contracts", r.ContractHandler.GetContracts())
 	v1.GET("/contract", r.ContractHandler.GetContractByAddress())

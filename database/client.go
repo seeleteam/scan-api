@@ -301,6 +301,23 @@ func (c *Client) GetPendingTxByHash(hash string) (*DBTx, error) {
 	return tx, err
 }
 
+//GetTxsDayCount get row count of transaction table from mongo
+func (c *Client) GetTxsDayCount(begin int64, end int64) (int64, error) {
+	var txCnt int64
+	beginTime := strconv.FormatInt(begin, 10)
+	endTime := strconv.FormatInt(end, 10)
+	query := func(c *mgo.Collection) error {
+		var err error
+		var temp int
+		temp, err = c.Find(bson.M{"timestamp": bson.M{"$gte": beginTime, "$lt": endTime}}).Count()
+		txCnt = int64(temp)
+		return err
+
+	}
+	err := c.withCollection(txTbl, query)
+	return txCnt, err
+}
+
 //GetTxCnt get row count of transaction table from mongo
 func (c *Client) GetTxCnt() (uint64, error) {
 	var txCnt uint64

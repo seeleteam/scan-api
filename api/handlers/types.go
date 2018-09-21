@@ -49,6 +49,12 @@ type RetDetailBlockInfo struct {
 	MinHeight uint64 `json:"minheight"`
 }
 
+//CountsTime
+type CountsTime struct {
+	Stime   string `json:"stime"`
+	TxCount int64  `json:"txcount"`
+}
+
 //RetSimpleTxInfo describle the transaction info in the transaction detail page which send to the frontend
 type RetSimpleTxInfo struct {
 	TxType      int         `json:"txtype"`
@@ -118,6 +124,14 @@ type RetDetailAccountInfo struct {
 	TxCount              int64                    `json:"txcount"`
 	ContractCreationCode string                   `json:"contractCreationCode"`
 	Txs                  []RetDetailAccountTxInfo `json:"txs"`
+}
+
+//createRetinfor
+func createRetinfor(data int64, theTime string) *CountsTime {
+	var ret CountsTime
+	ret.TxCount = data
+	ret.Stime = theTime
+	return &ret
 }
 
 //createRetSimpleBlockInfo converts the given dbblock to the retsimpleblockinfo
