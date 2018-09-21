@@ -89,23 +89,6 @@ func (a *AccountTbl) getAccountsByBeginAndEnd(begin, end uint64) []*RetSimpleAcc
 	return accounts
 }
 
-//getHomebyAccounts
-func (a *AccountTbl) getHomebyAccounts(begin, end uint64) []*RetSimpleAccountHome {
-	var accounts []*RetSimpleAccountHome
-
-	dbAccounts := a.GetAccountsByIdx(begin, end)
-
-	for i := 0; i < len(dbAccounts); i++ {
-		data := dbAccounts[i]
-
-		simpleAccount := createHomeRetSimpleAccountInfo(data, a.totalBalance)
-		simpleAccount.Number = i + 1
-		accounts = append(accounts, simpleAccount)
-	}
-
-	return accounts
-}
-
 //AccountHandler handle all account request
 type AccountHandler struct {
 	accTbls  []*AccountTbl
