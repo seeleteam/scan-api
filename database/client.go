@@ -705,34 +705,6 @@ func (c *Client) GetOneDayBlockDifficulty(shardNumber int, zeroTime int64) (*DBO
 	return oneDayBlockDifficulty, err
 }
 
-//GetAccuntsTotalBalance return the sum of all account
-func (c *Client) GetAccuntsTotalBalance() (map[int]int64, error) {
-	totalBalance := make(map[int]int64)
-	query := func(c *mgo.Collection) error {
-
-		job := &mgo.MapReduce{
-			Map: "function() { emit(this.id_, this.balance) }",
-			Reduce: `function(key, values) {
-						return Array.sum(values)
-					}`,
-		}
-		var result []struct {
-			Id    int "_id"
-			Value int64
-		}
-		_, err := c.Find(nil).MapReduce(job, &result)
-		if err != nil {
-			return err
-		}
-		for _, item := range result {
-			totalBalance[item.Id] = item.Value
-		}
-		return err
-	}
-	err := c.withCollection(accTbl, query)
-	return totalBalance, err
-}
-
 //GetAccountsByHome get an dbaccount list sort by balance
 func (c *Client) GetAccountsByHome() []*DBAccount {
 	var accounts []*DBAccount

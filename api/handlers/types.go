@@ -227,7 +227,7 @@ func createRetSimpleAccountInfo(account *database.DBAccount, ttBalance int64) *R
 }
 
 //createHomeRetSimpleAccountInfo converts the given dbaccount to the RetSimpleAccountHome
-func createHomeRetSimpleAccountInfo(account *database.DBAccount, ttBalance int64) *RetSimpleAccountHome {
+func createHomeRetSimpleAccountInfo(account *database.DBAccount) *RetSimpleAccountHome {
 	var ret RetSimpleAccountHome
 	ret.Address = account.Address
 	ret.Balance = account.Balance

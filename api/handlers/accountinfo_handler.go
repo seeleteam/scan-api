@@ -198,11 +198,10 @@ func (h *AccountHandler) GetAccounts() gin.HandlerFunc {
 func (h *AccountHandler) GetHomeAccounts() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var Account []*RetSimpleAccountHome
-		TotalBalance, _ := h.DBClient.GetAccuntsTotalBalance()
 		Accounts := h.DBClient.GetAccountsByHome()
 		for i := 0; i < len(Accounts); i++ {
 			data := Accounts[i]
-			simpleTx := createHomeRetSimpleAccountInfo(data, int64(TotalBalance[0]))
+			simpleTx := createHomeRetSimpleAccountInfo(data)
 			Account = append(Account, simpleTx)
 		}
 
