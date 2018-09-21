@@ -4,6 +4,7 @@ import "github.com/seeleteam/scan-api/database"
 
 // BlockInfoDB Warpper for access mongodb.
 type BlockInfoDB interface {
+	GetBlockTxsTps() (float64, error)
 	GetBlockHeight(shardNumber int) (uint64, error)
 	GetBlockByHeight(shardNumber int, height uint64) (*database.DBBlock, error)
 	GetBlocksByHeight(shardNumber int, begin uint64, end uint64) ([]*database.DBBlock, error)

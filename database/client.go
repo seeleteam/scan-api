@@ -363,6 +363,24 @@ func (c *Client) GetAccountCnt() (uint64, error) {
 	return txCnt, err
 }
 
+//GetBlockTxsTps  From a block transaction throughput TPS
+func (c *Client) GetBlockTxsTps() (float64, error) {
+	var blocksTpx float64
+	var Txs, Blockprotime int64
+	query := func(c *mgo.Collection) error {
+		var err error
+		var blocks []*DBBlock
+		c.Find(bson.M{}).Sort("-timestamp").Limit(2).All(&blocks)
+		Txs = int64(len(blocks[1].Txs))
+		Blockprotime = int64(blocks[0].Timestamp - blocks[1].Timestamp)
+		blocksTpx = float64(Txs / Blockprotime)
+		return err
+	}
+
+	err := c.withCollection(blockTbl, query)
+	return blocksTpx, err
+}
+
 //GetContractCnt get contract count
 func (c *Client) GetContractCnt() (uint64, error) {
 	var txCnt uint64
