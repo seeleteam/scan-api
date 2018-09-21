@@ -72,8 +72,8 @@ type DBMiner struct {
 	Address     string `bson:"address"`
 	Balance     int64  `bson:"balance"`
 	ShardNumber int    `bson:"shardNumber"`
-	Reward      int64   `bson:"reward"`
-	TxFee         int64    `bson:"fee"`
+	Reward      int64  `bson:"reward"`
+	TxFee       int64  `bson:"fee"`
 	TimeStamp   int64  `bson:"timestamp"`
 }
 

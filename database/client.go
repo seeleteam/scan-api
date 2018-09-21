@@ -14,7 +14,7 @@ const (
 	blockTbl     = "block"
 	txTbl        = "transaction"
 	accTbl       = "account"
-	minerTbl       = "miner"
+	minerTbl     = "miner"
 	pendingTxTbl = "pendingtx"
 
 	chartTxTbl              = "chart_transhistory"
@@ -562,6 +562,16 @@ func (c *Client) UpdateMinerAccount(miner *DBMiner) error {
 	}
 
 	return err
+}
+
+//GetMinerAccounts get the size of DBMiner
+func (c *Client) GetMinerAccounts(size int) ([]*DBMiner, error) {
+	var miners []*DBMiner
+	query := func(c *mgo.Collection) error {
+		return c.Find(bson.M{}).Sort("-balance").Limit(size).All(&miners)
+	}
+	err := c.withCollection(minerTbl, query)
+	return miners, err
 }
 
 //UpdateAccount update account
