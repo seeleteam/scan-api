@@ -25,6 +25,8 @@ type Syncer struct {
 
 	cacheAccount  map[string]*database.DBAccount
 	updateAccount map[string]*database.DBAccount
+	cacheMinerAccount map[string]*database.DBMiner
+	updateMinerAccount map[string]*database.DBMiner
 }
 
 //NewSyncer return a syncer to sync block data from seele node
@@ -46,6 +48,8 @@ func NewSyncer(db Database, rpcConnUrl string, shardNumber int) *Syncer {
 		syncCnt:       0,
 		cacheAccount:  make(map[string]*database.DBAccount),
 		updateAccount: make(map[string]*database.DBAccount),
+		cacheMinerAccount: make(map[string]*database.DBMiner),
+		updateMinerAccount: make(map[string]*database.DBMiner),
 		workerpool:    workerpool.New(maxInsertConn),
 	}
 }
