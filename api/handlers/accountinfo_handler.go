@@ -214,13 +214,19 @@ func (h *AccountHandler) GetAccounts() gin.HandlerFunc {
 //GetHomeAccounts handler for get account list
 func (h *AccountHandler) GetHomeAccounts() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		accounts := h.accTbls[0].getHomebyAccounts(0, 10)
+		var Account []*RetSimpleAccountHome
+		TotalBalance, _ := h.DBClient.GetAccuntsTotalBalance()
+		Accounts := h.DBClient.GetAccountsByHome()
+		for i := 0; i < len(Accounts); i++ {
+			data := Accounts[i]
+			simpleTx := createHomeRetSimpleAccountInfo(data, int64(TotalBalance[0]))
+			Account = append(Account, simpleTx)
+		}
+
 		c.JSON(http.StatusOK, gin.H{
 			"code":    apiOk,
 			"message": "",
-			"data": gin.H{
-				"list": accounts,
-			},
+			"data":    Account,
 		})
 	}
 }
