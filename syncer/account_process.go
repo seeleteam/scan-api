@@ -35,7 +35,9 @@ func (s *Syncer) getMinerAccountAndCount(account *database.DBAccount, reward int
 	if ok {
 		miner.Reward += reward
 		miner.TxFee += txFee
+		miner.Balance += reward + txFee
 		s.updateMinerAccount[account.Address] = miner
+		return
 	}
 
 	minerAccount, err := s.db.GetMinerAccountByAddress(account.Address)
