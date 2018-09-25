@@ -67,6 +67,16 @@ type DBAccount struct {
 	TimeStamp   int64  `bson:"timestamp"`
 }
 
+//DBMiner describle a miner account which stored in the database
+type DBMiner struct {
+	Address     string `bson:"address"`
+	Balance     int64  `bson:"balance"`
+	ShardNumber int    `bson:"shardNumber"`
+	Reward      int64  `bson:"reward"`
+	TxFee       int64  `bson:"fee"`
+	TimeStamp   int64  `bson:"timestamp"`
+}
+
 //CreateDbBlock convert an rpc block to an dbblock
 func CreateDbBlock(b *rpc.BlockInfo) *DBBlock {
 	var dbBlock DBBlock

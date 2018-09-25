@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 	"sync"
@@ -17,7 +18,10 @@ const (
 	txCount           = 25
 	//exclude divide zero problem
 	remianTotalBalance = 1
+	MINERRANKSIZE = 10
 )
+
+var errGetAccountsFromDB = errors.New("could not get miner data from db")
 
 //AccountTbl represents an account list ordered by account balance
 type AccountTbl struct {
@@ -110,6 +114,23 @@ func NewAccHandler(DBClient BlockInfoDB) *AccountHandler {
 
 	ret.updateImpl()
 	return ret
+}
+
+func (h *AccountHandler) GetMinerAccounts() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		miners, err := h.DBClient.GetMinerAccounts(MINERRANKSIZE)
+		if err != nil {
+			responseError(c, errGetAccountsFromDB, http.StatusInternalServerError, apiDBQueryError)
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"code":    apiOk,
+			"message": "",
+			"data":    miners,
+		})
+
+	}
 }
 
 func (h *AccountHandler) updateImpl() {

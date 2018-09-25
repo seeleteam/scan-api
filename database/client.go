@@ -14,6 +14,7 @@ const (
 	blockTbl     = "block"
 	txTbl        = "transaction"
 	accTbl       = "account"
+	minerTbl     = "miner"
 	pendingTxTbl = "pendingtx"
 
 	chartTxTbl              = "chart_transhistory"
@@ -565,6 +566,16 @@ func (c *Client) GetAccountByAddress(address string) (*DBAccount, error) {
 	return account, err
 }
 
+//getMinerAccountAndCount get an dbaccount by account address
+func (c *Client) GetMinerAccountByAddress(address string) (*DBMiner, error) {
+	miner := new(DBMiner)
+	query := func(c *mgo.Collection) error {
+		return c.Find(bson.M{"address": address}).One(miner)
+	}
+	err := c.withCollection(minerTbl, query)
+	return miner, err
+}
+
 //AddAccount insert an account into database
 func (c *Client) AddAccount(account *DBAccount) error {
 	query := func(c *mgo.Collection) error {
@@ -572,6 +583,30 @@ func (c *Client) AddAccount(account *DBAccount) error {
 	}
 	err := c.withCollection(accTbl, query)
 	return err
+}
+
+//UpdateAccount update account
+func (c *Client) UpdateMinerAccount(miner *DBMiner) error {
+	query := func(c *mgo.Collection) error {
+		_, err := c.Upsert(bson.M{"address": miner.Address}, miner)
+		return err
+	}
+	err := c.withCollection(minerTbl, query)
+	if err != nil {
+		return err
+	}
+
+	return err
+}
+
+//GetMinerAccounts get the size of DBMiner
+func (c *Client) GetMinerAccounts(size int) ([]*DBMiner, error) {
+	var miners []*DBMiner
+	query := func(c *mgo.Collection) error {
+		return c.Find(bson.M{}).Sort("-balance").Limit(size).All(&miners)
+	}
+	err := c.withCollection(minerTbl, query)
+	return miners, err
 }
 
 //UpdateAccount update account

@@ -2,11 +2,11 @@ package syncer
 
 import (
 	"sync"
-
-	"github.com/seeleteam/scan-api/log"
-	"github.com/seeleteam/scan-api/rpc"
+	"time"
 
 	"github.com/seeleteam/scan-api/database"
+	"github.com/seeleteam/scan-api/log"
+	"github.com/seeleteam/scan-api/rpc"
 )
 
 const (
@@ -30,11 +30,38 @@ func (s *Syncer) getAccountFromDBOrCache(address string) *database.DBAccount {
 	return fromAccount
 }
 
+func (s *Syncer) getMinerAccountAndCount(account *database.DBAccount, reward int64, txFee int64) {
+	miner, ok := s.cacheMinerAccount[account.Address]
+	if ok {
+		miner.Reward += reward
+		miner.TxFee += txFee
+		miner.Balance += reward + txFee
+		s.updateMinerAccount[account.Address] = miner
+		return
+	}
+
+	minerAccount, err := s.db.GetMinerAccountByAddress(account.Address)
+	if err != nil {
+		minerAccount = &database.DBMiner{
+			Address:     account.Address,
+			Balance:     account.Balance,
+			ShardNumber: account.ShardNumber,
+			Reward:      reward,
+			TxFee:       txFee,
+			TimeStamp:   time.Now().Unix(),
+		}
+	}
+
+	s.cacheMinerAccount[account.Address] = minerAccount
+	s.updateMinerAccount[account.Address] = minerAccount
+}
+
 //ProcessAccount Process All Account included in the block
 func (s *Syncer) accountSync(b *rpc.BlockInfo) error {
+	txFees := int64(0)
 	for i := 0; i < len(b.Txs); i++ {
 		tx := b.Txs[i]
-
+		txFees += tx.Fee
 		//exclude coinbase transaction
 		if tx.From != nullAddress {
 
@@ -146,6 +173,8 @@ func (s *Syncer) accountSync(b *rpc.BlockInfo) error {
 		}
 
 		s.db.UpdateAccountMinedBlock(b.Creator, blockCnt)
+
+		s.getMinerAccountAndCount(minerAccount, b.Txs[0].Amount.Int64(), txFees)
 	}
 
 	return nil
@@ -175,7 +204,7 @@ func (s *Syncer) accountUpdateSync() {
 	// }
 
 	var wg sync.WaitGroup
-	wg.Add(len(s.updateAccount))
+	wg.Add(len(s.updateAccount) + len(s.updateMinerAccount))
 
 	for _, v := range s.updateAccount {
 
@@ -206,7 +235,25 @@ func (s *Syncer) accountUpdateSync() {
 		})
 	}
 
+	for _, m := range s.updateMinerAccount {
+		s.workerpool.Submit(func() {
+
+			balance, err := s.rpc.GetBalance(m.Address)
+			if err != nil {
+				log.Error(err)
+				balance = 0
+			}
+
+			m.Balance = balance
+
+			s.db.UpdateMinerAccount(m)
+
+			wg.Done()
+		})
+	}
+
 	wg.Wait()
 
 	s.updateAccount = make(map[string]*database.DBAccount)
+	s.updateMinerAccount = make(map[string]*database.DBMiner)
 }

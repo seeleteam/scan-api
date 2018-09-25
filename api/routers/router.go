@@ -57,6 +57,7 @@ func (r *Router) Init(e *gin.Engine) {
 	v1.GET("/accounts", r.AccountHandler.GetAccounts())
 	v1.GET("/Txstat", r.BlockHandler.GetTxsDayCount())
 	v1.GET("/account", r.AccountHandler.GetAccountByAddress())
+	v1.GET("/miners", r.AccountHandler.GetMinerAccounts())
 	v1.GET("/contracts", r.ContractHandler.GetContracts())
 	v1.GET("/contract", r.ContractHandler.GetContractByAddress())
 	//v1.GET("/difficulty", r.BlockHandler.GetDifficulty())
