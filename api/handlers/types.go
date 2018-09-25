@@ -8,6 +8,7 @@ package handlers
 import (
 	"fmt"
 	"math/big"
+	"strconv"
 	"time"
 
 	"github.com/seeleteam/scan-api/database"
@@ -47,6 +48,12 @@ type RetDetailBlockInfo struct {
 
 	MaxHeight uint64 `json:"maxheight"`
 	MinHeight uint64 `json:"minheight"`
+}
+
+//CountsTime
+type CountsTime struct {
+	Stime   string `json:"stime"`
+	TxCount int64  `json:"txcount"`
 }
 
 //RetSimpleTxInfo describle the transaction info in the transaction detail page which send to the frontend
@@ -93,6 +100,14 @@ type RetSimpleAccountInfo struct {
 	TxCount     int64   `json:"txcount"`
 }
 
+//RetSimpleAccountHome
+type RetSimpleAccountHome struct {
+	Number     int    `json:"number"`
+	Address    string `json:"address"`
+	Balance    int64  `json:"balance"`
+	Percentage string `json:"percentage"`
+}
+
 //RetDetailAccountTxInfo describle the tx info contained by the RetDetailAccountInfo
 type RetDetailAccountTxInfo struct {
 	ShardNumber int    `json:"shardnumber"`
@@ -118,6 +133,14 @@ type RetDetailAccountInfo struct {
 	TxCount              int64                    `json:"txcount"`
 	ContractCreationCode string                   `json:"contractCreationCode"`
 	Txs                  []RetDetailAccountTxInfo `json:"txs"`
+}
+
+//createRetinfor
+func createRetinfor(data int64, theTime string) *CountsTime {
+	var ret CountsTime
+	ret.TxCount = data
+	ret.Stime = theTime
+	return &ret
 }
 
 //createRetSimpleBlockInfo converts the given dbblock to the retsimpleblockinfo
@@ -214,6 +237,16 @@ func createRetSimpleAccountInfo(account *database.DBAccount, ttBalance int64) *R
 	ret.TxCount = account.TxCount
 	ret.Percentage = (float64(ret.Balance) / float64(ttBalance))
 	ret.ShardNumber = account.ShardNumber
+	return &ret
+}
+
+//createHomeRetSimpleAccountInfo converts the given dbaccount to the RetSimpleAccountHome
+func createHomeRetSimpleAccountInfo(account *database.DBAccount) *RetSimpleAccountHome {
+	var ret RetSimpleAccountHome
+	ret.Address = account.Address
+	ret.Balance = account.Balance
+	AccountBalance := strconv.FormatFloat((float64(ret.Balance) / 1000000000), 'f', -1, 64)
+	ret.Percentage = AccountBalance
 	return &ret
 }
 

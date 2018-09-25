@@ -4,8 +4,10 @@ import "github.com/seeleteam/scan-api/database"
 
 // BlockInfoDB Warpper for access mongodb.
 type BlockInfoDB interface {
+	GetBlockTxsTps() (float64, error)
 	GetBlockHeight(shardNumber int) (uint64, error)
 	GetBlockByHeight(shardNumber int, height uint64) (*database.DBBlock, error)
+	GetTxsDayCount(begin, end int64) (int64, error)
 	GetBlocksByHeight(shardNumber int, begin uint64, end uint64) ([]*database.DBBlock, error)
 	GetBlockByHash(hash string) (*database.DBBlock, error)
 	GetTxCnt() (uint64, error)
@@ -30,6 +32,7 @@ type BlockInfoDB interface {
 	GetTotalBalance() (map[int]int64, error)
 	GetTxCntByShardNumberAndAddress(shardNumber int, address string) (int64, error)
 	GetMinerAccounts(size int) ([]*database.DBMiner, error)
+	GetAccountsByHome() []*database.DBAccount
 }
 
 // ChartInfoDB Warpper for access mongodb.

@@ -302,6 +302,23 @@ func (c *Client) GetPendingTxByHash(hash string) (*DBTx, error) {
 	return tx, err
 }
 
+//GetTxsDayCount get row count of transaction table from mongo
+func (c *Client) GetTxsDayCount(begin int64, end int64) (int64, error) {
+	var txCnt int64
+	beginTime := strconv.FormatInt(begin, 10)
+	endTime := strconv.FormatInt(end, 10)
+	query := func(c *mgo.Collection) error {
+		var err error
+		var temp int
+		temp, err = c.Find(bson.M{"timestamp": bson.M{"$gte": beginTime, "$lt": endTime}}).Count()
+		txCnt = int64(temp)
+		return err
+
+	}
+	err := c.withCollection(txTbl, query)
+	return txCnt, err
+}
+
 //GetTxCnt get row count of transaction table from mongo
 func (c *Client) GetTxCnt() (uint64, error) {
 	var txCnt uint64
@@ -362,6 +379,24 @@ func (c *Client) GetAccountCnt() (uint64, error) {
 	}
 	err := c.withCollection(accTbl, query)
 	return txCnt, err
+}
+
+//GetBlockTxsTps  From a block transaction throughput TPS
+func (c *Client) GetBlockTxsTps() (float64, error) {
+	var blocksTpx float64
+	var Txs, Blockprotime int64
+	query := func(c *mgo.Collection) error {
+		var err error
+		var blocks []*DBBlock
+		c.Find(bson.M{}).Sort("-timestamp").Limit(2).All(&blocks)
+		Txs = int64(len(blocks[1].Txs))
+		Blockprotime = int64(blocks[0].Timestamp - blocks[1].Timestamp)
+		blocksTpx = float64(Txs / Blockprotime)
+		return err
+	}
+
+	err := c.withCollection(blockTbl, query)
+	return blocksTpx, err
 }
 
 //GetContractCnt get contract count
@@ -755,6 +790,16 @@ func (c *Client) GetOneDayBlockDifficulty(shardNumber int, zeroTime int64) (*DBO
 	}
 	err := c.withCollection(chartBlockDifficultyTbl, query)
 	return oneDayBlockDifficulty, err
+}
+
+//GetAccountsByHome get an dbaccount list sort by balance
+func (c *Client) GetAccountsByHome() []*DBAccount {
+	var accounts []*DBAccount
+	query := func(c *mgo.Collection) error {
+		return c.Find(bson.M{}).Sort("-balance").Limit(10).All(&accounts)
+	}
+	c.withCollection(accTbl, query)
+	return accounts
 }
 
 //GetOneDayBlockDifficultyChart get all rows int the hashrate table
