@@ -1,6 +1,6 @@
 {
     "GinMode":"debug",
-    "Addr": "127.0.0.1:802", 
+    "Addr": ":8888", 
     "LimitConnection": 0,
     "DefaultHammerTime": 30,
     "WriteLog": true,
