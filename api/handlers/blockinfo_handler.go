@@ -406,7 +406,7 @@ func (h *BlockHandler) GetBlockProtime() gin.HandlerFunc {
 			c.JSON(http.StatusOK, gin.H{
 				"code":            apiOk,
 				"message":         "",
-				"data":            Blockprotime,
+				"listTime":        Blockprotime,
 				"lastblockHeight": lastblockHeight,
 			})
 		}
