@@ -334,17 +334,16 @@ func (c *Client) GetTxCnt() (uint64, error) {
 	return txCnt, err
 }
 
-//GetBlockProTime from recent 10 average time to calculate the block
-func (c *Client) GetBlockProTime() (int64, float64, error) {
-	var Blockprotime float64
-	var lastblockHeight, begin, end int64
+//GetBlockProTime gets the information of last two blocks
+func (c *Client) GetBlockProTime() (int64, int64, error) {
+	var Blockprotime, lastblockHeight, begin, end int64
 	query := func(c *mgo.Collection) error {
 		var err error
 		var blocks []*DBBlock
 		c.Find(bson.M{}).Sort("-timestamp").Limit(2).All(&blocks)
 		begin = blocks[1].Timestamp
 		end = blocks[0].Timestamp
-		Blockprotime = float64((end - begin))
+		Blockprotime = end - begin
 		lastblockHeight = blocks[0].Height
 		return err
 	}
