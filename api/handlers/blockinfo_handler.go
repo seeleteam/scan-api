@@ -540,6 +540,7 @@ func (h *BlockHandler) getPendingTxsByBeginAndEnd(shardNumber int, begin, end ui
 }
 
 //GetTxsDayCount 30 days trading history data
+//plans to write method, optimize performance.
 func (h *BlockHandler) GetTxsDayCount() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		dbClinet := h.DBClient
