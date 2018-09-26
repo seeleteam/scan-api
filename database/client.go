@@ -305,7 +305,7 @@ func (c *Client) GetPendingTxByHash(hash string) (*DBTx, error) {
 
 //GetTxsDayCount get row count of transaction table from mongo
 func (c *Client) GetTxsDayCount() ([]*DBTx, error) {
-	var trans []*DBTx
+	var txs []*DBTx
 	nTime := time.Now()
 	yesTime := nTime.AddDate(0, 0, -30)
 	logDay := yesTime.Format("20060102")
@@ -317,12 +317,12 @@ func (c *Client) GetTxsDayCount() ([]*DBTx, error) {
 	beginTime := strconv.FormatInt(begin, 10)
 	query := func(c *mgo.Collection) error {
 		var err error
-		c.Find(bson.M{"timestamp": bson.M{"$gte": beginTime}}).All(&trans)
+		c.Find(bson.M{"timestamp": bson.M{"$gte": beginTime}}).All(&txs)
 		return err
 	}
 
 	err := c.withCollection(txTbl, query)
-	return trans, err
+	return txs, err
 
 }
 
