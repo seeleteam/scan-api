@@ -334,7 +334,7 @@ func (c *Client) GetTxCnt() (uint64, error) {
 	return txCnt, err
 }
 
-//GetBlockProTime Recently two block information
+//GetBlockProTime gets the information of last two blocks
 func (c *Client) GetBlockProTime() (int64, int64, error) {
 	var Blockprotime, lastblockHeight, begin, end int64
 	query := func(c *mgo.Collection) error {
