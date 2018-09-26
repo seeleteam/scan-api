@@ -569,7 +569,7 @@ func (h *BlockHandler) GetTxsDayCount() gin.HandlerFunc {
 				}
 
 			}
-			simpleAcc := createRetinfor(txCnt, string(logDay))
+			simpleAcc := createRetinfor(txCnt, strconv.FormatInt(begin, 10))
 			data = append(data, simpleAcc)
 		}
 		c.JSON(http.StatusOK, gin.H{
