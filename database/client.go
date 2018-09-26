@@ -334,7 +334,7 @@ func (c *Client) GetTxCnt() (uint64, error) {
 	return txCnt, err
 }
 
-//GetBlockProTime from recent 10 average time to calculate the block
+//GetBlockProTime Recently two block information
 func (c *Client) GetBlockProTime() (int64, float64, error) {
 	var Blockprotime float64
 	var lastblockHeight, begin, end int64
