@@ -56,7 +56,7 @@ type CountsTime struct {
 	TxCount int64  `json:"txcount"`
 }
 
-//CountsTime
+//Lastblock
 type Lastblock struct {
 	LastblockHeight int64   `json:"lastblockHeight"`
 	LastblockTime   float64 `json:"lastblockTime"`
