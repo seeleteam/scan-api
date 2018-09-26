@@ -58,8 +58,8 @@ type CountsTime struct {
 
 //Lastblock
 type Lastblock struct {
-	LastblockHeight int64   `json:"lastblockHeight"`
-	LastblockTime   float64 `json:"lastblockTime"`
+	LastblockHeight int64 `json:"lastblockHeight"`
+	LastblockTime   int64 `json:"lastblockTime"`
 }
 
 //RetSimpleTxInfo describle the transaction info in the transaction detail page which send to the frontend
@@ -150,7 +150,7 @@ func createRetinfor(data int64, theTime string) *CountsTime {
 }
 
 //createRetLastblockInfo converts the given dbblock to the Lastblock
-func createRetLastblockInfo(lastblockHeight int64, lastblockTime float64) *Lastblock {
+func createRetLastblockInfo(lastblockHeight int64, lastblockTime int64) *Lastblock {
 	var ret Lastblock
 	ret.LastblockHeight = lastblockHeight
 	ret.LastblockTime = lastblockTime

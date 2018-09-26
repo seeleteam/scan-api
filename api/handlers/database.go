@@ -12,7 +12,7 @@ type BlockInfoDB interface {
 	GetBlockByHash(hash string) (*database.DBBlock, error)
 	GetTxCnt() (uint64, error)
 	GetBlockCnt() (uint64, error)
-	GetBlockProTime() (int64, float64, error)
+	GetBlockProTime() (int64, int64, error)
 	GetAccountCnt() (uint64, error)
 	GetContractCnt() (uint64, error)
 	GetTxCntByShardNumber(shardNumber int) (uint64, error)
