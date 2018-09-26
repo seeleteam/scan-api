@@ -396,7 +396,7 @@ func (h *BlockHandler) GetBlockCnt() gin.HandlerFunc {
 	}
 }
 
-//GetBlockProtime a distinction on information
+//GetBlockProtime On a block information
 func (h *BlockHandler) GetBlockProtime() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		lastblockHeight, lastblockTime, err := h.DBClient.GetBlockProTime()
