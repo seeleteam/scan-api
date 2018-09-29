@@ -2,7 +2,6 @@ package database
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 	"time"
 
@@ -319,7 +318,7 @@ func (c *Client) GetTotalTxz() ([]*DBSimpleTxs, error) {
 		pipe := c.Pipe(m)
 		err1 := pipe.All(&DBSimpleTxs)
 		if err1 != nil {
-			fmt.Printf("ERROR : %s\n", err1.Error())
+			return err1
 		}
 		return err1
 	}
