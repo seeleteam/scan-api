@@ -18,7 +18,7 @@ const (
 	txCount           = 25
 	//exclude divide zero problem
 	remianTotalBalance = 1
-	MINERRANKSIZE = 20
+	MINERRANKSIZE      = 20
 )
 
 var errGetAccountsFromDB = errors.New("could not get miner data from db")
