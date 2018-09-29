@@ -544,13 +544,17 @@ func (h *BlockHandler) getPendingTxsByBeginAndEnd(shardNumber int, begin, end ui
 func (h *BlockHandler) GetTxsDayCount() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var data []*CountsTime
-		trans, _ := h.DBClient.GetTotalTxz()
-		for i := 0; i < len(trans); i++ {
-			toBeCharge := trans[i].Id
+		txs, err := h.DBClient.GetTotalTxs()
+		if err != nil {
+			responseError(c, errGetBlockFromDB, http.StatusInternalServerError, apiDBQueryError)
+			return
+		}
+		for i := 0; i < len(txs); i++ {
+			txID := txs[i].Id
 			timeLayout := "2006-01-02"
 			loc, _ := time.LoadLocation("Local")
-			theTime, _ := time.ParseInLocation(timeLayout, toBeCharge, loc)
-			simpleAcc := createRetinfor(theTime.Unix(), trans[i].Count)
+			theTime, _ := time.ParseInLocation(timeLayout, txID, loc)
+			simpleAcc := createRetinfor(uint64(theTime.Unix()), uint64(txs[i].Count))
 			data = append(data, simpleAcc)
 		}
 		c.JSON(http.StatusOK, gin.H{

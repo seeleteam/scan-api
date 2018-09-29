@@ -29,7 +29,7 @@ type BlockInfoDB interface {
 	GetAccountsByShardNumber(shardNumber int, max int) ([]*database.DBAccount, error)
 	GetContractCntByShardNumber(shardNumber int) (uint64, error)
 	GetContractsByShardNumber(shardNumber int, max int) ([]*database.DBAccount, error)
-	GetTotalTxz() ([]*database.DBSimpleTxs, error)
+	GetTotalTxs() ([]*database.DBSimpleTxs, error)
 	GetTotalBalance() (map[int]int64, error)
 	GetTxCntByShardNumberAndAddress(shardNumber int, address string) (int64, error)
 	GetMinerAccounts(size int) ([]*database.DBMiner, error)

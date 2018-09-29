@@ -51,8 +51,8 @@ type RetDetailBlockInfo struct {
 
 //CountsTime
 type CountsTime struct {
-	Stime   int64 `json:"stime"`
-	TxCount int   `json:"txcount"`
+	Stime   uint64 `json:"stime"`
+	TxCount uint64 `json:"txcount"`
 }
 
 //Lastblock
@@ -139,9 +139,9 @@ type RetDetailAccountInfo struct {
 }
 
 //createRetinfor
-func createRetinfor(theTime int64, data int) *CountsTime {
+func createRetinfor(theTime, TxCount uint64) *CountsTime {
 	var ret CountsTime
-	ret.TxCount = data
+	ret.TxCount = TxCount
 	ret.Stime = theTime
 	return &ret
 }
