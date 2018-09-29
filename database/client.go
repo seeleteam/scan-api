@@ -2,6 +2,7 @@ package database
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -301,6 +302,73 @@ func (c *Client) GetPendingTxByHash(hash string) (*DBTx, error) {
 	}
 	err := c.withCollection(pendingTxTbl, query)
 	return tx, err
+}
+
+// // GetTotalTxz
+// func (c *Client) GetTotalTxz() (map[int]int64, error) {
+// 	totalBalance := make(map[int]int64)
+// 	nTime := time.Now()
+// 	yesTime := nTime.AddDate(0, 0, -200)
+// 	logDay := yesTime.Format("20060102")
+// 	timeLayout := "20060102"
+// 	loc, _ := time.LoadLocation("Local")
+// 	theTime, _ := time.ParseInLocation(timeLayout, logDay, loc)
+// 	begin := theTime.Unix()
+
+// 	beginTime := strconv.FormatInt(begin, 10)
+// 	query := func(c *mgo.Collection) error {
+
+// 		job := &mgo.MapReduce{
+// 			Map: "function() { emit(this.timestamp, this.block) }",
+// 			Reduce: `function(key, values) {
+//   	 			//return values++;
+// 				return Array.sum(values)
+// 					}`,
+// 		}
+// 		var result []struct {
+// 			Id    int "_id"
+// 			Value int64
+// 		}
+// 		//fmt.Println("job", job)
+// 		fmt.Println("beginTime", beginTime)
+// 		abc := "1534076800"
+// 		_, err := c.Find(bson.M{"timestamp": bson.M{"$gte": abc}}).MapReduce(job, &result)
+// 		if err != nil {
+// 			return err
+// 		}
+// 		for _, item := range result {
+
+// 			totalBalance[item.Id] = item.Value
+// 			fmt.Println("totalBalance[item.Id]", totalBalance[item.Id], item.Value)
+// 		}
+// 		fmt.Println("result---", len(result))
+// 		return err
+// 	}
+// 	err := c.withCollection(txTbl, query)
+// 	return totalBalance, err
+// }
+
+//GetTotalTxz get row count of transaction table from mongo
+func (c *Client) GetTotalTxz() ([]*DBSimpleTxs, error) {
+	var DBSimpleTxs []*DBSimpleTxs
+	nTime := time.Now()
+	yesTime := nTime.AddDate(0, 0, -30)
+	logDay := yesTime.Format("2006-01-02")
+	query := func(c *mgo.Collection) error {
+		m := []bson.M{
+			{"$match": bson.M{"timetxs": bson.M{"$gte": logDay}}},
+			{"$group": bson.M{"_id": "$timetxs", "count": bson.M{"$sum": 1}}},
+			{"$sort": bson.M{"_id": -1}},
+		}
+		pipe := c.Pipe(m)
+		err1 := pipe.All(&DBSimpleTxs)
+		if err1 != nil {
+			fmt.Printf("ERROR : %s\n", err1.Error())
+		}
+		return err1
+	}
+	err := c.withCollection(txTbl, query)
+	return DBSimpleTxs, err
 }
 
 //GetTxsDayCount get row count of transaction table from mongo

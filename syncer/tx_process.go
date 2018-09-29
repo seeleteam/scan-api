@@ -19,6 +19,7 @@ func (s *Syncer) txSync(block *rpc.BlockInfo) error {
 		transIdx++
 		trans.Idx = transIdx
 		dbTx := database.CreateDbTx(trans)
+		dbTx.Timestamp
 		dbTx.Pending = false
 		dbTx.ShardNumber = s.shardNumber
 
