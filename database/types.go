@@ -128,9 +128,8 @@ func CreateDbTx(t rpc.Transaction) *DBTx {
 	trans.From = t.From
 	trans.To = t.To
 	trans.Amount = t.Amount.Int64()
-	ab := int64(t.Timestamp)
-	abc := time.Unix(ab, 0)
-	trans.Timetxs = abc.Format("2006-01-02")
+	timetxs := time.Unix(int64(t.Timestamp), 0)
+	trans.Timetxs = timetxs.Format("2006-01-02")
 	trans.Timestamp = strconv.FormatUint(t.Timestamp, 10)
 	trans.AccountNonce = strconv.FormatUint(t.AccountNonce, 10)
 	trans.Payload = t.Payload
