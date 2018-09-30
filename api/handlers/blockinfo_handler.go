@@ -245,6 +245,23 @@ func getBeginAndEndByPage(total, p, step uint64) (page, begin, end uint64) {
 
 	end = total - page*step
 	if end < step {
+		begin = 0
+	} else {
+		begin = end - step
+	}
+
+	return page, begin, end
+}
+
+func getAccountBeginAndEndByPage(total, p, step uint64) (page, begin, end uint64) {
+	totalPages := uint64(math.Ceil(float64(total) / float64(step)))
+	page = p
+	if page > (totalPages - 1) {
+		page = totalPages - 1
+	}
+
+	end = total - page*step
+	if end < step {
 		begin = page * step
 		end = total
 	} else {
