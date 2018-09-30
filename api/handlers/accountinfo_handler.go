@@ -18,7 +18,7 @@ const (
 	txCount           = 25
 	//exclude divide zero problem
 	remianTotalBalance = 1
-	MINERRANKSIZE = 20
+	MINERRANKSIZE      = 20
 )
 
 var errGetAccountsFromDB = errors.New("could not get miner data from db")
@@ -195,7 +195,7 @@ func (h *AccountHandler) GetAccounts() gin.HandlerFunc {
 		accTbl := h.accTbls[shardNumber-1]
 		accCnt := accTbl.GetAccountCnt()
 
-		page, begin, end := getBeginAndEndByPage(uint64(accCnt), p, ps)
+		page, begin, end := getAccountBeginAndEndByPage(uint64(accCnt), p, ps)
 		accounts := accTbl.getAccountsByBeginAndEnd(begin, end)
 
 		c.JSON(http.StatusOK, gin.H{

@@ -253,6 +253,24 @@ func getBeginAndEndByPage(total, p, step uint64) (page, begin, end uint64) {
 	return page, begin, end
 }
 
+func getAccountBeginAndEndByPage(total, p, step uint64) (page, begin, end uint64) {
+	totalPages := uint64(math.Ceil(float64(total) / float64(step)))
+	page = p
+	if page > (totalPages - 1) {
+		page = totalPages - 1
+	}
+
+	end = total - page*step
+	if end < step {
+		begin = page * step
+		end = total
+	} else {
+		end = (page + 1) * step
+		begin = end - step
+	}
+	return page, begin, end
+}
+
 //GetBlocks handler for get block list
 func (h *BlockHandler) GetBlocks() gin.HandlerFunc {
 	return func(c *gin.Context) {
