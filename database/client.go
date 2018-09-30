@@ -267,7 +267,7 @@ func (c *Client) GetTxByIdx(idx uint64) (*DBTx, error) {
 func (c *Client) GetTxsByIdx(shardNumber int, begin uint64, end uint64) ([]*DBTx, error) {
 	var trans []*DBTx
 	query := func(c *mgo.Collection) error {
-		return c.Find(bson.M{"shardNumber": shardNumber, "idx": bson.M{"$gte": begin, "$lt": end}}).Sort("idx").All(&trans)
+		return c.Find(bson.M{"shardNumber": shardNumber, "idx": bson.M{"$gte": begin, "$lt": end}}).Sort("-block").All(&trans)
 	}
 	err := c.withCollection(txTbl, query)
 	return trans, err
