@@ -245,9 +245,11 @@ func getBeginAndEndByPage(total, p, step uint64) (page, begin, end uint64) {
 
 	end = total - page*step
 	if end < step {
-		begin = 0
+		begin = page * step
+		end = total
 	} else {
-		end = step
+		end = (page + 1) * step
+		begin = end - step
 	}
 	return page, begin, end
 }
