@@ -312,7 +312,7 @@ func (c *Client) GetTotalTxs() ([]*DBSimpleTxs, error) {
 	query := func(c *mgo.Collection) error {
 		m := []bson.M{
 			{"$match": bson.M{"timetxs": bson.M{"$gte": logDay}}},
-			{"$group": bson.M{"_id": "$timetxs", "count": bson.M{"$sum": 1}}},
+			{"$group": bson.M{"_id": "$timetxs", "stime": bson.M{"$first": "$timestamp"}, "txcount": bson.M{"$sum": 1}}},
 			{"$sort": bson.M{"_id": -1}},
 		}
 		pipe := c.Pipe(m)

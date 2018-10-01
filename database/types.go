@@ -23,8 +23,8 @@ type DBSimpleTxInBlock struct {
 }
 
 type DBSimpleTxs struct {
-	Id    string `bson:"_id"`
-	Count int    `bson:"count"`
+	Stime   string `json:"stime"`
+	TxCount int    `json:"txcount"`
 }
 
 //DBBlock describle the block info which stored in the database

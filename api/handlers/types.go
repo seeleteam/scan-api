@@ -49,12 +49,6 @@ type RetDetailBlockInfo struct {
 	MinHeight uint64 `json:"minheight"`
 }
 
-//CountsTime
-type CountsTime struct {
-	Stime   uint64 `json:"stime"`
-	TxCount uint64 `json:"txcount"`
-}
-
 //Lastblock
 type Lastblock struct {
 	LastblockHeight int64 `json:"lastblockHeight"`
@@ -136,14 +130,6 @@ type RetDetailAccountInfo struct {
 	TxCount              int64                    `json:"txcount"`
 	ContractCreationCode string                   `json:"contractCreationCode"`
 	Txs                  []RetDetailAccountTxInfo `json:"txs"`
-}
-
-//createRetinfor
-func createRetinfor(theTime, TxCount uint64) *CountsTime {
-	var ret CountsTime
-	ret.TxCount = TxCount
-	ret.Stime = theTime
-	return &ret
 }
 
 //createRetLastblockInfo converts the given dbblock to the Lastblock
