@@ -72,7 +72,7 @@ type DBSimpleTxDebtInBlock struct {
 type DBTx struct {
 	TxType          int         `bson:"txtype"` // 0 is an normal transaction, 1 is an create contract transaction
 	Hash            string      `bson:"hash"`
-	TxHash          string      `bson:"txHash"`
+	DebtTxHash      string      `bson:"debtTxHash"`
 	From            string      `bson:"from"`
 	To              string      `bson:"to"`
 	Amount          int64       `bson:"amount"`
@@ -172,7 +172,7 @@ func CreateDbTx(t rpc.Transaction) *DBTx {
 	var trans DBTx
 	trans.TxType = t.TxType
 	trans.Hash = t.Hash
-	trans.TxHash = t.TxHash
+	trans.DebtTxHash = t.TxHash
 	trans.From = t.From
 	trans.To = t.To
 	trans.Amount = t.Amount.Int64()
