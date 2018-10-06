@@ -16,7 +16,7 @@ func (s *Syncer) txSync(block *rpc.BlockInfo) error {
 		trans := block.Txs[i]
 		for j := 0; j < len(block.TxDebts); j++ {
 			if block.Txs[i].Hash == block.TxDebts[j].TxHash {
-				trans.TxHash = block.TxDebts[j].Hash
+				trans.DebtTxHash = block.TxDebts[j].Hash
 			}
 		}
 
