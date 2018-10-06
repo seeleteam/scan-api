@@ -172,7 +172,7 @@ func CreateDbTx(t rpc.Transaction) *DBTx {
 	var trans DBTx
 	trans.TxType = t.TxType
 	trans.Hash = t.Hash
-	trans.DebtTxHash = t.TxHash
+	trans.DebtTxHash = t.DebtTxHash
 	trans.From = t.From
 	trans.To = t.To
 	trans.Amount = t.Amount.Int64()

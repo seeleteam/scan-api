@@ -23,7 +23,7 @@ type CurrentBlock struct {
 //Transaction is the transaction data send from seele node
 type Transaction struct {
 	Hash         string   `json:"hash"`
-	TxHash       string   `json:"txHash"`
+	DebtTxHash   string   `json:"debtTxHash"`
 	From         string   `json:"from"`
 	To           string   `json:"to"`
 	Amount       *big.Int `json:"amount"`
