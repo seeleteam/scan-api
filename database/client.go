@@ -16,6 +16,7 @@ const (
 	txTbl        = "transaction"
 	accTbl       = "account"
 	minerTbl     = "miner"
+	debtTbl      = "debt"
 	pendingTxTbl = "pendingtx"
 
 	chartTxTbl              = "chart_transhistory"
@@ -211,6 +212,15 @@ func (c *Client) AddTxs(txs ...interface{}) error {
 		return c.Insert(txs...)
 	}
 	err := c.withCollection(txTbl, query)
+	return err
+}
+
+//AddDebtTxs insert a transaction into mongo
+func (c *Client) AddDebtTxs(debttxs ...interface{}) error {
+	query := func(c *mgo.Collection) error {
+		return c.Insert(debttxs...)
+	}
+	err := c.withCollection(debtTbl, query)
 	return err
 }
 

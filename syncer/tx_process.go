@@ -49,6 +49,29 @@ func (s *Syncer) txSync(block *rpc.BlockInfo) error {
 	return nil
 }
 
+func (s *Syncer) debttxSync(block *rpc.BlockInfo) error {
+	debttxs := []interface{}{}
+	for i := 0; i < len(block.Debts); i++ {
+		debts := block.Debts[i]
+
+		for j := 0; j < len(block.TxDebts); j++ {
+			if block.Debts[i].TxHash == block.TxDebts[j].TxHash {
+				debts.TxHash = block.TxDebts[j].TxHash
+			}
+		}
+
+		debts.Block = block.Height
+		debtTx := database.CreateDebtTx(debts)
+		debtTx.ShardNumber = s.shardNumber
+
+		debttxs = append(debttxs, debtTx)
+
+	}
+	//wg.Wait()
+	s.db.AddDebtTxs(debttxs...)
+	return nil
+}
+
 func (s *Syncer) pendingTxsSync() error {
 	s.db.RemoveAllPendingTxs()
 	transIdx, err := s.db.GetPendingTxCntByShardNumber(s.shardNumber)

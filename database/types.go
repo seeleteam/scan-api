@@ -187,6 +187,19 @@ func CreateDbTx(t rpc.Transaction) *DBTx {
 	return &trans
 }
 
+//CreateDebtTx convert an rpc transaction to an dbtransaction
+func CreateDebtTx(t rpc.Debt) *Debt {
+	var debts Debt
+	debts.Hash = t.Hash
+	debts.TxHash = t.TxHash
+	debts.To = t.To
+	debts.Amount = t.Amount.Int64()
+	debts.Payload = t.Payload
+	debts.Height = t.Block
+	debts.Fee = t.Fee
+	return &debts
+}
+
 //CreateEmptyAccount create an empty dbaccount
 func CreateEmptyAccount(address string, shardNumber int) *DBAccount {
 	return &DBAccount{
