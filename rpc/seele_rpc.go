@@ -22,6 +22,7 @@ func (rpc *SeeleRPC) CurrentBlock() (currentBlock *CurrentBlock, err error) {
 	}
 
 	result := rpcOutputBlock["header"].(map[string]interface{})
+
 	timestamp := int64(result["CreateTimestamp"].(float64))
 	difficulty := int64(result["Difficulty"].(float64))
 	height := uint64(result["Height"].(float64))
@@ -50,6 +51,7 @@ func (rpc *SeeleRPC) GetBlockByHeight(h uint64, fullTx bool) (block *BlockInfo, 
 	if err := rpc.call("seele_getBlockByHeight", req, &rpcOutputBlock); err != nil {
 		return nil, err
 	}
+
 	headerMp := rpcOutputBlock["header"].(map[string]interface{})
 	height := uint64(headerMp["Height"].(float64))
 	hash := rpcOutputBlock["hash"].(string)
@@ -60,6 +62,7 @@ func (rpc *SeeleRPC) GetBlockByHeight(h uint64, fullTx bool) (block *BlockInfo, 
 	timestamp := int64(headerMp["CreateTimestamp"].(float64))
 	difficulty := int64(headerMp["Difficulty"].(float64))
 	totalDifficulty := int64(rpcOutputBlock["totalDifficulty"].(float64))
+
 	var Txs []Transaction
 	if fullTx {
 		var rpcTxs []interface{}
