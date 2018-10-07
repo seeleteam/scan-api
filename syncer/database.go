@@ -13,7 +13,7 @@ type Database interface {
 	RemoveAllPendingTxs() error
 	AddTx(tx *database.DBTx) error
 	AddTxs(tx ...interface{}) error
-	AddDebtTxs(tx ...interface{}) error
+	AddDebtTxs(debttxs ...interface{}) error
 	AddPendingTx(tx *database.DBTx) error
 	GetAccountByAddress(address string) (*database.DBAccount, error)
 	GetMinerAccountByAddress(address string) (*database.DBMiner, error)

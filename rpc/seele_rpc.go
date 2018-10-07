@@ -33,7 +33,7 @@ func (rpc *SeeleRPC) CurrentBlock() (currentBlock *CurrentBlock, err error) {
 		Creator:   result["Creator"].(string),
 		TxCount:   len(rpcOutputBlock["transactions"].([]interface{})),
 	}
-	fmt.Println("==========222222========", currentBlock)
+
 	return currentBlock, err
 }
 
@@ -54,7 +54,6 @@ func (rpc *SeeleRPC) GetBlockByHeight(h uint64, fullTx bool) (block *BlockInfo, 
 	height := uint64(headerMp["Height"].(float64))
 	hash := rpcOutputBlock["hash"].(string)
 	parentHash := headerMp["PreviousBlockHash"].(string)
-	//	nonce := uint64(headerMp["Nonce"].(float64))
 	stateHash := headerMp["StateHash"].(string)
 	txHash := headerMp["TxHash"].(string)
 	creator := headerMp["Creator"].(string)
@@ -124,10 +123,9 @@ func (rpc *SeeleRPC) GetBlockByHeight(h uint64, fullTx bool) (block *BlockInfo, 
 	}
 
 	block = &BlockInfo{
-		Height:     height,
-		Hash:       hash,
-		ParentHash: parentHash,
-		//	Nonce:           nonce,
+		Height:          height,
+		Hash:            hash,
+		ParentHash:      parentHash,
 		StateHash:       stateHash,
 		TxHash:          txHash,
 		Creator:         creator,
