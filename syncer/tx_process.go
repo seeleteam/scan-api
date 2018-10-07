@@ -67,7 +67,7 @@ func (s *Syncer) debttxSync(block *rpc.BlockInfo) error {
 		debttxs = append(debttxs, debtTx)
 
 	}
-	//wg.Wait()
+
 	s.db.AddDebtTxs(debttxs...)
 	return nil
 }
