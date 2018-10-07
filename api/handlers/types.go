@@ -77,6 +77,7 @@ type RetDetailTxInfo struct {
 	TxType       int         `json:"txtype"`
 	ShardNumber  int         `json:"shardnumber"`
 	TxHash       string      `json:"txHash"`
+	DebtHash     string      `json:"debtHash"`
 	Block        uint64      `json:"block"`
 	Age          string      `json:"age"`
 	From         string      `json:"from"`
@@ -210,6 +211,7 @@ func createRetDetailTxInfo(transaction *database.DBTx) *RetDetailTxInfo {
 	var ret RetDetailTxInfo
 	ret.TxType = transaction.TxType
 	ret.TxHash = transaction.Hash
+	ret.DebtHash = transaction.DebtTxHash
 	ret.Block = transaction.Block
 	ret.From = transaction.From
 	ret.To = transaction.To
