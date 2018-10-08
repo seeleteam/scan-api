@@ -35,7 +35,7 @@ func (s *Syncer) getMinerAccountAndCount(account *database.DBAccount, reward int
 	if ok {
 		miner.Reward += reward
 		miner.TxFee += txFee
-		miner.Balance += reward + txFee
+		miner.Total += reward + txFee
 		s.updateMinerAccount[account.Address] = miner
 		return
 	}
@@ -44,7 +44,7 @@ func (s *Syncer) getMinerAccountAndCount(account *database.DBAccount, reward int
 	if err != nil {
 		minerAccount = &database.DBMiner{
 			Address:     account.Address,
-			Balance:     account.Balance,
+			Total:     account.Balance,
 			ShardNumber: account.ShardNumber,
 			Reward:      reward,
 			TxFee:       txFee,
@@ -237,17 +237,7 @@ func (s *Syncer) accountUpdateSync() {
 
 	for _, m := range s.updateMinerAccount {
 		s.workerpool.Submit(func() {
-
-			balance, err := s.rpc.GetBalance(m.Address)
-			if err != nil {
-				log.Error(err)
-				balance = 0
-			}
-
-			m.Balance = balance
-
 			s.db.UpdateMinerAccount(m)
-
 			wg.Done()
 		})
 	}

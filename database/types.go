@@ -70,7 +70,7 @@ type DBAccount struct {
 //DBMiner describle a miner account which stored in the database
 type DBMiner struct {
 	Address     string `bson:"address"`
-	Balance     int64  `bson:"balance"`
+	Total     int64  `bson:"total"`
 	ShardNumber int    `bson:"shardNumber"`
 	Reward      int64  `bson:"reward"`
 	TxFee       int64  `bson:"fee"`
