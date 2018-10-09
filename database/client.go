@@ -303,6 +303,26 @@ func (c *Client) GetPendingTxByHash(hash string) (*DBTx, error) {
 	return tx, err
 }
 
+//GetTotalTxs get row count of transaction table from mongo
+func (c *Client) GetTotalTxs() ([]*DBSimpleTxs, error) {
+	var DBSimpleTxs []*DBSimpleTxs
+	nTime := time.Now()
+	startDate := nTime.AddDate(0, 0, -30)
+	logDay := startDate.Format("2006-01-02")
+	query := func(c *mgo.Collection) error {
+		m := []bson.M{
+			{"$match": bson.M{"timetxs": bson.M{"$gte": logDay}}},
+			{"$group": bson.M{"_id": "$timetxs", "stime": bson.M{"$first": "$timestamp"}, "txcount": bson.M{"$sum": 1}}},
+			{"$sort": bson.M{"_id": -1}},
+		}
+		pipe := c.Pipe(m)
+		return pipe.All(&DBSimpleTxs)
+	}
+
+	err := c.withCollection(txTbl, query)
+	return DBSimpleTxs, err
+}
+
 //GetTxsDayCount get row count of transaction table from mongo
 func (c *Client) GetTxsDayCount() ([]*DBTx, error) {
 	var txs []*DBTx

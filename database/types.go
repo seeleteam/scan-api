@@ -7,6 +7,7 @@ package database
 
 import (
 	"strconv"
+	"time"
 
 	"github.com/seeleteam/scan-api/rpc"
 )
@@ -19,6 +20,11 @@ type DBSimpleTxInBlock struct {
 	Amount    int64  `bson:"amount"`
 	Timestamp string `bson:"timestamp"`
 	Fee       int64  `bson:"fee"`
+}
+
+type DBSimpleTxs struct {
+	Stime   string `json:"stime"`
+	TxCount int    `json:"txcount"`
 }
 
 //DBBlock describle the block info which stored in the database
@@ -47,6 +53,7 @@ type DBTx struct {
 	Amount          int64       `bson:"amount"`
 	AccountNonce    string      `bson:"accountNonce"`
 	Timestamp       string      `bson:"timestamp"`
+	Timetxs         string      `bson:"timetxs"`
 	Payload         string      `bson:"payload"`
 	Block           uint64      `bson:"block"`
 	Idx             int64       `bson:"idx"`
@@ -121,6 +128,8 @@ func CreateDbTx(t rpc.Transaction) *DBTx {
 	trans.From = t.From
 	trans.To = t.To
 	trans.Amount = t.Amount.Int64()
+	timetxs := time.Unix(int64(t.Timestamp), 0)
+	trans.Timetxs = timetxs.Format("2006-01-02")
 	trans.Timestamp = strconv.FormatUint(t.Timestamp, 10)
 	trans.AccountNonce = strconv.FormatUint(t.AccountNonce, 10)
 	trans.Payload = t.Payload

@@ -12,7 +12,6 @@ import (
 	"math/big"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -559,43 +558,17 @@ func (h *BlockHandler) getPendingTxsByBeginAndEnd(shardNumber int, begin, end ui
 }
 
 //GetTxsDayCount 30 days trading history data
-//plans to write method, optimize performance.
 func (h *BlockHandler) GetTxsDayCount() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		dbClinet := h.DBClient
-		var data []*CountsTime
-		nTime := time.Now()
-		var txCnt int64
-		trans, err := dbClinet.GetTxsDayCount()
+		txs, err := h.DBClient.GetTotalTxs()
 		if err != nil {
 			responseError(c, errGetBlockFromDB, http.StatusInternalServerError, apiDBQueryError)
 			return
 		}
-
-		for i := 0; i < 30; i++ {
-			yesTime := nTime.AddDate(0, 0, -i)
-			yesTimeend := nTime.AddDate(0, 0, -i+1)
-			logDay := yesTime.Format("20060102")
-			logDayend := yesTimeend.Format("20060102")
-			timeLayout := "20060102"
-			loc, _ := time.LoadLocation("Local")
-			theTime, _ := time.ParseInLocation(timeLayout, logDay, loc)
-			theTimeend, _ := time.ParseInLocation(timeLayout, logDayend, loc)
-			begin := theTime.Unix()
-			end := theTimeend.Unix()
-			for j := 0; j < len(trans); j++ {
-				if trans[j].Timestamp >= strconv.FormatInt(begin, 10) && trans[j].Timestamp < strconv.FormatInt(end, 10) {
-					txCnt++
-				}
-
-			}
-			simpleAcc := createRetinfor(txCnt, strconv.FormatInt(begin, 10))
-			data = append(data, simpleAcc)
-		}
 		c.JSON(http.StatusOK, gin.H{
 			"code":    apiOk,
 			"message": "",
-			"data":    data,
+			"data":    txs,
 		})
 
 	}
