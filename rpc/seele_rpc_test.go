@@ -26,6 +26,7 @@ func newRPC(address string) (*SeeleRPC, error) {
 	}
 	return rpc, nil
 }
+
 func TestCurrentBlock(t *testing.T) {
 	rpc, err := newRPC(SEELEADDRESS)
 	if err != nil {
@@ -37,6 +38,7 @@ func TestCurrentBlock(t *testing.T) {
 	}
 	t.Log(currentBlock)
 }
+
 func TestGetBlockByHeight(t *testing.T) {
 	rpc, err := newRPC(SEELEADDRESS)
 	if err != nil {
