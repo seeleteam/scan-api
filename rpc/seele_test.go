@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"testing"
+	"math/big"
 )
 
 //import (
@@ -69,6 +70,8 @@ const (
 	WRONGTXHASH       = "0x02c240f019adc8b267b82026aef6b677c67867624e2acc1418149e7f8083ba0e1"
 )
 
+var zero = big.NewInt(0)
+
 func newRPC(address string) (*SeeleRPC, error) {
 	rpc := NewRPC(address)
 	if rpc == nil {
@@ -90,7 +93,10 @@ func TestGetPeersInfo(t *testing.T) {
 	if err != nil {
 		t.Fatal("GetPeersInfo failed:", err)
 	}
-	t.Log(peers)
+
+	if len(peers) < 0 {
+		t.Fatal("GetPeersInfo get invalid peers number")
+	}
 }
 
 func TestGetBalance(t *testing.T) {
@@ -103,7 +109,10 @@ func TestGetBalance(t *testing.T) {
 	if err != nil {
 		t.Fatal("GetBalance failed", err)
 	}
-	t.Log(balance)
+
+	if balance < 0 {
+		t.Fatal("invalid balance")
+	}
 
 	if _, err := rpc.GetBalance(WRONGSEELEACCOUNT); err == nil {
 		t.Fatal("GetReceiptByTxHash on wrong account test fail")
@@ -120,7 +129,11 @@ func TestGetReceiptByTxHash(t *testing.T) {
 	if err != nil {
 		t.Fatal("GetReceiptByTxHash failed", err)
 	}
-	t.Log(receipt)
+
+	if receipt.Result == "" || receipt.PostState == "" || receipt.TxHash == "" || receipt.ContractAddress == "" ||
+		receipt.TotalFee.Cmp(zero) < 0 || receipt.UsedGas.Cmp(zero) < 0 {
+			t.Fatal("GetReceiptByTxHash get invalid data")
+	}
 
 	if _, err := rpc.GetReceiptByTxHash(WRONGTXHASH); err == nil {
 		t.Fatal("GetReceiptByTxHash on wrong txhash test fail")
@@ -137,5 +150,15 @@ func TestGetPendingTransactions(t *testing.T) {
 	if err != nil {
 		t.Fatal("GetPendingTransactions failed", err)
 	}
-	t.Log(pendingTxs)
+
+	if len(pendingTxs) < 0 {
+		t.Fatal("GetPendingTransactions get invalid tx number")
+	}
+
+	for _, tx := range pendingTxs {
+		if tx.Hash == "" || tx.From == "" || tx.To == "" || tx.Amount.Cmp(zero) < 0 ||
+			tx.AccountNonce < 0 || tx.Fee < 0 {
+			t.Fatal("GetPendingTransactions get invalid data")
+		}
+	}
 }
