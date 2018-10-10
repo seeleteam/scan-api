@@ -197,9 +197,7 @@ func (s *Syncer) checkOlderBlocks() bool {
 //sync get block data from seele node and store it in the mongodb
 func (s *Syncer) sync() error {
 	log.Info("[BlockSync syncCnt:%d]Begin Sync", s.syncCnt)
-
 	s.checkOlderBlocks()
-
 	curBlock, err := s.rpc.CurrentBlock()
 
 	if err != nil {

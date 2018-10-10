@@ -11,27 +11,29 @@ import (
 
 // CurrentBlock returns the current block info.
 func (rpc *SeeleRPC) CurrentBlock() (currentBlock *CurrentBlock, err error) {
-	request := GetBlockByHeightRequest{
-		Height: -1,
-		FullTx: true,
-	}
+	var request []interface{}
+	request = append(request, -1)
+	request = append(request, true)
+
 	rpcOutputBlock := make(map[string]interface{})
-	if err := rpc.call("seele.GetBlockByHeight", request, &rpcOutputBlock); err != nil {
+	if err := rpc.call("seele_getBlockByHeight", request, &rpcOutputBlock); err != nil {
 		return nil, err
 	}
 
-	timestamp := int64(rpcOutputBlock["timestamp"].(float64))
-	difficulty := int64(rpcOutputBlock["difficulty"].(float64))
-	height := uint64(rpcOutputBlock["height"].(float64))
+	result := rpcOutputBlock["header"].(map[string]interface{})
 
+	timestamp := int64(result["CreateTimestamp"].(float64))
+	difficulty := int64(result["Difficulty"].(float64))
+	height := uint64(result["Height"].(float64))
 	currentBlock = &CurrentBlock{
 		HeadHash:  rpcOutputBlock["hash"].(string),
 		Height:    height,
 		Timestamp: big.NewInt(timestamp),
 		Difficult: big.NewInt(difficulty),
-		Creator:   rpcOutputBlock["creator"].(string),
+		Creator:   result["Creator"].(string),
 		TxCount:   len(rpcOutputBlock["transactions"].([]interface{})),
 	}
+
 	return currentBlock, err
 }
 
@@ -41,20 +43,24 @@ func (rpc *SeeleRPC) GetBlockByHeight(h uint64, fullTx bool) (block *BlockInfo, 
 		Height: int64(h),
 		FullTx: fullTx,
 	}
+	var req []interface{}
+	req = append(req, request.Height)
+	req = append(req, request.FullTx)
 	rpcOutputBlock := make(map[string]interface{})
-	if err := rpc.call("seele.GetBlockByHeight", request, &rpcOutputBlock); err != nil {
+	if err := rpc.call("seele_getBlockByHeight", req, &rpcOutputBlock); err != nil {
 		return nil, err
 	}
 
-	height := uint64(rpcOutputBlock["height"].(float64))
+	headerMp := rpcOutputBlock["header"].(map[string]interface{})
+	height := uint64(headerMp["Height"].(float64))
 	hash := rpcOutputBlock["hash"].(string)
-	parentHash := rpcOutputBlock["parentHash"].(string)
-	nonce := uint64(rpcOutputBlock["nonce"].(float64))
-	stateHash := rpcOutputBlock["stateHash"].(string)
-	txHash := rpcOutputBlock["txHash"].(string)
-	creator := rpcOutputBlock["creator"].(string)
-	timestamp := int64(rpcOutputBlock["timestamp"].(float64))
-	difficulty := int64(rpcOutputBlock["difficulty"].(float64))
+	parentHash := headerMp["PreviousBlockHash"].(string)
+	nonce := uint64(headerMp["Nonce"].(float64))
+	stateHash := headerMp["StateHash"].(string)
+	txHash := headerMp["TxHash"].(string)
+	creator := headerMp["Creator"].(string)
+	timestamp := int64(headerMp["CreateTimestamp"].(float64))
+	difficulty := int64(headerMp["Difficulty"].(float64))
 	totalDifficulty := int64(rpcOutputBlock["totalDifficulty"].(float64))
 
 	var Txs []Transaction
@@ -77,6 +83,25 @@ func (rpc *SeeleRPC) GetBlockByHeight(h uint64, fullTx bool) (block *BlockInfo, 
 		}
 	}
 
+	var Debts []Debt
+	if fullTx {
+		var rpcDebt []interface{}
+		rpcDebt = rpcOutputBlock["debts"].([]interface{})
+		for i := 0; i < len(rpcDebt); i++ {
+			var de Debt
+			rpcDebtinfo := rpcDebt[i].(map[string]interface{})
+			txsdbet := rpcDebtinfo["Data"].(map[string]interface{})
+			de.TxHash = txsdbet["TxHash"].(string)
+			de.To = txsdbet["Account"].(string)
+			de.Shard = int64(txsdbet["Shard"].(float64))
+			amount := int64(txsdbet["Amount"].(float64))
+			de.Amount = big.NewInt(amount)
+			de.Code = txsdbet["Code"].(string)
+			de.Fee = int64(txsdbet["Fee"].(float64))
+			Debts = append(Debts, de)
+		}
+	}
+
 	block = &BlockInfo{
 		Height:          height,
 		Hash:            hash,
@@ -89,6 +114,7 @@ func (rpc *SeeleRPC) GetBlockByHeight(h uint64, fullTx bool) (block *BlockInfo, 
 		Difficulty:      big.NewInt(difficulty),
 		TotalDifficulty: big.NewInt(totalDifficulty),
 		Txs:             Txs,
+		TxDebt:          Debts,
 	}
 	return block, err
 }

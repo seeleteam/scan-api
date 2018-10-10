@@ -23,19 +23,42 @@ type DBSimpleTxInBlock struct {
 
 //DBBlock describle the block info which stored in the database
 type DBBlock struct {
-	HeadHash        string              `bson:"headHash"`
-	PreHash         string              `bson:"preBlockHash"`
-	Height          int64               `bson:"height"`
-	StateHash       string              `bson:"stateHash"`
-	Timestamp       int64               `bson:"timestamp"`
-	Difficulty      string              `bson:"difficulty"`
-	TotalDifficulty string              `bson:"totalDifficulty"`
-	Creator         string              `bson:"creator"`
-	Nonce           string              `bson:"nonce"`
-	TxHash          string              `bson:"txHash"`
-	Reward          int64               `bson:"reward"`
-	Txs             []DBSimpleTxInBlock `bson:"transactions"`
-	ShardNumber     int                 `bson:"shardNumber"`
+	HeadHash        string                  `bson:"headHash"`
+	PreHash         string                  `bson:"preBlockHash"`
+	Height          int64                   `bson:"height"`
+	StateHash       string                  `bson:"stateHash"`
+	Timestamp       int64                   `bson:"timestamp"`
+	Difficulty      string                  `bson:"difficulty"`
+	TotalDifficulty string                  `bson:"totalDifficulty"`
+	Creator         string                  `bson:"creator"`
+	Nonce           string                  `bson:"nonce"`
+	TxHash          string                  `bson:"txHash"`
+	Reward          int64                   `bson:"reward"`
+	Txs             []DBSimpleTxInBlock     `bson:"transactions"`
+	Debt            []DBSimpleTxDebtInBlock `bson:"debt"`
+	ShardNumber     int                     `bson:"shardNumber"`
+}
+
+//Debt describle a transaction which stored in the database
+type Debt struct {
+	Hash        string `bson:"hash"`
+	TxHash      string `bson:"txhash"`
+	From        string `bson:"from"`
+	To          string `bson:"to"`
+	Block       uint64 `bson:"block"`
+	ShardNumber int    `bson:"shardNumber"`
+	Fee         int64  `bson:"fee"`
+	Payload     string `bson:"payload"`
+	Amount      int64  `bson:"amount"`
+}
+
+type DBSimpleTxDebtInBlock struct {
+	TxHash  string
+	Shard   int64
+	Account string
+	Amount  int64
+	Fee     int64
+	Code    string
 }
 
 //DBTx describle a transaction which stored in the database
@@ -110,6 +133,16 @@ func CreateDbBlock(b *rpc.BlockInfo) *DBBlock {
 		dbBlock.Reward = tx.Amount.Int64()
 	}
 
+	for i := 0; i < len(b.TxDebt); i++ {
+		var simpleTxdebt DBSimpleTxDebtInBlock
+		simpleTxdebt.Account = b.TxDebt[i].To
+		simpleTxdebt.TxHash = b.TxDebt[i].TxHash
+		simpleTxdebt.Shard = b.TxDebt[i].Shard
+		simpleTxdebt.Fee = b.TxDebt[i].Fee
+		simpleTxdebt.Code = b.TxDebt[i].Code
+		simpleTxdebt.Amount = b.TxDebt[i].Amount.Int64()
+		dbBlock.Debt = append(dbBlock.Debt, simpleTxdebt)
+	}
 	return &dbBlock
 }
 
