@@ -6,6 +6,7 @@
 package rpc
 
 import (
+	"fmt"
 	"math/big"
 )
 
@@ -55,7 +56,7 @@ type GetBlockByHeightRequest struct {
 	FullTx bool  `json:"fullTx"`
 }
 
-//PeerInfo is the peer info send from seele node
+// PeerInfo is the peer info send from seele node
 type PeerInfo struct {
 	ID            string   `json:"id"`            // Unique of the node
 	Caps          []string `json:"caps"`          // Sum-protocols advertised by this particular peer
@@ -64,10 +65,19 @@ type PeerInfo struct {
 	ShardNumber   int      `json:"shardNumber"`
 }
 
-//Receipt
+// Receipt is the receipt information of tx
 type Receipt struct {
-	Result          string `json:"result"`
-	PostState       string `json:"result"`
-	TxHash          string `json:"txhash"`
-	ContractAddress string `json:"contractaddress"`
+	Result          string   `json:"result"`
+	PostState       string   `json:"poststate"`
+	TxHash          string   `json:"txhash"`
+	ContractAddress string   `json:"contractaddress"`
+	Failed          bool     `json:"failed"`
+	TotalFee        *big.Int `json:"totalFee"`
+	UsedGas         *big.Int `json:"usedGas"`
+}
+
+// String implement fmt.Stringer interface
+func (r *Receipt) String() string {
+	return fmt.Sprintf("result:%s, poststate:%s, txhash:%s, contractAddress:%s, failed:%v, totalfee:%v, usedgas:%v",
+		r.Result, r.PostState, r.TxHash, r.ContractAddress, r.Failed, r.TotalFee.Int64(), r.UsedGas.Int64())
 }
