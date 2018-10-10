@@ -45,7 +45,7 @@ type Debt struct {
 	TxHash      string `bson:"txhash"`
 	From        string `bson:"from"`
 	To          string `bson:"to"`
-	Block       uint64 `bson:"block"`
+	Height      uint64 `bson:"height"`
 	ShardNumber int    `bson:"shardNumber"`
 	Fee         int64  `bson:"fee"`
 	Payload     string `bson:"payload"`
