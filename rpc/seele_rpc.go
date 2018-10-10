@@ -94,7 +94,7 @@ func (rpc *SeeleRPC) GetBlockByHeight(h uint64, fullTx bool) (block *BlockInfo, 
 	return block, err
 }
 
-//GetPeersInfo get peers info from connected seele node
+// GetPeersInfo get peers info from connected seele node
 func (rpc *SeeleRPC) GetPeersInfo() (result []PeerInfo, err error) {
 	rpcPeerInfos := make([]map[string]interface{}, 0)
 	if err := rpc.call("network_getPeersInfo", nil, &rpcPeerInfos); err != nil {
@@ -208,7 +208,7 @@ func (rpc *SeeleRPC) GetReceiptByTxHash(txhash string) (*Receipt, error) {
 	return &receipt, nil
 }
 
-//GetPendingTransactions get pending transactions on seele node
+// GetPendingTransactions get pending transactions on seele node
 func (rpc *SeeleRPC) GetPendingTransactions() ([]Transaction, error) {
 	rpcOutputTxs := make([]map[string]interface{}, 0)
 	if err := rpc.call("debug_getPendingTransactions", nil, &rpcOutputTxs); err != nil {

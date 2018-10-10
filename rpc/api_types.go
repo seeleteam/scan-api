@@ -56,7 +56,7 @@ type GetBlockByHeightRequest struct {
 	FullTx bool  `json:"fullTx"`
 }
 
-//PeerInfo is the peer info send from seele node
+// PeerInfo is the peer info send from seele node
 type PeerInfo struct {
 	ID            string   `json:"id"`            // Unique of the node
 	Caps          []string `json:"caps"`          // Sum-protocols advertised by this particular peer
@@ -65,10 +65,10 @@ type PeerInfo struct {
 	ShardNumber   int      `json:"shardNumber"`
 }
 
-// Receipt is the receipt information of seele
+// Receipt is the receipt information of tx
 type Receipt struct {
 	Result          string   `json:"result"`
-	PostState       string   `json:"result"`
+	PostState       string   `json:"poststate"`
 	TxHash          string   `json:"txhash"`
 	ContractAddress string   `json:"contractaddress"`
 	Failed          bool     `json:"failed"`
