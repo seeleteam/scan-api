@@ -91,15 +91,37 @@ func (rpc *SeeleRPC) GetBlockByHeight(h uint64, fullTx bool) (block *BlockInfo, 
 		for i := 0; i < len(rpcDebt); i++ {
 			var de Debt
 			rpcDebtinfo := rpcDebt[i].(map[string]interface{})
-			txsdbet := rpcDebtinfo["Data"].(map[string]interface{})
-			de.TxHash = txsdbet["TxHash"].(string)
-			de.To = txsdbet["Account"].(string)
-			de.Shard = int64(txsdbet["Shard"].(float64))
-			amount := int64(txsdbet["Amount"].(float64))
+			dbets := rpcDebtinfo["Data"].(map[string]interface{})
+			de.TxHash = dbets["TxHash"].(string)
+			de.Hash = rpcDebtinfo["Hash"].(string)
+			de.Block = height
+			de.To = dbets["Account"].(string)
+			de.ShardNumber = int(dbets["Shard"].(float64))
+			amount := int64(dbets["Amount"].(float64))
 			de.Amount = big.NewInt(amount)
-			de.Code = txsdbet["Code"].(string)
-			de.Fee = int64(txsdbet["Fee"].(float64))
+			de.Payload = dbets["Code"].(string)
+			de.Fee = int64(dbets["Fee"].(float64))
 			Debts = append(Debts, de)
+		}
+	}
+
+	var TxDebts []TxDebt
+	if fullTx {
+		var rpcTxDebt []interface{}
+		rpcTxDebt = rpcOutputBlock["txDebts"].([]interface{})
+		for i := 0; i < len(rpcTxDebt); i++ {
+			var txDebt TxDebt
+			rpcDebtinfo := rpcTxDebt[i].(map[string]interface{})
+			txdbets := rpcDebtinfo["Data"].(map[string]interface{})
+			txDebt.Hash = rpcDebtinfo["Hash"].(string)
+			txDebt.TxHash = txdbets["TxHash"].(string)
+			txDebt.To = txdbets["Account"].(string)
+			txDebt.ShardNumber = int(txdbets["Shard"].(float64))
+			amount := int64(txdbets["Amount"].(float64))
+			txDebt.Amount = big.NewInt(amount)
+			txDebt.Payload = txdbets["Code"].(string)
+			txDebt.Fee = int64(txdbets["Fee"].(float64))
+			TxDebts = append(TxDebts, txDebt)
 		}
 	}
 
@@ -115,7 +137,8 @@ func (rpc *SeeleRPC) GetBlockByHeight(h uint64, fullTx bool) (block *BlockInfo, 
 		Difficulty:      big.NewInt(difficulty),
 		TotalDifficulty: big.NewInt(totalDifficulty),
 		Txs:             Txs,
-		TxDebt:          Debts,
+		Debts:           Debts,
+		TxDebts:         TxDebts,
 	}
 	return block, err
 }
