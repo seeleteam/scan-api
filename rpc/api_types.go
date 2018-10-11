@@ -48,6 +48,36 @@ type BlockInfo struct {
 	Nonce           uint64        `json:"nonce"`
 	TxHash          string        `json:"txHash"`
 	Txs             []Transaction `json:"txs"`
+	TxDebt          []Debt        `json:"txDebt"`
+}
+
+type Debt struct {
+	Hash        string   `bson:"hash"`
+	TxHash      string   `bson:"txhash"`
+	From        string   `bson:"from"`
+	To          string   `bson:"to"`
+	Block       uint64   `bson:"block"`
+	Shard       int64    `bson:"shard"`
+	ShardNumber int      `bson:"shardNumber"`
+	Fee         int64    `bson:"fee"`
+	Payload     string   `bson:"payload"`
+	Code        string   `bson:"code"`
+	Amount      *big.Int `bson:"amount"`
+}
+
+type Header struct {
+	PreviousBlockHash string
+	Creator           string
+	StateHash         string
+	TxHash            string
+	ReceiptHash       string
+	TxDebtHash        string
+	DebtHash          string
+	Difficulty        *big.Int
+	Height            *big.Int
+	CreateTimestamp   *big.Int
+	Nonce             *big.Int
+	ExtraData         string
 }
 
 // GetBlockByHeightRequest request param for GetBlockByHeight api
