@@ -180,7 +180,9 @@ func (rpc *SeeleRPC) GetPeersInfo() (result []PeerInfo, err error) {
 // GetBalance get the balance of the account
 func (rpc *SeeleRPC) GetBalance(address string) (int64, error) {
 	result := make(map[string]interface{})
-	if err := rpc.call("seele_getBalance", &address, &result); err != nil {
+	var request []interface{}
+	request = append(request, address)
+	if err := rpc.call("seele_getBalance", request, &result); err != nil {
 		return 0, err
 	}
 
@@ -200,7 +202,9 @@ func (rpc *SeeleRPC) GetBalance(address string) (int64, error) {
 // GetReceiptByTxHash get the receipt by tx hash
 func (rpc *SeeleRPC) GetReceiptByTxHash(txhash string) (*Receipt, error) {
 	rpcOutputReceipt := make(map[string]interface{})
-	if err := rpc.call("txpool_getReceiptByTxHash", &txhash, &rpcOutputReceipt); err != nil {
+	var request []interface{}
+	request = append(request, txhash)
+	if err := rpc.call("txpool_getReceiptByTxHash", request, &rpcOutputReceipt); err != nil {
 		return nil, err
 	}
 
@@ -244,13 +248,14 @@ func (rpc *SeeleRPC) GetPendingTransactions() ([]Transaction, error) {
 	// result data struct:
 	// []map[
 	//   from:0x4c10f2cd2159bb432094e3be7e17904c2b4aeb21
-	//   hash:0x6524d63226943b2c0cafca124983faa2c64dc2bacf27aab22f6b3ebc67404c39
+	//   to:0xddada93f414f5063cbd4cb642705b1c848fa3c01
+	//   hash:0x1c54966c31a174a404f0feb2ade442e87c09a2802bef41b7efd6ac088d2a0edb
 	//   payload:
 	//   timestamp:0
-	//   to:0x0ea2a45ab5a909c309439b0e004c61b7b2a3e831
-	//   accountNonce:14
+	//	 accountNonce:1
 	//   amount:10000
-	//   fee:1
+	//   gasLimit:21000
+	//   gasPrice:1
 	// ]
 	var Txs []Transaction
 	for _, rpcTx := range rpcOutputTxs {
@@ -263,7 +268,8 @@ func (rpc *SeeleRPC) GetPendingTransactions() ([]Transaction, error) {
 		tx.AccountNonce = uint64(rpcTx["accountNonce"].(float64))
 		tx.Payload = rpcTx["payload"].(string)
 		tx.Timestamp = uint64(rpcTx["timestamp"].(float64))
-		tx.Fee = int64(rpcTx["fee"].(float64))
+		tx.GasLimit = int64(rpcTx["gasLimit"].(float64))
+		tx.GasPrice = int64(rpcTx["gasPrice"].(float64))
 		Txs = append(Txs, tx)
 	}
 	return Txs, nil

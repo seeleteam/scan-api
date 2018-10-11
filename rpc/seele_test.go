@@ -8,8 +8,8 @@ package rpc
 import (
 	"errors"
 	"fmt"
-	"testing"
 	"math/big"
+	"testing"
 )
 
 //import (
@@ -66,8 +66,10 @@ const (
 	SEELEADDRESS      = "172.16.0.197:8027"
 	SEELEACCOUNT      = "0x4c10f2cd2159bb432094e3be7e17904c2b4aeb21"
 	WRONGSEELEACCOUNT = "0x4c10f2cd2159bb432094e3be7e17904c2b4aeb211"
-	TXHASH            = "0x02c240f019adc8b267b82026aef6b677c67867624e2acc1418149e7f8083ba0e"
+	TXHASH            = "0xcbc3e2202d3601c29d5048acdd41d4389625fe2fdc9ee64ef411fbdb5b1436da"
 	WRONGTXHASH       = "0x02c240f019adc8b267b82026aef6b677c67867624e2acc1418149e7f8083ba0e1"
+	Height            = 10386
+	fullTx            = true
 )
 
 var zero = big.NewInt(0)
@@ -132,7 +134,7 @@ func TestGetReceiptByTxHash(t *testing.T) {
 
 	if receipt.Result == "" || receipt.PostState == "" || receipt.TxHash == "" || receipt.ContractAddress == "" ||
 		receipt.TotalFee.Cmp(zero) < 0 || receipt.UsedGas.Cmp(zero) < 0 {
-			t.Fatal("GetReceiptByTxHash get invalid data")
+		t.Fatal("GetReceiptByTxHash get invalid data")
 	}
 
 	if _, err := rpc.GetReceiptByTxHash(WRONGTXHASH); err == nil {
@@ -157,8 +159,32 @@ func TestGetPendingTransactions(t *testing.T) {
 
 	for _, tx := range pendingTxs {
 		if tx.Hash == "" || tx.From == "" || tx.To == "" || tx.Amount.Cmp(zero) < 0 ||
-			tx.AccountNonce < 0 || tx.Fee < 0 {
+			tx.AccountNonce < 0 || tx.Fee < 0 || tx.GasLimit < 0 || tx.GasPrice < 0 {
 			t.Fatal("GetPendingTransactions get invalid data")
 		}
 	}
+}
+
+func TestCurrentBlock(t *testing.T) {
+	rpc, err := newRPC(SEELEADDRESS)
+	if err != nil {
+		t.Fatal("newRPC error:", err)
+	}
+	currentBlock, err := rpc.CurrentBlock()
+	if err != nil {
+		t.Fatal("GetPeersInfo failed:", err)
+	}
+	t.Log(currentBlock)
+}
+
+func TestGetBlockByHeight(t *testing.T) {
+	rpc, err := newRPC(SEELEADDRESS)
+	if err != nil {
+		t.Fatal("newRPC error:", err)
+	}
+	block, err := rpc.GetBlockByHeight(Height, fullTx)
+	if err != nil {
+		t.Fatal("GetBalance failed", err)
+	}
+	t.Log(block)
 }
