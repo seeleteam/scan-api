@@ -233,7 +233,7 @@ func (s *Syncer) sync() error {
 	}
 	log.Info("sync end-------")
 
-	s.accountUpdateSync()
+	//s.accountUpdateSync()
 
 	err = s.pendingTxsSync()
 	if err != nil {
@@ -272,6 +272,9 @@ func (s *Syncer) SyncHandle(i uint64) bool {
 		log.Error(err)
 		return true
 	}
+
+	s.accountUpdateSync()
+
 	return false
 }
 
