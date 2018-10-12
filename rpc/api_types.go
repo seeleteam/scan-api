@@ -6,7 +6,6 @@
 package rpc
 
 import (
-	"fmt"
 	"math/big"
 )
 
@@ -20,7 +19,7 @@ type CurrentBlock struct {
 	TxCount   int      `json:"txcount"`
 }
 
-//Transaction is the transaction data send from seele node
+// Transaction is the transaction data send from seele node
 type Transaction struct {
 	Hash         string   `json:"hash"`
 	From         string   `json:"from"`
@@ -33,9 +32,11 @@ type Transaction struct {
 	Block        uint64   `json:"block"`
 	Idx          uint64   `json:"idx"`
 	TxType       int      `json:"txtype"`
+	GasLimit     int64    `json:"gasLimit"`
+	GasPrice     int64    `json:"gasPrice"`
 }
 
-//BlockInfo is the block data send from seele node
+// BlockInfo is the block data send from seele node
 type BlockInfo struct {
 	Hash            string        `json:"hash"`
 	ParentHash      string        `json:"parentHash"`
@@ -104,10 +105,4 @@ type Receipt struct {
 	Failed          bool     `json:"failed"`
 	TotalFee        *big.Int `json:"totalFee"`
 	UsedGas         *big.Int `json:"usedGas"`
-}
-
-// String implement fmt.Stringer interface
-func (r *Receipt) String() string {
-	return fmt.Sprintf("result:%s, poststate:%s, txhash:%s, contractAddress:%s, failed:%v, totalfee:%v, usedgas:%v",
-		r.Result, r.PostState, r.TxHash, r.ContractAddress, r.Failed, r.TotalFee.Int64(), r.UsedGas.Int64())
 }
