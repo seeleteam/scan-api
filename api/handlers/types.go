@@ -44,6 +44,7 @@ type RetDetailBlockInfo struct {
 	Miner       string   `json:"miner"`
 	Nonce       string   `json:"nonce"`
 	TxCount     int      `json:"txcount"`
+	DebtCount   int      `json:"debtCount"`
 
 	MaxHeight uint64 `json:"maxheight"`
 	MinHeight uint64 `json:"minheight"`
@@ -177,6 +178,7 @@ func createRetDetailBlockInfo(blockInfo *database.DBBlock, maxHeight, minHeight 
 
 	ret.Nonce = blockInfo.Nonce
 	ret.TxCount = len(blockInfo.Txs)
+	ret.DebtCount = len(blockInfo.Debt)
 	ret.MaxHeight = maxHeight
 	ret.MinHeight = minHeight
 	ret.ShardNumber = blockInfo.ShardNumber
