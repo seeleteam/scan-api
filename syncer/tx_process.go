@@ -12,10 +12,15 @@ func (s *Syncer) txSync(block *rpc.BlockInfo) error {
 	//var wg sync.WaitGroup
 	//wg.Add(len(block.Txs))
 
-	for j := 0; j < len(block.Txs); j++ {
-		trans := block.Txs[j]
-		trans.Block = block.Height
+	for i := 0; i < len(block.Txs); i++ {
+		trans := block.Txs[i]
+		for j := 0; j < len(block.TxDebts); j++ {
+			if block.Txs[i].Hash == block.TxDebts[j].TxHash {
+				trans.DebtTxHash = block.TxDebts[j].Hash
+			}
+		}
 
+		trans.Block = block.Height
 		transIdx++
 		trans.Idx = transIdx
 		dbTx := database.CreateDbTx(trans)

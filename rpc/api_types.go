@@ -22,6 +22,7 @@ type CurrentBlock struct {
 // Transaction is the transaction data send from seele node
 type Transaction struct {
 	Hash         string   `json:"hash"`
+	DebtTxHash   string   `json:"debtTxHash"`
 	From         string   `json:"from"`
 	To           string   `json:"to"`
 	Amount       *big.Int `json:"amount"`
@@ -49,7 +50,8 @@ type BlockInfo struct {
 	Nonce           uint64        `json:"nonce"`
 	TxHash          string        `json:"txHash"`
 	Txs             []Transaction `json:"txs"`
-	TxDebt          []Debt        `json:"txDebt"`
+	Debts           []Debt        `json:"debts"`
+	TxDebts         []TxDebt      `json:"txDebts"`
 }
 
 type Debt struct {
@@ -58,11 +60,19 @@ type Debt struct {
 	From        string   `bson:"from"`
 	To          string   `bson:"to"`
 	Block       uint64   `bson:"block"`
-	Shard       int64    `bson:"shard"`
 	ShardNumber int      `bson:"shardNumber"`
 	Fee         int64    `bson:"fee"`
 	Payload     string   `bson:"payload"`
-	Code        string   `bson:"code"`
+	Amount      *big.Int `bson:"amount"`
+}
+
+type TxDebt struct {
+	Hash        string   `bson:"hash"`
+	TxHash      string   `bson:"txhash"`
+	To          string   `bson:"to"`
+	ShardNumber int      `bson:"shardNumber"`
+	Fee         int64    `bson:"fee"`
+	Payload     string   `bson:"payload"`
 	Amount      *big.Int `bson:"amount"`
 }
 
