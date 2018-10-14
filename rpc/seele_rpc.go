@@ -56,7 +56,6 @@ func (rpc *SeeleRPC) GetBlockByHeight(h uint64, fullTx bool) (block *BlockInfo, 
 	height := uint64(headerMp["Height"].(float64))
 	hash := rpcOutputBlock["hash"].(string)
 	parentHash := headerMp["PreviousBlockHash"].(string)
-	nonce := uint64(headerMp["Nonce"].(float64))
 	stateHash := headerMp["StateHash"].(string)
 	txHash := headerMp["TxHash"].(string)
 	creator := headerMp["Creator"].(string)
@@ -79,7 +78,8 @@ func (rpc *SeeleRPC) GetBlockByHeight(h uint64, fullTx bool) (block *BlockInfo, 
 			tx.AccountNonce = uint64(rpcTx["accountNonce"].(float64))
 			tx.Payload = rpcTx["payload"].(string)
 			tx.Timestamp = uint64(rpcTx["timestamp"].(float64))
-			tx.Fee = int64(rpcTx["fee"].(float64))
+			tx.GasLimit = int64(rpcTx["gasLimit"].(float64))
+			tx.GasPrice = int64(rpcTx["gasPrice"].(float64))
 			Txs = append(Txs, tx)
 		}
 	}
@@ -129,7 +129,6 @@ func (rpc *SeeleRPC) GetBlockByHeight(h uint64, fullTx bool) (block *BlockInfo, 
 		Height:          height,
 		Hash:            hash,
 		ParentHash:      parentHash,
-		Nonce:           nonce,
 		StateHash:       stateHash,
 		TxHash:          txHash,
 		Creator:         creator,

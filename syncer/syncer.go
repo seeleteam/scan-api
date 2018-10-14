@@ -265,6 +265,12 @@ func (s *Syncer) SyncHandle(i uint64) bool {
 		return true
 	}
 
+	err = s.debttxSync(rpcBlock)
+	if err != nil {
+		log.Error(err)
+		return true
+	}
+
 	err = s.accountSync(rpcBlock)
 	if err != nil {
 		log.Error(err)
