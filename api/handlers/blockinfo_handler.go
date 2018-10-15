@@ -813,23 +813,6 @@ func (h *BlockHandler) Getdebts() gin.HandlerFunc {
 		}
 		shardNumber := int(s)
 
-		block, flag := c.GetQuery("block")
-		if flag {
-			height, err := strconv.ParseUint(block, 10, 64)
-			if err != nil {
-				responseError(c, errParamInvalid, http.StatusBadRequest, apiParmaInvalid)
-			} else {
-				h.GetTxsInBlock(c, shardNumber, height, p, ps)
-				return
-			}
-		}
-
-		address, flag := c.GetQuery("address")
-		if flag {
-			h.GetTxsInAccount(c, address, p, ps)
-			return
-		}
-
 		debtCnt, err := dbClinet.GetdebtCntByShardNumber(shardNumber)
 		if err != nil {
 			responseError(c, errGetTxCountFromDB, http.StatusInternalServerError, apiDBQueryError)
