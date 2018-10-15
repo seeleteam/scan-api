@@ -511,7 +511,6 @@ func (c *Client) GetdebtCntByShardNumber(shardNumber int) (uint64, error) {
 	var txCnt uint64
 	query := func(c *mgo.Collection) error {
 		var err error
-		//TODO: fix this overflow
 		var temp int
 		temp, err = c.Find(bson.M{"shardNumber": shardNumber}).Count()
 		txCnt = uint64(temp)
