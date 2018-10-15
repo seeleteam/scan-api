@@ -313,6 +313,16 @@ func (c *Client) GetTxByHash(hash string) (*DBTx, error) {
 	return tx, err
 }
 
+//GetDebtByHash get debt info by hash from mongo
+func (c *Client) GetDebtByHash(hash string) (*Debt, error) {
+	debt := new(Debt)
+	query := func(c *mgo.Collection) error {
+		return c.Find(bson.M{"hash": hash}).One(debt)
+	}
+	err := c.withCollection(debtTbl, query)
+	return debt, err
+}
+
 //GetPendingTxByHash
 func (c *Client) GetPendingTxByHash(hash string) (*DBTx, error) {
 	tx := new(DBTx)

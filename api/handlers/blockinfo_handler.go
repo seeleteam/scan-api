@@ -790,6 +790,30 @@ func (h *BlockHandler) GetTxs() gin.HandlerFunc {
 	}
 }
 
+//GetDebtByHash handler for get debt by hash
+func (h *BlockHandler) GetDebtByHash() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		dbClinet := h.DBClient
+		debtHash := c.Query("debtHash")
+
+		if len(debtHash) != txHashLength {
+			responseError(c, errParamInvalid, http.StatusBadRequest, apiParmaInvalid)
+			return
+		}
+		data, err := dbClinet.GetDebtByHash(debtHash)
+		if err == nil {
+			detailDetb := createRetDetailDebtInfo(data)
+
+			c.JSON(http.StatusOK, gin.H{
+				"code":    apiOk,
+				"message": "",
+				"data":    detailDetb,
+			})
+			return
+		}
+	}
+}
+
 //Getdebts get all debts by order or by block
 func (h *BlockHandler) Getdebts() gin.HandlerFunc {
 	return func(c *gin.Context) {
