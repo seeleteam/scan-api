@@ -73,6 +73,19 @@ type RetSimpleTxInfo struct {
 	Nonce       string      `json:"nonce"`
 }
 
+//RetSimpledebtInfo describle the debt info in the debt detail page which send to the frontend
+type RetSimpledebtInfo struct {
+	Hash        string `json:"hash"`
+	TxHash      string `json:"txhash"`
+	From        string `json:"from"`
+	To          string `json:"to"`
+	Height      uint64 `json:"height"`
+	ShardNumber int    `json:"shardNumber"`
+	Fee         int64  `json:"fee"`
+	Payload     string `json:"payload"`
+	Amount      int64  `json:"amount"`
+}
+
 //RetDetailTxInfo describle the transaction detail info in the transaction detail page which send to the frontend
 type RetDetailTxInfo struct {
 	TxType       int         `json:"txtype"`
@@ -206,6 +219,21 @@ func createRetSimpleTxInfo(transaction *database.DBTx) *RetSimpleTxInfo {
 	}
 	ret.ShardNumber = transaction.ShardNumber
 	ret.Receipt = transaction.Receipt
+	return &ret
+}
+
+//createRetSimpledebtInfo converts the given debt to the RetSimpledebtInfo
+func createRetSimpledebtInfo(debts *database.Debt) *RetSimpledebtInfo {
+	var ret RetSimpledebtInfo
+	ret.TxHash = debts.Hash
+	ret.Hash = debts.Hash
+	ret.Height = debts.Height
+	ret.From = debts.From
+	ret.To = debts.To
+	ret.Amount = debts.Amount
+	ret.Fee = debts.Fee
+	ret.Payload = debts.Payload
+	ret.ShardNumber = debts.ShardNumber
 	return &ret
 }
 
