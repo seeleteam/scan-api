@@ -283,6 +283,16 @@ func (c *Client) GetTxsByIdx(shardNumber int, begin uint64, end uint64) ([]*DBTx
 	return trans, err
 }
 
+//GetdebtsByIdx get a debt list from mongo by time period
+func (c *Client) GetdebtsByIdx(shardNumber int, begin uint64, end uint64) ([]*Debt, error) {
+	var debts []*Debt
+	query := func(c *mgo.Collection) error {
+		return c.Find(bson.M{"shardNumber": shardNumber, "idx": bson.M{"$gte": begin, "$lt": end}}).Sort("-height").All(&debts)
+	}
+	err := c.withCollection(debtTbl, query)
+	return debts, err
+}
+
 //GetPendingTxsByIdx get a transaction list from mongo by time period
 func (c *Client) GetPendingTxsByIdx(shardNumber int, begin uint64, end uint64) ([]*DBTx, error) {
 	var trans []*DBTx
@@ -493,6 +503,21 @@ func (c *Client) GetTxCntByShardNumber(shardNumber int) (uint64, error) {
 		return err
 	}
 	err := c.withCollection(txTbl, query)
+	return txCnt, err
+}
+
+//GetdebtCntByShardNumber get tx count by shardNumber
+func (c *Client) GetdebtCntByShardNumber(shardNumber int) (uint64, error) {
+	var txCnt uint64
+	query := func(c *mgo.Collection) error {
+		var err error
+		//TODO: fix this overflow
+		var temp int
+		temp, err = c.Find(bson.M{"shardNumber": shardNumber}).Count()
+		txCnt = uint64(temp)
+		return err
+	}
+	err := c.withCollection(debtTbl, query)
 	return txCnt, err
 }
 

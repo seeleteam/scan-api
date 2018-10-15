@@ -539,6 +539,25 @@ func (h *BlockHandler) getTxsByBeginAndEnd(shardNumber int, begin, end uint64) [
 	return txs
 }
 
+func (h *BlockHandler) getdebtsByBeginAndEnd(shardNumber int, begin, end uint64) []*RetSimpledebtInfo {
+	dbClinet := h.DBClient
+
+	var debts []*RetSimpledebtInfo
+	debttxs, err := dbClinet.GetdebtsByIdx(shardNumber, begin, end)
+	if err != nil {
+		return nil
+	}
+
+	for i := 0; i < len(debttxs); i++ {
+		data := debttxs[i]
+
+		simpleDebts := createRetSimpledebtInfo(data)
+		debts = append(debts, simpleDebts)
+	}
+
+	return debts
+}
+
 func (h *BlockHandler) getPendingTxsByBeginAndEnd(shardNumber int, begin, end uint64) []*RetSimpleTxInfo {
 	dbClinet := h.DBClient
 
@@ -766,6 +785,71 @@ func (h *BlockHandler) GetTxs() gin.HandlerFunc {
 					"curPage":    page + 1,
 				},
 				"list": txs,
+			},
+		})
+	}
+}
+
+//Getdebts get all debts by order or by block
+func (h *BlockHandler) Getdebts() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		dbClinet := h.DBClient
+
+		p, _ := strconv.ParseUint(c.Query("p"), 10, 64)
+		ps, _ := strconv.ParseUint(c.Query("ps"), 10, 64)
+		s, _ := strconv.ParseInt(c.Query("s"), 10, 64)
+		if ps == 0 {
+			ps = transItemNumsPrePage
+		} else if ps > maxItemNumsPrePage {
+			ps = maxItemNumsPrePage
+		}
+
+		if p >= 1 {
+			p--
+		}
+
+		if s <= 0 {
+			s = 1
+		}
+		shardNumber := int(s)
+
+		block, flag := c.GetQuery("block")
+		if flag {
+			height, err := strconv.ParseUint(block, 10, 64)
+			if err != nil {
+				responseError(c, errParamInvalid, http.StatusBadRequest, apiParmaInvalid)
+			} else {
+				h.GetTxsInBlock(c, shardNumber, height, p, ps)
+				return
+			}
+		}
+
+		address, flag := c.GetQuery("address")
+		if flag {
+			h.GetTxsInAccount(c, address, p, ps)
+			return
+		}
+
+		debtCnt, err := dbClinet.GetdebtCntByShardNumber(shardNumber)
+		if err != nil {
+			responseError(c, errGetTxCountFromDB, http.StatusInternalServerError, apiDBQueryError)
+			return
+		}
+
+		page, begin, end := getBeginAndEndByPage(debtCnt, p, ps)
+		debts := h.getdebtsByBeginAndEnd(shardNumber, begin, end)
+
+		c.JSON(http.StatusOK, gin.H{
+			"code":    apiOk,
+			"message": "",
+			"data": gin.H{
+				"pageInfo": gin.H{
+					"totalCount": debtCnt,
+					"begin":      begin,
+					"end":        end,
+					"curPage":    page + 1,
+				},
+				"list": debts,
 			},
 		})
 	}

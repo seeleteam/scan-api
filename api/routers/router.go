@@ -49,7 +49,8 @@ func (r *Router) Init(e *gin.Engine) {
 	v1.GET("/Homeaccounts", r.AccountHandler.GetHomeAccounts())
 	v1.GET("/txs", r.BlockHandler.GetTxs())
 	v1.GET("/pendingtxs", r.BlockHandler.GetPendingTxs())
-	v1.GET("blockTxsTps", r.BlockHandler.GetBlockTxsTps())
+	v1.GET("/debts", r.BlockHandler.Getdebts())
+	v1.GET("/blockTxsTps", r.BlockHandler.GetBlockTxsTps())
 	v1.GET("/tx", r.BlockHandler.GetTxByHash())
 	v1.GET("/blockprotime", r.BlockHandler.GetBlockProtime())
 	//ugly fix this

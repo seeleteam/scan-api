@@ -53,6 +53,7 @@ type Debt struct {
 	From        string `bson:"from"`
 	To          string `bson:"to"`
 	Height      uint64 `bson:"height"`
+	Idx         uint64 `bson:"idx"`
 	ShardNumber int    `bson:"shardNumber"`
 	Fee         int64  `bson:"fee"`
 	Payload     string `bson:"payload"`

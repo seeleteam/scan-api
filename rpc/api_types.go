@@ -55,25 +55,26 @@ type BlockInfo struct {
 }
 
 type Debt struct {
-	Hash        string   `bson:"hash"`
-	TxHash      string   `bson:"txhash"`
-	From        string   `bson:"from"`
-	To          string   `bson:"to"`
-	Block       uint64   `bson:"block"`
-	ShardNumber int      `bson:"shardNumber"`
-	Fee         int64    `bson:"fee"`
-	Payload     string   `bson:"payload"`
-	Amount      *big.Int `bson:"amount"`
+	Hash        string   `json:"hash"`
+	TxHash      string   `json:"txhash"`
+	From        string   `json:"from"`
+	To          string   `json:"to"`
+	Block       uint64   `json:"block"`
+	Idx         uint64   `json:"idx"`
+	ShardNumber int      `json:"shardNumber"`
+	Fee         int64    `json:"fee"`
+	Payload     string   `json:"payload"`
+	Amount      *big.Int `json:"amount"`
 }
 
 type TxDebt struct {
-	Hash        string   `bson:"hash"`
-	TxHash      string   `bson:"txhash"`
-	To          string   `bson:"to"`
-	ShardNumber int      `bson:"shardNumber"`
-	Fee         int64    `bson:"fee"`
-	Payload     string   `bson:"payload"`
-	Amount      *big.Int `bson:"amount"`
+	Hash        string   `json:"hash"`
+	TxHash      string   `json:"txhash"`
+	To          string   `json:"to"`
+	ShardNumber int      `json:"shardNumber"`
+	Fee         int64    `json:"fee"`
+	Payload     string   `json:"payload"`
+	Amount      *big.Int `json:"amount"`
 }
 
 type Header struct {

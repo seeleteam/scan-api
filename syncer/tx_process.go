@@ -50,6 +50,7 @@ func (s *Syncer) txSync(block *rpc.BlockInfo) error {
 }
 
 func (s *Syncer) debttxSync(block *rpc.BlockInfo) error {
+	debtIdx, _ := s.db.GetTxCntByShardNumber(s.shardNumber)
 	debttxs := []interface{}{}
 	for i := 0; i < len(block.Debts); i++ {
 		debts := block.Debts[i]
@@ -61,6 +62,8 @@ func (s *Syncer) debttxSync(block *rpc.BlockInfo) error {
 		}
 
 		debts.Block = block.Height
+		debtIdx++
+		debts.Idx = debtIdx
 		debtTx := database.CreateDebtTx(debts)
 		debtTx.ShardNumber = s.shardNumber
 
