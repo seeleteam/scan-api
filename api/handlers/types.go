@@ -259,6 +259,20 @@ func createRetDetailTxInfo(transaction *database.DBTx) *RetDetailTxInfo {
 	return &ret
 }
 
+func createRetDetailDebtInfo(debt *database.Debt) *RetSimpledebtInfo {
+	var ret RetSimpledebtInfo
+	ret.Hash = debt.Hash
+	ret.TxHash = debt.TxHash
+	ret.Height = debt.Height
+	ret.From = debt.From
+	ret.To = debt.To
+	ret.Amount = debt.Amount
+	ret.Fee = debt.Fee
+	ret.ShardNumber = debt.ShardNumber
+	ret.Payload = debt.Payload
+	return &ret
+}
+
 //createRetSimpleAccountInfo converts the given dbaccount to the retsimpleaccountinfo
 func createRetSimpleAccountInfo(account *database.DBAccount, ttBalance int64) *RetSimpleAccountInfo {
 	var ret RetSimpleAccountInfo

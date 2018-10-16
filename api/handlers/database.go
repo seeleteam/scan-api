@@ -36,6 +36,7 @@ type BlockInfoDB interface {
 	GetTxCntByShardNumberAndAddress(shardNumber int, address string) (int64, error)
 	GetMinerAccounts(size int) ([]*database.DBMiner, error)
 	GetAccountsByHome() []*database.DBAccount
+	GetDebtByHash(hash string) (*database.Debt, error)
 }
 
 // ChartInfoDB Warpper for access mongodb.
