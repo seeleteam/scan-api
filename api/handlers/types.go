@@ -225,7 +225,7 @@ func createRetSimpleTxInfo(transaction *database.DBTx) *RetSimpleTxInfo {
 //createRetSimpledebtInfo converts the given debt to the RetSimpledebtInfo
 func createRetSimpledebtInfo(debts *database.Debt) *RetSimpledebtInfo {
 	var ret RetSimpledebtInfo
-	ret.TxHash = debts.Hash
+	ret.TxHash = debts.TxHash
 	ret.Hash = debts.Hash
 	ret.Height = debts.Height
 	ret.From = debts.From

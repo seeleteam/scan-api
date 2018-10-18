@@ -148,6 +148,20 @@ func (c *Client) GetBlockByHeight(shardNumber int, height uint64) (*DBBlock, err
 	return b, err
 }
 
+//GetblockdebtCntByShardNumber get block from mongo by block height
+func (c *Client) GetblockdebtCntByShardNumber(shardNumber int, height uint64) (uint64, error) {
+	var debtCnt uint64
+	query := func(c *mgo.Collection) error {
+		var temp int
+		var err error
+		temp, err = c.Find(bson.M{"height": height, "shardNumber": shardNumber}).Count()
+		debtCnt = uint64(temp)
+		return err
+	}
+	err := c.withCollection(debtTbl, query)
+	return debtCnt, err
+}
+
 //GetBlockByHash get a block from mongo by block header hash
 func (c *Client) GetBlockByHash(hash string) (*DBBlock, error) {
 	b := new(DBBlock)
@@ -321,6 +335,17 @@ func (c *Client) GetDebtByHash(hash string) (*Debt, error) {
 	}
 	err := c.withCollection(debtTbl, query)
 	return debt, err
+}
+
+//GetblockdebtsByIdx get a debt list from mongo by time period
+func (c *Client) GetblockdebtsByIdx(shardNumber int, height uint64, begin uint64, end uint64) ([]*Debt, error) {
+	var debts []*Debt
+	query := func(c *mgo.Collection) error {
+		return c.Find(bson.M{"shardNumber": shardNumber, "height": height}).Sort("-height").All(&debts)
+	}
+
+	err := c.withCollection(debtTbl, query)
+	return debts, err
 }
 
 //GetPendingTxByHash

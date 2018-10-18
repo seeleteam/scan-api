@@ -434,6 +434,25 @@ func (h *BlockHandler) getdebtsByBeginAndEnd(shardNumber int, begin, end uint64)
 	return debts
 }
 
+func (h *BlockHandler) getblockdebtsByBeginAndEnd(shardNumber int, height uint64, begin, end uint64) []*RetSimpledebtInfo {
+	dbClient := h.DBClient
+
+	var debts []*RetSimpledebtInfo
+	debt, err := dbClient.GetblockdebtsByIdx(shardNumber, height, begin, end)
+	if err != nil {
+		return nil
+	}
+	debtByBeginAndEnd := debt[begin:end]
+	for i := 0; i < len(debtByBeginAndEnd); i++ {
+		data := debtByBeginAndEnd[i]
+
+		simpleDebts := createRetSimpledebtInfo(data)
+		debts = append(debts, simpleDebts)
+	}
+
+	return debts
+}
+
 func (h *BlockHandler) getPendingTxsByBeginAndEnd(shardNumber int, begin, end uint64) []*RetSimpleTxInfo {
 	dbClient := h.DBClient
 
@@ -731,6 +750,54 @@ func (h *BlockHandler) Getdebts() gin.HandlerFunc {
 			"data": gin.H{
 				"pageInfo": gin.H{
 					"totalCount": debtCnt,
+					"begin":      begin,
+					"end":        end,
+					"curPage":    page + 1,
+				},
+				"list": debts,
+			},
+		})
+	}
+}
+
+//GetBlockDebt get all debts in block by height
+func (h *BlockHandler) GetBlockDebt() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		dbClient := h.DBClient
+
+		p, _ := strconv.ParseUint(c.Query("p"), 10, 64)
+		ps, _ := strconv.ParseUint(c.Query("ps"), 10, 64)
+		s, _ := strconv.ParseInt(c.Query("s"), 10, 64)
+		if ps == 0 {
+			ps = transItemNumsPrePage
+		} else if ps > maxItemNumsPrePage {
+			ps = maxItemNumsPrePage
+		}
+
+		if p >= 1 {
+			p--
+		}
+
+		if s <= 0 {
+			s = 1
+		}
+		shardNumber := int(s)
+		height, _ := strconv.ParseUint(c.Query("block"), 10, 64)
+
+		debtinblockCnt, err := dbClient.GetblockdebtCntByShardNumber(shardNumber, height)
+		if err != nil {
+			responseError(c, errGetDebtFromDB, http.StatusInternalServerError, apiDBQueryError)
+			return
+		}
+
+		page, begin, end := getBeginAndEndByPage(debtinblockCnt, p, ps)
+		debts := h.getblockdebtsByBeginAndEnd(shardNumber, height, begin, end)
+		c.JSON(http.StatusOK, gin.H{
+			"code":    apiOk,
+			"message": "",
+			"data": gin.H{
+				"pageInfo": gin.H{
+					"totalCount": debtinblockCnt,
 					"begin":      begin,
 					"end":        end,
 					"curPage":    page + 1,
