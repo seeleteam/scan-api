@@ -45,8 +45,11 @@ func (s *Syncer) txSync(block *rpc.BlockInfo) error {
 	}
 
 	//wg.Wait()
-	s.db.AddTxs(txs...)
-	return nil
+	if len(txs) == 0 {
+		return nil
+	}
+
+	return s.db.AddTxs(txs...)
 }
 
 func (s *Syncer) debttxSync(block *rpc.BlockInfo) error {
@@ -71,8 +74,11 @@ func (s *Syncer) debttxSync(block *rpc.BlockInfo) error {
 
 	}
 
-	s.db.AddDebtTxs(debttxs...)
-	return nil
+	if len(debttxs) == 0 {
+		return nil
+	}
+
+	return s.db.AddDebtTxs(debttxs...)
 }
 
 func (s *Syncer) pendingTxsSync() error {
