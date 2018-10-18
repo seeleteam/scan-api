@@ -156,7 +156,7 @@ func (rpc *SeeleRPC) GetPeersInfo() (result []PeerInfo, err error) {
 	return getPeerInfos(rpcPeerInfos), nil
 }
 
-// getPeerInfos parse peer informations map to PeerInfo
+// getPeerInfos parse peer information map to PeerInfo
 func getPeerInfos(infos []map[string]interface{}) []PeerInfo {
 	var peerInfos []PeerInfo
 	for _, rpcPeerInfo := range infos {
