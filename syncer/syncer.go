@@ -2,20 +2,19 @@ package syncer
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/gammazero/workerpool"
 	"github.com/seeleteam/scan-api/database"
 	"github.com/seeleteam/scan-api/log"
 	"github.com/seeleteam/scan-api/rpc"
-
-	"time"
 )
 
 const (
 	maxInsertConn = 200
 )
 
-//Syncer
+// Syncer is Seele synchronization handler
 type Syncer struct {
 	rpc         *rpc.SeeleRPC
 	db          Database
@@ -29,7 +28,7 @@ type Syncer struct {
 	updateMinerAccount map[string]*database.DBMiner
 }
 
-//NewSyncer return a syncer to sync block data from seele node
+// NewSyncer return a syncer to sync block data from seele node
 func NewSyncer(db Database, rpcConnUrl string, shardNumber int) *Syncer {
 	rpc := rpc.NewRPC(rpcConnUrl)
 	if rpc == nil {
@@ -54,7 +53,7 @@ func NewSyncer(db Database, rpcConnUrl string, shardNumber int) *Syncer {
 	}
 }
 
-//Blocks that are already in storage may be modified
+// Blocks that are already in storage may be modified
 func (s *Syncer) checkOlderBlocks() bool {
 	dbBlockHeight, err := s.db.GetBlockHeight(s.shardNumber)
 	if err != nil {
@@ -194,11 +193,11 @@ func (s *Syncer) checkOlderBlocks() bool {
 	return fallBack
 }
 
-//sync get block data from seele node and store it in the mongodb
+// sync get block data from seele node and store it in the mongodb
 func (s *Syncer) sync() error {
 	log.Info("[BlockSync syncCnt:%d]Begin Sync", s.syncCnt)
 	s.checkOlderBlocks()
-	curBlock, err := s.rpc.CurrentBlock()
+	curHeight, err := s.rpc.CurrentBlockHeight()
 
 	if err != nil {
 		log.Error(err)
@@ -223,7 +222,7 @@ func (s *Syncer) sync() error {
 		block.Timestamp = time.Now().Add(-time.Hour).Unix()
 		s.db.UpdateBlock(s.shardNumber, 0, block)
 	} else {
-		for i := dbBlockHeight; i <= curBlock.Height; i++ {
+		for i := dbBlockHeight; i <= curHeight; i++ {
 			if s.SyncHandle(i) {
 				break
 			}
@@ -242,7 +241,7 @@ func (s *Syncer) sync() error {
 	return nil
 }
 
-//SyncHandle sync the block data from seele node, and handle tx or account
+// SyncHandle sync the block data from seele node, and handle tx or account
 func (s *Syncer) SyncHandle(i uint64) bool {
 	rpcBlock, err := s.rpc.GetBlockByHeight(i, true)
 	log.Info("sync add block[%d]: %v", i, rpcBlock)
@@ -279,7 +278,7 @@ func (s *Syncer) SyncHandle(i uint64) bool {
 	return false
 }
 
-//StartSync start an timer to sync block data from seele node
+// StartSync start an timer to sync block data from seele node
 func (s *Syncer) StartSync(interval time.Duration) {
 	s.sync()
 

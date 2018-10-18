@@ -10,32 +10,14 @@ import (
 	"math/big"
 )
 
-// CurrentBlock returns the current block info.
-func (rpc *SeeleRPC) CurrentBlock() (currentBlock *CurrentBlock, err error) {
-	var request []interface{}
-	request = append(request, -1)
-	request = append(request, true)
-
-	rpcOutputBlock := make(map[string]interface{})
-	if err := rpc.call("seele_getBlockByHeight", request, &rpcOutputBlock); err != nil {
-		return nil, err
+// CurrentBlockHeight gets the current blockchain height
+func (rpc *SeeleRPC) CurrentBlockHeight() (uint64, error) {
+	var height uint64
+	if err := rpc.call("seele_getBlockHeight", nil, &height); err != nil {
+		return 0, err
 	}
 
-	result := rpcOutputBlock["header"].(map[string]interface{})
-
-	timestamp := int64(result["CreateTimestamp"].(float64))
-	difficulty := int64(result["Difficulty"].(float64))
-	height := uint64(result["Height"].(float64))
-	currentBlock = &CurrentBlock{
-		HeadHash:  rpcOutputBlock["hash"].(string),
-		Height:    height,
-		Timestamp: big.NewInt(timestamp),
-		Difficult: big.NewInt(difficulty),
-		Creator:   result["Creator"].(string),
-		TxCount:   len(rpcOutputBlock["transactions"].([]interface{})),
-	}
-
-	return currentBlock, err
+	return height, nil
 }
 
 //GetBlockByHeight get block and transaction data from seele node
@@ -171,8 +153,13 @@ func (rpc *SeeleRPC) GetPeersInfo() (result []PeerInfo, err error) {
 	//     ]
 	//   shard:2
 	// ]
+	return getPeerInfos(rpcPeerInfos), nil
+}
+
+// getPeerInfos parse peer information map to PeerInfo
+func getPeerInfos(infos []map[string]interface{}) []PeerInfo {
 	var peerInfos []PeerInfo
-	for _, rpcPeerInfo := range rpcPeerInfos {
+	for _, rpcPeerInfo := range infos {
 		id := rpcPeerInfo["id"].(string)
 		rpcCaps := rpcPeerInfo["caps"].([]interface{})
 		var caps []string
@@ -196,15 +183,15 @@ func (rpc *SeeleRPC) GetPeersInfo() (result []PeerInfo, err error) {
 		peerInfos = append(peerInfos, peerInfo)
 	}
 
-	return peerInfos, nil
+	return peerInfos
 }
 
 // GetBalance get the balance of the account
-func (rpc *SeeleRPC) GetBalance(address string) (int64, error) {
-	result := make(map[string]interface{})
+func (rpc *SeeleRPC) GetBalance(account string) (int64, error) {
+	balanceMp := make(map[string]interface{})
 	var request []interface{}
-	request = append(request, address)
-	if err := rpc.call("seele_getBalance", request, &result); err != nil {
+	request = append(request, account)
+	if err := rpc.call("seele_getBalance", request, &balanceMp); err != nil {
 		return 0, err
 	}
 
@@ -213,20 +200,26 @@ func (rpc *SeeleRPC) GetBalance(address string) (int64, error) {
 	//   Balance:1.9975499e+12
 	//   Account:0x4c10f2cd2159bb432094e3be7e17904c2b4aeb21
 	// ]
-	account := result["Account"].(string)
-	if account != address {
-		return 0, fmt.Errorf("expected balance '%s', actually '%s'", address, result)
+
+	return getBalance(balanceMp, account)
+}
+
+// getBalance parse balance informations map to int64
+func getBalance(balanceMp map[string]interface{}, account string) (int64, error) {
+	retAccount := balanceMp["Account"].(string)
+	if retAccount != account {
+		return 0, fmt.Errorf("expected balance '%s', actually '%s'", account, retAccount)
 	}
-	balance := int64(result["Balance"].(float64))
-	return balance, nil
+	return int64(balanceMp["Balance"].(float64)), nil
 }
 
 // GetReceiptByTxHash get the receipt by tx hash
 func (rpc *SeeleRPC) GetReceiptByTxHash(txhash string) (*Receipt, error) {
-	rpcOutputReceipt := make(map[string]interface{})
+	receiptMp := make(map[string]interface{})
 	var request []interface{}
-	request = append(request, txhash)
-	if err := rpc.call("txpool_getReceiptByTxHash", request, &rpcOutputReceipt); err != nil {
+	abiJSON := ""
+	request = append(request, txhash, abiJSON)
+	if err := rpc.call("txpool_getReceiptByTxHash", request, &receiptMp); err != nil {
 		return nil, err
 	}
 
@@ -240,15 +233,21 @@ func (rpc *SeeleRPC) GetReceiptByTxHash(txhash string) (*Receipt, error) {
 	//   contract:0x
 	//   failed:false
 	// ]
-	result := rpcOutputReceipt["result"].(string)
-	postState := rpcOutputReceipt["poststate"].(string)
-	txHash := rpcOutputReceipt["txhash"].(string)
-	contractAddress := rpcOutputReceipt["contract"].(string)
-	failed := rpcOutputReceipt["failed"].(bool)
-	totalFee := int64(rpcOutputReceipt["totalFee"].(float64))
-	usedGas := int64(rpcOutputReceipt["usedGas"].(float64))
 
-	receipt := Receipt{
+	return getReceiptByTxHash(receiptMp), nil
+}
+
+// getReceiptByTxHash parse receipt map to Receipt
+func getReceiptByTxHash(receiptMp map[string]interface{}) *Receipt {
+	result := receiptMp["result"].(string)
+	postState := receiptMp["poststate"].(string)
+	txHash := receiptMp["txhash"].(string)
+	contractAddress := receiptMp["contract"].(string)
+	failed := receiptMp["failed"].(bool)
+	totalFee := int64(receiptMp["totalFee"].(float64))
+	usedGas := int64(receiptMp["usedGas"].(float64))
+
+	return &Receipt{
 		Result:          result,
 		PostState:       postState,
 		TxHash:          txHash,
@@ -257,13 +256,12 @@ func (rpc *SeeleRPC) GetReceiptByTxHash(txhash string) (*Receipt, error) {
 		TotalFee:        big.NewInt(totalFee),
 		UsedGas:         big.NewInt(usedGas),
 	}
-	return &receipt, nil
 }
 
 // GetPendingTransactions get pending transactions on seele node
 func (rpc *SeeleRPC) GetPendingTransactions() ([]Transaction, error) {
-	rpcOutputTxs := make([]map[string]interface{}, 0)
-	if err := rpc.call("debug_getPendingTransactions", nil, &rpcOutputTxs); err != nil {
+	txsMp := make([]map[string]interface{}, 0)
+	if err := rpc.call("debug_getPendingTransactions", nil, &txsMp); err != nil {
 		return nil, err
 	}
 
@@ -279,8 +277,14 @@ func (rpc *SeeleRPC) GetPendingTransactions() ([]Transaction, error) {
 	//   gasLimit:21000
 	//   gasPrice:1
 	// ]
+
+	return getPendingTransactions(txsMp), nil
+}
+
+// getPendingTransactions parse txs map to Transaction
+func getPendingTransactions(txsMp []map[string]interface{}) []Transaction {
 	var Txs []Transaction
-	for _, rpcTx := range rpcOutputTxs {
+	for _, rpcTx := range txsMp {
 		var tx Transaction
 		tx.Hash = rpcTx["hash"].(string)
 		tx.From = rpcTx["from"].(string)
@@ -294,5 +298,6 @@ func (rpc *SeeleRPC) GetPendingTransactions() ([]Transaction, error) {
 		tx.GasPrice = int64(rpcTx["gasPrice"].(float64))
 		Txs = append(Txs, tx)
 	}
-	return Txs, nil
+
+	return Txs
 }
