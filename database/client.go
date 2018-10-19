@@ -342,18 +342,16 @@ func (c *Client) GetTotalTxs() ([]*DBSimpleTxs, error) {
 		return nil, err
 	}
 
-	stats := []interface{}{}
-	if len(genTxsStat) != 0 {
-		for _, stat := range genTxsStat {
-			stats = append(stats, stat)
-		}
+	for _, stat := range genTxsStat {
 		insert := func(c *mgo.Collection) error {
-			return c.Insert(stats...)
+			_, err := c.Upsert(bson.M{"stime": stat.Stime}, stat)
+			return err
 		}
 		if err := c.withCollection(txHisTbl, insert); err != nil {
 			return nil, err
 		}
 	}
+
 	dbSimpleTxs = append(dbSimpleTxs, genTxsStat...)
 
 	return dbSimpleTxs, nil
