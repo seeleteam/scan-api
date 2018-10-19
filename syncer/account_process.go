@@ -1,7 +1,6 @@
 package syncer
 
 import (
-	"fmt"
 	"sync"
 	"time"
 
@@ -33,7 +32,6 @@ func (s *Syncer) getAccountFromDBOrCache(address string) *database.DBAccount {
 
 func (s *Syncer) getMinerAccountAndCount(account *database.DBAccount, reward int64, txFee int64) {
 	miner, ok := s.cacheMinerAccount[account.Address]
-	fmt.Println("miner=", miner)
 	if ok {
 		miner.Reward += reward
 		miner.TxFee += txFee
@@ -41,8 +39,10 @@ func (s *Syncer) getMinerAccountAndCount(account *database.DBAccount, reward int
 		s.updateMinerAccount[account.Address] = miner
 		return
 	}
+
 	s.getMinerAccount(account, reward, txFee)
 }
+
 func (s *Syncer) getMinerAccount(account *database.DBAccount, reward int64, txFee int64) {
 
 	minerAccount, err := s.db.GetMinerAccountByAddress(account.Address)
