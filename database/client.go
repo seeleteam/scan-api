@@ -343,16 +343,17 @@ func (c *Client) GetTotalTxs() ([]*DBSimpleTxs, error) {
 	}
 
 	stats := []interface{}{}
-	for _, stat := range genTxsStat {
-		stats = append(stats, stat)
+	if len(genTxsStat) != 0 {
+		for _, stat := range genTxsStat {
+			stats = append(stats, stat)
+		}
+		insert := func(c *mgo.Collection) error {
+			return c.Insert(stats...)
+		}
+		if err := c.withCollection(txHisTbl, insert); err != nil {
+			return nil, err
+		}
 	}
-	insert := func(c *mgo.Collection) error {
-		return c.Insert(stats...)
-	}
-	if err := c.withCollection(txHisTbl, insert); err != nil {
-		return nil, err
-	}
-
 	dbSimpleTxs = append(dbSimpleTxs, genTxsStat...)
 
 	return dbSimpleTxs, nil
