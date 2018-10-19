@@ -14,7 +14,8 @@ import (
 
 func newTestDBAccount(t *testing.T) *database.DBAccount {
 	return &database.DBAccount{
-		Address: "0x4d7adfbeabc99303c9ad4fcd6370b611b88eb5b3b69b1dbc61f6c0ce30a352b0",
+		ShardNumber: 1,
+		Address:     "0x4d7adfbeabc99303c9ad4fcd6370b611b88eb5b3b69b1dbc61f6c0ce30a352b0",
 	}
 }
 
@@ -35,7 +36,6 @@ func TestCreateDbBlock(t *testing.T) {
 
 	s.cacheMinerAccount[AccountInfo.Address] = minerAccount
 	s.getMinerAccountAndCount(AccountInfo, reward, txFee)
-
 	assert.Equal(t, AccountInfo.Address, minerAccount.Address)
-
+	assert.Equal(t, AccountInfo.ShardNumber, minerAccount.ShardNumber)
 }

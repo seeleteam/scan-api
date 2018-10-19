@@ -44,7 +44,6 @@ func (s *Syncer) getMinerAccountAndCount(account *database.DBAccount, reward int
 }
 
 func (s *Syncer) getMinerAccount(account *database.DBAccount, reward int64, txFee int64) {
-
 	minerAccount, err := s.db.GetMinerAccountByAddress(account.Address)
 	if err != nil {
 		minerAccount = &database.DBMiner{

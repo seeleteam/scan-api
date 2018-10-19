@@ -274,6 +274,7 @@ func (s *Syncer) SyncHandle(i uint64) bool {
 		return true
 	}
 	s.accountUpdateSync()
+
 	return false
 }
 
