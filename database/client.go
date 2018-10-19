@@ -442,19 +442,34 @@ func (c *Client) GetAccountCnt() (uint64, error) {
 
 //GetBlockTxsTps  From a block transaction throughput TPS
 func (c *Client) GetBlockTxsTps() (float64, error) {
-	var blocksTpx float64
-	var Txs, Blockprotime int64
-	query := func(c *mgo.Collection) error {
+	var blocksTpx1 float64
+	var Txs1, Blockprotime1 int64
+	query1 := func(c *mgo.Collection) error {
 		var err error
 		var blocks []*DBBlock
-		c.Find(bson.M{}).Sort("-timestamp").Limit(2).All(&blocks)
-		Txs = int64(len(blocks[1].Txs))
-		Blockprotime = int64(blocks[0].Timestamp - blocks[1].Timestamp)
-		blocksTpx = float64(Txs / Blockprotime)
+		c.Find(bson.M{"shardNumber": 1}).Sort("-timestamp").Limit(2).All(&blocks)
+		Txs1 = int64(len(blocks[1].Txs))
+		Blockprotime1 = int64(blocks[0].Timestamp - blocks[1].Timestamp)
+		blocksTpx1 = float64(Txs1 / Blockprotime1)
+		return err
+	}
+	err := c.withCollection(blockTbl, query1)
+
+	var blocksTpx2 float64
+	var Txs2, Blockprotime2 int64
+	query2 := func(c *mgo.Collection) error {
+		var err error
+		var blocks []*DBBlock
+		c.Find(bson.M{"shardNumber": 1}).Sort("-timestamp").Limit(2).All(&blocks)
+		Txs2 = int64(len(blocks[1].Txs))
+		Blockprotime2 = int64(blocks[0].Timestamp - blocks[1].Timestamp)
+		blocksTpx2 = float64(Txs2 / Blockprotime2)
 		return err
 	}
 
-	err := c.withCollection(blockTbl, query)
+	err = c.withCollection(blockTbl, query2)
+
+	blocksTpx := blocksTpx1 + blocksTpx2
 	return blocksTpx, err
 }
 
