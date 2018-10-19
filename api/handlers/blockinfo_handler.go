@@ -12,8 +12,10 @@ import (
 	"math/big"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/seeleteam/scan-api/database"
 )
 
 const (
@@ -560,7 +562,58 @@ func (h *BlockHandler) getPendingTxsByBeginAndEnd(shardNumber int, begin, end ui
 //GetTxsDayCount 30 days trading history data
 func (h *BlockHandler) GetTxsDayCount() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		txs, err := h.DBClient.GetTotalTxs()
+		db := h.DBClient
+		// Get First block to ensure how long to get transaction history
+		firstBlock, err := db.GetBlockByHeight(1, 1)
+		if err != nil {
+			responseError(c, errGetBlockFromDB, http.StatusInternalServerError, apiDBQueryError)
+			return
+		}
+		firstTimestamp := firstBlock.Timestamp
+		firstTime := time.Unix(firstTimestamp, 0)
+		firstYear, firstMonth, firstDay := firstTime.Date()
+		firstDate := time.Date(firstYear, firstMonth, firstDay, 0, 0, 0, 0, time.Local)
+		todayYear, todayMonth, todayDay := time.Now().Date()
+		todayDate := time.Date(todayYear, todayMonth, todayDay, 0, 0, 0, 0, time.Local)
+		hisDays := int((todayDate.Unix() - firstDate.Unix()) / 86400)
+		if hisDays > 29 {
+			hisDays = 29
+		}
+
+		hisStartDate := todayDate.AddDate(0, 0, -hisDays)
+		begin := hisStartDate.Unix()
+		beginTime := strconv.FormatInt(begin, 10)
+		hisCounts, err := db.GetTxsHis(beginTime)
+		if err != nil {
+			responseError(c, errGetBlockFromDB, http.StatusInternalServerError, apiDBQueryError)
+			return
+		}
+
+		critical, err := strconv.ParseInt(hisCounts[0].Stime, 10, 64)
+		if err != nil {
+			responseError(c, errGetBlockFromDB, http.StatusInternalServerError, apiDBQueryError)
+			return
+		}
+		critical -= 86400
+		var count database.DBHisTxsCount
+		for hisStartDate.Unix() < critical {
+			count.Stime = strconv.FormatInt(critical, 10)
+			count.TxCount = 0
+			db.UpsertTxHis(count)
+			critical -= 86400
+		}
+
+		needGenDays := len(hisCounts) - hisDays - 1
+		genDate := todayDate.AddDate(0, 0, needGenDays)
+		genLogDay := genDate.Format("2006-01-02")
+		genHisCounts, err := db.GetTotalTxs(genLogDay)
+		if err != nil {
+			responseError(c, errGetBlockFromDB, http.StatusInternalServerError, apiDBQueryError)
+			return
+		}
+		for _, hisCount := range genHisCounts {
+			db.UpsertTxHis(*hisCount)
+		}
 		if err != nil {
 			responseError(c, errGetBlockFromDB, http.StatusInternalServerError, apiDBQueryError)
 			return
@@ -568,7 +621,7 @@ func (h *BlockHandler) GetTxsDayCount() gin.HandlerFunc {
 		c.JSON(http.StatusOK, gin.H{
 			"code":    apiOk,
 			"message": "",
-			"data":    txs,
+			"data":    hisCounts,
 		})
 
 	}
