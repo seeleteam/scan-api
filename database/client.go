@@ -352,8 +352,6 @@ func (c *Client) GetTotalTxs() ([]*DBSimpleTxs, error) {
 		}
 	}
 
-	dbSimpleTxs = append(dbSimpleTxs, genTxsStat...)
-
 	return dbSimpleTxs, nil
 }
 
