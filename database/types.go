@@ -30,7 +30,7 @@ type DBHisTxsCount struct {
 type DBHisTxsCounts []*DBHisTxsCount
 
 func (c DBHisTxsCounts) Len() int { return len(c) }
-func (c DBHisTxsCounts) Less(i, j int) bool { return c[i].Stime < c[j].Stime }
+func (c DBHisTxsCounts) Less(i, j int) bool { return c[i].Stime > c[j].Stime }
 func (c DBHisTxsCounts) Swap(i, j int)      { c[i], c[j] = c[j], c[i] }
 
 //DBBlock describle the block info which stored in the database
