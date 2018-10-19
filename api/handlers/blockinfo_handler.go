@@ -16,6 +16,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/seeleteam/scan-api/database"
+	"sort"
 )
 
 const (
@@ -614,10 +615,7 @@ func (h *BlockHandler) GetTxsDayCount() gin.HandlerFunc {
 		for _, hisCount := range genHisCounts {
 			db.UpsertTxHis(*hisCount)
 		}
-		if err != nil {
-			responseError(c, errGetBlockFromDB, http.StatusInternalServerError, apiDBQueryError)
-			return
-		}
+		sort.Sort(hisCounts)
 		c.JSON(http.StatusOK, gin.H{
 			"code":    apiOk,
 			"message": "",
