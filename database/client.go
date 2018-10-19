@@ -7,7 +7,7 @@ import (
 
 	"github.com/seeleteam/scan-api/log"
 
-	mgo "gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -17,6 +17,7 @@ const (
 	accTbl       = "account"
 	minerTbl     = "miner"
 	pendingTxTbl = "pendingtx"
+	txHisTbl     = "txhistory"
 
 	chartTxTbl              = "chart_transhistory"
 	chartHashRateTbl        = "chart_hashrate"
@@ -303,24 +304,58 @@ func (c *Client) GetPendingTxByHash(hash string) (*DBTx, error) {
 	return tx, err
 }
 
-//GetTotalTxs get row count of transaction table from mongo
+// GetTotalTxs get row count of transaction table from mongo
 func (c *Client) GetTotalTxs() ([]*DBSimpleTxs, error) {
-	var DBSimpleTxs []*DBSimpleTxs
+	var dbSimpleTxs []*DBSimpleTxs
 	nTime := time.Now()
 	startDate := nTime.AddDate(0, 0, -30)
-	logDay := startDate.Format("2006-01-02")
+	begin := startDate.Unix()
+	beginTime := strconv.FormatInt(begin, 10)
+	queryTxHis := func(c *mgo.Collection) error {
+		var err error
+		c.Find(bson.M{"stime": bson.M{"$gte": beginTime}}).All(&dbSimpleTxs)
+		return err
+	}
+
+	if err := c.withCollection(txHisTbl, queryTxHis); err != nil {
+		return nil, err
+	}
+
+	if len(dbSimpleTxs) == 30 {
+		return dbSimpleTxs, nil
+	}
+
+	genDate := nTime.AddDate(0, 0, len(dbSimpleTxs)-30)
+	genLogDay := genDate.Format("2006-01-02")
+
+	var genTxsStat []*DBSimpleTxs
 	query := func(c *mgo.Collection) error {
 		m := []bson.M{
-			{"$match": bson.M{"timetxs": bson.M{"$gte": logDay}}},
+			{"$match": bson.M{"timetxs": bson.M{"$gte": genLogDay}}},
 			{"$group": bson.M{"_id": "$timetxs", "stime": bson.M{"$first": "$timestamp"}, "txcount": bson.M{"$sum": 1}}},
 			{"$sort": bson.M{"_id": -1}},
 		}
 		pipe := c.Pipe(m)
-		return pipe.All(&DBSimpleTxs)
+		return pipe.All(&genTxsStat)
+	}
+	if err := c.withCollection(txTbl, query); err != nil {
+		return nil, err
 	}
 
-	err := c.withCollection(txTbl, query)
-	return DBSimpleTxs, err
+	stats := []interface{}{}
+	for _, stat := range genTxsStat {
+		stats = append(stats, stat)
+	}
+	insert := func(c *mgo.Collection) error {
+		return c.Insert(stats...)
+	}
+	if err := c.withCollection(txHisTbl, insert); err != nil {
+		return nil, err
+	}
+
+	dbSimpleTxs = append(dbSimpleTxs, genTxsStat...)
+
+	return dbSimpleTxs, nil
 }
 
 //GetTxsDayCount get row count of transaction table from mongo
