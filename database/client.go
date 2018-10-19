@@ -305,30 +305,8 @@ func (c *Client) GetPendingTxByHash(hash string) (*DBTx, error) {
 }
 
 // GetTotalTxs get row count of transaction table from mongo
-func (c *Client) GetTotalTxs() ([]*DBSimpleTxs, error) {
-	var dbSimpleTxs []*DBSimpleTxs
-	nTime := time.Now()
-	startDate := nTime.AddDate(0, 0, -30)
-	begin := startDate.Unix()
-	beginTime := strconv.FormatInt(begin, 10)
-	queryTxHis := func(c *mgo.Collection) error {
-		var err error
-		c.Find(bson.M{"stime": bson.M{"$gte": beginTime}}).All(&dbSimpleTxs)
-		return err
-	}
-
-	if err := c.withCollection(txHisTbl, queryTxHis); err != nil {
-		return nil, err
-	}
-
-	if len(dbSimpleTxs) == 30 {
-		return dbSimpleTxs, nil
-	}
-
-	genDate := nTime.AddDate(0, 0, len(dbSimpleTxs)-30)
-	genLogDay := genDate.Format("2006-01-02")
-
-	var genTxsStat []*DBSimpleTxs
+func (c *Client) GetTotalTxs(genLogDay string) (DBHisTxsCounts, error) {
+	var genHisCounts DBHisTxsCounts
 	query := func(c *mgo.Collection) error {
 		m := []bson.M{
 			{"$match": bson.M{"timetxs": bson.M{"$gte": genLogDay}}},
@@ -336,23 +314,36 @@ func (c *Client) GetTotalTxs() ([]*DBSimpleTxs, error) {
 			{"$sort": bson.M{"_id": -1}},
 		}
 		pipe := c.Pipe(m)
-		return pipe.All(&genTxsStat)
+		return pipe.All(&genHisCounts)
 	}
 	if err := c.withCollection(txTbl, query); err != nil {
 		return nil, err
 	}
+	return genHisCounts, nil
+}
 
-	for _, stat := range genTxsStat {
-		insert := func(c *mgo.Collection) error {
-			_, err := c.Upsert(bson.M{"stime": stat.Stime}, stat)
-			return err
-		}
-		if err := c.withCollection(txHisTbl, insert); err != nil {
-			return nil, err
-		}
+// GetTxsHis get transaction history
+func (c *Client) GetTxsHis(time string) (DBHisTxsCounts, error) {
+	var hisCounts DBHisTxsCounts
+	queryTxHis := func(c *mgo.Collection) error {
+		var err error
+		c.Find(bson.M{"stime": bson.M{"$gte": time}}).Sort("stime").All(&hisCounts)
+		return err
 	}
 
-	return dbSimpleTxs, nil
+	if err := c.withCollection(txHisTbl, queryTxHis); err != nil {
+		return nil, err
+	}
+	return hisCounts, nil
+}
+
+// UpsertTxHis insert or update transaction history
+func (c *Client) UpsertTxHis(count DBHisTxsCount) error {
+	insert := func(c *mgo.Collection) error {
+		_, err := c.Upsert(bson.M{"stime": count.Stime}, count)
+		return err
+	}
+	return c.withCollection(txHisTbl, insert)
 }
 
 //GetTxsDayCount get row count of transaction table from mongo
