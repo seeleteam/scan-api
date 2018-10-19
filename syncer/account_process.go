@@ -1,6 +1,7 @@
 package syncer
 
 import (
+	"fmt"
 	"sync"
 	"time"
 
@@ -32,13 +33,17 @@ func (s *Syncer) getAccountFromDBOrCache(address string) *database.DBAccount {
 
 func (s *Syncer) getMinerAccountAndCount(account *database.DBAccount, reward int64, txFee int64) {
 	miner, ok := s.cacheMinerAccount[account.Address]
+	fmt.Println("miner=", miner)
 	if ok {
 		miner.Reward += reward
 		miner.TxFee += txFee
-		miner.Revenue += reward + txFee
+		miner.Revenue = miner.Reward + miner.TxFee
 		s.updateMinerAccount[account.Address] = miner
 		return
 	}
+	s.getMinerAccount(account, reward, txFee)
+}
+func (s *Syncer) getMinerAccount(account *database.DBAccount, reward int64, txFee int64) {
 
 	minerAccount, err := s.db.GetMinerAccountByAddress(account.Address)
 	if err != nil {
@@ -181,28 +186,6 @@ func (s *Syncer) accountSync(b *rpc.BlockInfo) error {
 }
 
 func (s *Syncer) accountUpdateSync() {
-	// for _, v := range s.newAccount {
-	// 	balance, err := s.rpc.GetBalance(v.Address)
-	// 	if err != nil {
-	// 		log.Error(err)
-	// 		balance = 0
-	// 	}
-	// 	v.Balance = balance
-
-	// 	// txCnt, err := s.db.GetTxCntByShardNumberAndAddress(s.shardNumber, v.Address)
-	// 	// if err != nil {
-	// 	// 	log.Error(err)
-	// 	// 	txCnt = 0
-	// 	// }
-	// 	// v.TxCount = txCnt
-
-	// 	err = s.db.AddAccount(v)
-	// 	if err != nil {
-	// 		log.Error("[DB] err : %v", err)
-	// 		continue
-	// 	}
-	// }
-
 	var wg sync.WaitGroup
 	wg.Add(len(s.updateAccount) + len(s.updateMinerAccount))
 
