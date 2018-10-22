@@ -57,13 +57,6 @@ func (s *Syncer) debttxSync(block *rpc.BlockInfo) error {
 	debttxs := []interface{}{}
 	for i := 0; i < len(block.Debts); i++ {
 		debts := block.Debts[i]
-
-		for j := 0; j < len(block.TxDebts); j++ {
-			if block.Debts[i].TxHash == block.TxDebts[j].TxHash {
-				debts.TxHash = block.TxDebts[j].TxHash
-			}
-		}
-
 		debts.Block = block.Height
 		debtIdx++
 		debts.Idx = debtIdx
@@ -71,7 +64,6 @@ func (s *Syncer) debttxSync(block *rpc.BlockInfo) error {
 		debtTx.ShardNumber = s.shardNumber
 
 		debttxs = append(debttxs, debtTx)
-
 	}
 
 	if len(debttxs) == 0 {
