@@ -38,13 +38,8 @@ func (s *Syncer) txSync(block *rpc.BlockInfo) error {
 		}
 
 		txs = append(txs, dbTx)
-		//s.workerpool.Submit(func() {
-		//	s.db.AddTx(dbTx)
-		//	wg.Done()
-		//})
 	}
 
-	//wg.Wait()
 	if len(txs) == 0 {
 		return nil
 	}
