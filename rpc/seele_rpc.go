@@ -20,7 +20,7 @@ func (rpc *SeeleRPC) CurrentBlockHeight() (uint64, error) {
 	return height, nil
 }
 
-//GetBlockByHeight get block and transaction data from seele node
+// GetBlockByHeight get block and transaction data from seele node
 func (rpc *SeeleRPC) GetBlockByHeight(h uint64, fullTx bool) (block *BlockInfo, err error) {
 	request := GetBlockByHeightRequest{
 		Height: int64(h),
@@ -34,6 +34,84 @@ func (rpc *SeeleRPC) GetBlockByHeight(h uint64, fullTx bool) (block *BlockInfo, 
 		return nil, err
 	}
 
+	// reslut data struct:
+	// map[
+	//   debts:[
+	//     map[
+	//       Data:
+	//         map[
+	//           Shard:2
+	//           Account:0x0ea2a45ab5a909c309439b0e004c61b7b2a3e831
+	//           Amount:10000
+	//           Fee:0
+	//           Code:
+	//           TxHash:0x58752f8aeb2c69dd2c32059d3ad8b2d3d860c6d92aa2b3b30ff985e564f60fae
+	//         ]
+	//       Hash:0x0da1ed893e7f0ca2558c193b3b82ed20575a6978bea5b14f282309c69fee368e
+	//     ]
+	//   ]
+	//   hash:0x000002069d9de64bad509239e2a121afbf7de183576457a1d1fb077d19fa3e8c
+	//   header:
+	//     map[
+	//       StateHash:0x8af14975f636ace27571cfcdcd9a1a1b4a5b15228977cf6207e82f63abf96ffd
+	//       ReceiptHash:0x02fa1d68e7bbf0b833f6e8719efb11b32c7f760e4ae050a4f9b58b8dd8ad1620
+	//       DebtHash:0x0000000000000000000000000000000000000000000000000000000000000000
+	//       CreateTimestamp:1.539050098e+09
+	//       Nonce:1.782548729527727e+19
+	//       ExtraData:
+	//       PreviousBlockHash:0x000001cba2c0b82402b3d2d2ad49f50ca0b21aee18c8123486377b2ec93aa0e0
+	//       Creator:0x4c10f2cd2159bb432094e3be7e17904c2b4aeb21
+	//       TxHash:0xdb00575ff0cc0de89bd6c1799d37e5f600687963785176ca76e81bebfde6a03f
+	//       TxDebtHash:0x58d7c36b25a715f5076ccb878940920f6bb333ab142287452509f881103960d2
+	//       Difficulty:6.563003e+06
+	//       Height:10368
+	//     ]
+	//   totalDifficulty:6.8985339754e+10
+	//   transactions:[
+	//     map[
+	//       from:0x0000000000000000000000000000000000000000
+	//       hash:0x6fb17b265260caed33b4e8f58ad84b508dd8950b9bc93dae8518fc96912f76bb
+	//       payload:
+	//       timestamp:1.53993151e+09
+	//       to:0xd5a145191b7ca9cb4f3dc850e426c1e853d2a9f1
+	//       accountNonce:0
+	//       amount:1.5e+08
+	//       gasLimit:0
+	//       gasPrice:0
+	//     ]
+	//     map[
+	//       amount:10000
+	//       hash:0xf526dc404145cd409601e951fec4f2222f3abf578381cdaaea9db3a791a79cbd
+	//       payload:
+	//       timestamp:0
+	//       to:0xa00d22dc3624d4696eff8d1641b442f79c3379b1
+	//       accountNonce:280
+	//       from:0xec759db47a65f6537d630517f6cd3ca39c6f93d1
+	//       gasLimit:21000
+	//       gasPrice:1
+	//     ]
+	//   ]
+	//   txDebts:[
+	//     map[
+	//       Hash:0xe1c24a636a7c27aea7c384f6eb61eb49168129105f4c081ffa8ca7e77198b3f6
+	//       Data:
+	//         map[
+	//           Account:0x0ea2a45ab5a909c309439b0e004c61b7b2a3e831
+	//           Amount:10000
+	//           Fee:1
+	//           Code:
+	//           TxHash:0x0b30a6edf95a16933a0a77ffd3eb15680d4e3cb79466f21c1181c013a68eae62
+	//           Shard:2
+	//         ]
+	//       ]
+	//     ]
+	//   ]
+
+	return getBlockByHeight(rpcOutputBlock, fullTx), err
+}
+
+// getBlockByHeight parse block map to BlockInfo
+func getBlockByHeight(rpcOutputBlock map[string]interface{}, fullTx bool) *BlockInfo {
 	headerMp := rpcOutputBlock["header"].(map[string]interface{})
 	height := uint64(headerMp["Height"].(float64))
 	hash := rpcOutputBlock["hash"].(string)
@@ -77,11 +155,11 @@ func (rpc *SeeleRPC) GetBlockByHeight(h uint64, fullTx bool) (block *BlockInfo, 
 			de.TxHash = dbets["TxHash"].(string)
 			de.Hash = rpcDebtinfo["Hash"].(string)
 			de.Block = height
-			de.To = dbets["Account"].(string)
+			de.Account = dbets["Account"].(string)
 			de.ShardNumber = int(dbets["Shard"].(float64))
 			amount := int64(dbets["Amount"].(float64))
 			de.Amount = big.NewInt(amount)
-			de.Payload = dbets["Code"].(string)
+			de.Code = dbets["Code"].(string)
 			de.Fee = int64(dbets["Fee"].(float64))
 			Debts = append(Debts, de)
 		}
@@ -97,17 +175,17 @@ func (rpc *SeeleRPC) GetBlockByHeight(h uint64, fullTx bool) (block *BlockInfo, 
 			txdbets := rpcDebtinfo["Data"].(map[string]interface{})
 			txDebt.Hash = rpcDebtinfo["Hash"].(string)
 			txDebt.TxHash = txdbets["TxHash"].(string)
-			txDebt.To = txdbets["Account"].(string)
+			txDebt.Account = txdbets["Account"].(string)
 			txDebt.ShardNumber = int(txdbets["Shard"].(float64))
 			amount := int64(txdbets["Amount"].(float64))
 			txDebt.Amount = big.NewInt(amount)
-			txDebt.Payload = txdbets["Code"].(string)
+			txDebt.Code = txdbets["Code"].(string)
 			txDebt.Fee = int64(txdbets["Fee"].(float64))
 			TxDebts = append(TxDebts, txDebt)
 		}
 	}
 
-	block = &BlockInfo{
+	return &BlockInfo{
 		Height:          height,
 		Hash:            hash,
 		ParentHash:      parentHash,
@@ -121,7 +199,6 @@ func (rpc *SeeleRPC) GetBlockByHeight(h uint64, fullTx bool) (block *BlockInfo, 
 		Debts:           Debts,
 		TxDebts:         TxDebts,
 	}
-	return block, err
 }
 
 // GetPeersInfo get peers info from connected seele node
@@ -253,8 +330,8 @@ func getReceiptByTxHash(receiptMp map[string]interface{}) *Receipt {
 		TxHash:          txHash,
 		ContractAddress: contractAddress,
 		Failed:          failed,
-		TotalFee:        big.NewInt(totalFee),
-		UsedGas:         big.NewInt(usedGas),
+		TotalFee:        totalFee,
+		UsedGas:         usedGas,
 	}
 }
 

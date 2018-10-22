@@ -57,23 +57,22 @@ type BlockInfo struct {
 type Debt struct {
 	Hash        string   `json:"hash"`
 	TxHash      string   `json:"txhash"`
-	From        string   `json:"from"`
-	To          string   `json:"to"`
+	Account     string   `json:"to"`
 	Block       uint64   `json:"block"`
 	Idx         uint64   `json:"idx"`
 	ShardNumber int      `json:"shardNumber"`
 	Fee         int64    `json:"fee"`
-	Payload     string   `json:"payload"`
+	Code        string   `json:"payload"`
 	Amount      *big.Int `json:"amount"`
 }
 
 type TxDebt struct {
 	Hash        string   `json:"hash"`
 	TxHash      string   `json:"txhash"`
-	To          string   `json:"to"`
+	Account     string   `json:"to"`
 	ShardNumber int      `json:"shardNumber"`
 	Fee         int64    `json:"fee"`
-	Payload     string   `json:"payload"`
+	Code        string   `json:"payload"`
 	Amount      *big.Int `json:"amount"`
 }
 
@@ -109,11 +108,11 @@ type PeerInfo struct {
 
 // Receipt is the receipt information of tx
 type Receipt struct {
-	Result          string   `json:"result"`
-	PostState       string   `json:"poststate"`
-	TxHash          string   `json:"txhash"`
-	ContractAddress string   `json:"contractaddress"`
-	Failed          bool     `json:"failed"`
-	TotalFee        *big.Int `json:"totalFee"`
-	UsedGas         *big.Int `json:"usedGas"`
+	Result          string `json:"result"`
+	PostState       string `json:"poststate"`
+	TxHash          string `json:"txhash"`
+	ContractAddress string `json:"contractaddress"`
+	Failed          bool   `json:"failed"`
+	TotalFee        int64  `json:"totalFee"`
+	UsedGas         int64  `json:"usedGas"`
 }

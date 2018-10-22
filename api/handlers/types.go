@@ -193,7 +193,7 @@ func createRetDetailBlockInfo(blockInfo *database.DBBlock, maxHeight, minHeight 
 
 	ret.Nonce = blockInfo.Nonce
 	ret.TxCount = len(blockInfo.Txs)
-	ret.DebtCount = len(blockInfo.Debt)
+	ret.DebtCount = len(blockInfo.Debts)
 	ret.MaxHeight = maxHeight
 	ret.MinHeight = minHeight
 	ret.ShardNumber = blockInfo.ShardNumber
