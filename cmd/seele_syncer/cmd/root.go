@@ -13,7 +13,6 @@ import (
 	"github.com/seeleteam/scan-api/database"
 	"github.com/seeleteam/scan-api/log"
 	"github.com/seeleteam/scan-api/syncer"
-
 	"github.com/spf13/cobra"
 )
 

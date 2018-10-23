@@ -29,14 +29,14 @@ type Syncer struct {
 }
 
 // NewSyncer return a syncer to sync block data from seele node
-func NewSyncer(db Database, rpcConnUrl string, shardNumber int) *Syncer {
-	rpc := rpc.NewRPC(rpcConnUrl)
+func NewSyncer(db Database, rpcConnURL string, shardNumber int) *Syncer {
+	rpc := rpc.NewRPC(rpcConnURL)
 	if rpc == nil {
 		return nil
 	}
 
 	if err := rpc.Connect(); err != nil {
-		fmt.Printf("rpc init failed, connurl:%v\n", rpcConnUrl)
+		fmt.Printf("rpc init failed, connurl:%v\n", rpcConnURL)
 		return nil
 	}
 
@@ -197,13 +197,14 @@ func (s *Syncer) checkOlderBlocks() bool {
 func (s *Syncer) sync() error {
 	log.Info("[BlockSync syncCnt:%d]Begin Sync", s.syncCnt)
 	s.checkOlderBlocks()
+	// get seele node block height
 	curHeight, err := s.rpc.CurrentBlockHeight()
-
 	if err != nil {
 		log.Error(err)
 		return err
 	}
 
+	// get local block height
 	dbBlockHeight, err := s.db.GetBlockHeight(s.shardNumber)
 	if err != nil {
 		log.Error(err)
@@ -223,9 +224,12 @@ func (s *Syncer) sync() error {
 		s.db.UpdateBlock(s.shardNumber, 0, block)
 	} else {
 		for i := dbBlockHeight; i <= curHeight; i++ {
+			log.Info("begin to sync block[%d]:", i)
 			if s.SyncHandle(i) {
+				log.Info("failed to sync block[%d]:", i)
 				break
 			}
+			log.Info("successfully to sync block[%d]:", i)
 		}
 	}
 	log.Info("sync end-------")
@@ -242,39 +246,35 @@ func (s *Syncer) sync() error {
 // SyncHandle sync the block data from seele node, and handle tx or account
 func (s *Syncer) SyncHandle(i uint64) bool {
 	rpcBlock, err := s.rpc.GetBlockByHeight(i, true)
-	log.Info("sync add block[%d]: %v", i, rpcBlock)
 	if err != nil {
 		s.rpc.Release()
 		log.Error(err)
 		return true
 	}
 
-	err = s.blockSync(rpcBlock)
-	if err != nil {
-		log.Info("sync failed to add block[i], error: %v", err)
+	// sync block
+	if err = s.blockSync(rpcBlock); err != nil {
+		return true
+	}
+
+	// sync transactions
+	if err = s.txSync(rpcBlock); err != nil {
 		log.Error(err)
 		return true
 	}
 
-	err = s.txSync(rpcBlock)
-	if err != nil {
+	// sync debts
+	if err = s.debttxSync(rpcBlock); err != nil {
 		log.Error(err)
 		return true
 	}
 
-	err = s.debttxSync(rpcBlock)
-	if err != nil {
-		log.Error(err)
-		return true
-	}
-
-	err = s.accountSync(rpcBlock)
-	if err != nil {
+	// sync accounts
+	if err = s.accountSync(rpcBlock); err != nil {
 		log.Error(err)
 		return true
 	}
 	s.accountUpdateSync()
-
 	return false
 }
 
