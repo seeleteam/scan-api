@@ -1003,7 +1003,7 @@ func TestRemoveAll(t *testing.T) {
 	}
 
 	dbClient := NewDBClient("seele", "117.50.0.225:27017", 1)
-	assert.Equal(t, dbClient  != nil, true)
+	assert.Equal(t, dbClient != nil, true)
 
 	err := dbClient.RemoveTxs(3, 666666)
 	assert.Equal(t, err, nil)
@@ -1015,39 +1015,39 @@ func TestAddTxs(t *testing.T) {
 	}
 
 	dbClient := NewDBClient("seele", "117.50.0.225:27017", 1)
-	assert.Equal(t, dbClient  != nil, true)
+	assert.Equal(t, dbClient != nil, true)
 
 	tx1 := &DBTx{
-			TxType : 0,
-			Hash: "0x5d148be1b0a58c82a45e5f6a19b0d5c89be11850abc7d52149347c924365f1c6",
-			From : "0x0000000000000000000000000000000000000000",
-			To: "0x2b26d5bf9a2778553d1ac6d09bbd686ea5185c71",
-			Amount: 150000000,
-			AccountNonce : "0",
-			Timestamp : "1533551588",
-			Payload : "",
-			Block: 666666,
-			Idx :1,
-			ShardNumber : 3,
-			Fee : 0,
-			Pending : false,
-			ContractAddress : "",
-		}
-		tx2 := &DBTx{
-			TxType : 0,
-			Hash: "0x5d148be1b0a58c82a45e5f6a19b0d5c89be11850abc7d52149347c924365f1c6",
-			From : "0x0000000000000000000000000000000000000000",
-			To: "0x2b26d5bf9a2778553d1ac6d09bbd686ea5185c71",
-			Amount: 150000000,
-			AccountNonce : "0",
-			Timestamp : "1533551588",
-			Payload : "",
-			Block: 666667,
-			Idx :2,
-			ShardNumber : 3,
-			Fee : 0,
-			Pending : false,
-			ContractAddress : "",
+		TxType:          0,
+		Hash:            "0x5d148be1b0a58c82a45e5f6a19b0d5c89be11850abc7d52149347c924365f1c6",
+		From:            "0x0000000000000000000000000000000000000000",
+		To:              "0x2b26d5bf9a2778553d1ac6d09bbd686ea5185c71",
+		Amount:          150000000,
+		AccountNonce:    "0",
+		Timestamp:       "1533551588",
+		Payload:         "",
+		Block:           666666,
+		Idx:             1,
+		ShardNumber:     3,
+		Fee:             0,
+		Pending:         false,
+		ContractAddress: "",
+	}
+	tx2 := &DBTx{
+		TxType:          0,
+		Hash:            "0x5d148be1b0a58c82a45e5f6a19b0d5c89be11850abc7d52149347c924365f1c6",
+		From:            "0x0000000000000000000000000000000000000000",
+		To:              "0x2b26d5bf9a2778553d1ac6d09bbd686ea5185c71",
+		Amount:          150000000,
+		AccountNonce:    "0",
+		Timestamp:       "1533551588",
+		Payload:         "",
+		Block:           666667,
+		Idx:             2,
+		ShardNumber:     3,
+		Fee:             0,
+		Pending:         false,
+		ContractAddress: "",
 	}
 
 	txs := []interface{}{tx1, tx2}
