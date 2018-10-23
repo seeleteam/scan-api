@@ -20,7 +20,7 @@ type Set struct {
 	m map[int64]bool
 }
 
-const showLimit  = 15
+const showLimit = 15
 
 //NewSet return an new set
 func NewSet() *Set {

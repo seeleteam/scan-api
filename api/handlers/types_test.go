@@ -32,3 +32,27 @@ func Test_CreateRetSimpleBlockInfo(t *testing.T) {
 	assert.Equal(t, int64(got.Height), header.Height)
 	assert.Equal(t, got.Reward, header.Reward)
 }
+
+func Test_CreateRetLastblockInfo(t *testing.T) {
+	var lastblockHeight, lastblockTime int64
+	lastblockHeight = 10399
+	lastblockTime = 12
+	got := createRetLastblockInfo(lastblockHeight, lastblockTime)
+
+	assert.Equal(t, got.LastblockHeight, lastblockHeight)
+	assert.Equal(t, got.LastblockTime, lastblockTime)
+}
+
+func Benchmark_isOneBitCharacter(b *testing.B) {
+	tests := struct {
+		lastblockHeight int64
+		lastblockTime   int64
+	}{10399, 12}
+
+	for idx := 0; idx < b.N; idx++ {
+		if got := createRetLastblockInfo(tests.lastblockHeight, tests.lastblockTime); got.LastblockHeight != tests.lastblockHeight {
+			b.Errorf("createRetLastblockInfo() = %v, lastblockHeight %v", got, tests.lastblockHeight)
+		}
+	}
+
+}
