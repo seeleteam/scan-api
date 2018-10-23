@@ -148,11 +148,11 @@ func CreateDbBlock(b *rpc.BlockInfo) *DBBlock {
 	for i := 0; i < len(b.Debts); i++ {
 		var simpleDebt DBSimpleDebtInBlock
 		simpleDebt.Hash = b.Debts[i].Hash
-		simpleDebt.Account = b.Debts[i].Account
+		simpleDebt.Account = b.Debts[i].To
 		simpleDebt.TxHash = b.Debts[i].TxHash
 		simpleDebt.ShardNumber = b.Debts[i].ShardNumber
 		simpleDebt.Fee = b.Debts[i].Fee
-		simpleDebt.Payload = b.Debts[i].Code
+		simpleDebt.Payload = b.Debts[i].Payload
 		simpleDebt.Amount = b.Debts[i].Amount.Int64()
 		dbBlock.Debts = append(dbBlock.Debts, simpleDebt)
 	}
@@ -160,11 +160,11 @@ func CreateDbBlock(b *rpc.BlockInfo) *DBBlock {
 	for i := 0; i < len(b.TxDebts); i++ {
 		var simpleTxDebt DBSimpleDebtInBlock
 		simpleTxDebt.Hash = b.TxDebts[i].Hash
-		simpleTxDebt.Account = b.TxDebts[i].Account
+		simpleTxDebt.Account = b.TxDebts[i].To
 		simpleTxDebt.TxHash = b.TxDebts[i].TxHash
 		simpleTxDebt.ShardNumber = b.TxDebts[i].ShardNumber
 		simpleTxDebt.Fee = b.TxDebts[i].Fee
-		simpleTxDebt.Payload = b.TxDebts[i].Code
+		simpleTxDebt.Payload = b.TxDebts[i].Payload
 		simpleTxDebt.Amount = b.TxDebts[i].Amount.Int64()
 		dbBlock.TxDebts = append(dbBlock.TxDebts, simpleTxDebt)
 	}
