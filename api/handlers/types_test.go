@@ -37,7 +37,6 @@ func Test_CreateRetLastblockInfo(t *testing.T) {
 	var lastblockHeight, lastblockTime int64
 	lastblockHeight = 10399
 	lastblockTime = 12
-	//header := newTestDBBlock(t)
 	got := createRetLastblockInfo(lastblockHeight, lastblockTime)
 
 	assert.Equal(t, got.LastblockHeight, lastblockHeight)
