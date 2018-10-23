@@ -57,7 +57,6 @@ type BlockInfo struct {
 type Debt struct {
 	Hash        string   `json:"hash"`
 	TxHash      string   `json:"txhash"`
-	From        string   `json:"from"`
 	To          string   `json:"to"`
 	Block       uint64   `json:"block"`
 	Idx         uint64   `json:"idx"`
@@ -109,11 +108,11 @@ type PeerInfo struct {
 
 // Receipt is the receipt information of tx
 type Receipt struct {
-	Result          string   `json:"result"`
-	PostState       string   `json:"poststate"`
-	TxHash          string   `json:"txhash"`
-	ContractAddress string   `json:"contractaddress"`
-	Failed          bool     `json:"failed"`
-	TotalFee        *big.Int `json:"totalFee"`
-	UsedGas         *big.Int `json:"usedGas"`
+	Result          string `json:"result"`
+	PostState       string `json:"poststate"`
+	TxHash          string `json:"txhash"`
+	ContractAddress string `json:"contractaddress"`
+	Failed          bool   `json:"failed"`
+	TotalFee        int64  `json:"totalFee"`
+	UsedGas         int64  `json:"usedGas"`
 }

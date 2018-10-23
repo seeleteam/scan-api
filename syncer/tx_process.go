@@ -6,12 +6,10 @@ import (
 	"github.com/seeleteam/scan-api/rpc"
 )
 
+// txSync insert the transactions into database
 func (s *Syncer) txSync(block *rpc.BlockInfo) error {
 	transIdx, _ := s.db.GetTxCntByShardNumber(s.shardNumber)
 	txs := []interface{}{}
-	//var wg sync.WaitGroup
-	//wg.Add(len(block.Txs))
-
 	for i := 0; i < len(block.Txs); i++ {
 		trans := block.Txs[i]
 		for j := 0; j < len(block.TxDebts); j++ {
@@ -27,14 +25,16 @@ func (s *Syncer) txSync(block *rpc.BlockInfo) error {
 		dbTx.Pending = false
 		dbTx.ShardNumber = s.shardNumber
 
-		//must be an create contract transaction
+		// transaction fee is in the receipt
+		receipt, err := s.rpc.GetReceiptByTxHash(trans.Hash)
+		if err == nil {
+			dbTx.Fee = receipt.TotalFee
+		}
+		dbTx.Fee = receipt.TotalFee
 		if trans.To == "" {
 			dbTx.TxType = 1
-			receipt, err := s.rpc.GetReceiptByTxHash(trans.Hash)
-			if err == nil {
-				dbTx.ContractAddress = receipt.ContractAddress
-				dbTx.Receipt = *receipt
-			}
+			dbTx.ContractAddress = receipt.ContractAddress
+			dbTx.Receipt = *receipt
 		}
 
 		txs = append(txs, dbTx)
@@ -57,7 +57,6 @@ func (s *Syncer) debttxSync(block *rpc.BlockInfo) error {
 		debts.Idx = debtIdx
 		debtTx := database.CreateDebtTx(debts)
 		debtTx.ShardNumber = s.shardNumber
-
 		debttxs = append(debttxs, debtTx)
 	}
 

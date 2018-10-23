@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/seeleteam/scan-api/log"
-	"github.com/influxdata/influxdb/pkg/testing/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 // func TestOnGetBlockByHeight(t *testing.T) {

@@ -29,21 +29,21 @@ type DBSimpleTxs struct {
 
 //DBBlock describle the block info which stored in the database
 type DBBlock struct {
-	HeadHash        string                  `bson:"headHash"`
-	PreHash         string                  `bson:"preBlockHash"`
-	Height          int64                   `bson:"height"`
-	StateHash       string                  `bson:"stateHash"`
-	Timestamp       int64                   `bson:"timestamp"`
-	Difficulty      string                  `bson:"difficulty"`
-	TotalDifficulty string                  `bson:"totalDifficulty"`
-	Creator         string                  `bson:"creator"`
-	Nonce           string                  `bson:"nonce"`
-	TxHash          string                  `bson:"txHash"`
-	Reward          int64                   `bson:"reward"`
-	Txs             []DBSimpleTxInBlock     `bson:"transactions"`
-	Debt            []DBSimpleTxDebtInBlock `bson:"debt"`
-	TxDebt          []DBSimpleTxDebtInBlock `bson:"txDebt"`
-	ShardNumber     int                     `bson:"shardNumber"`
+	HeadHash        string                `bson:"headHash"`
+	PreHash         string                `bson:"preBlockHash"`
+	Height          int64                 `bson:"height"`
+	StateHash       string                `bson:"stateHash"`
+	Timestamp       int64                 `bson:"timestamp"`
+	Difficulty      string                `bson:"difficulty"`
+	TotalDifficulty string                `bson:"totalDifficulty"`
+	Creator         string                `bson:"creator"`
+	Nonce           string                `bson:"nonce"`
+	TxHash          string                `bson:"txHash"`
+	Reward          int64                 `bson:"reward"`
+	Txs             []DBSimpleTxInBlock   `bson:"transactions"`
+	Debts           []DBSimpleDebtInBlock `bson:"debt"`
+	TxDebts         []DBSimpleDebtInBlock `bson:"txDebt"`
+	ShardNumber     int                   `bson:"shardNumber"`
 }
 
 //Debt describle a transaction which stored in the database
@@ -60,7 +60,8 @@ type Debt struct {
 	Amount      int64  `bson:"amount"`
 }
 
-type DBSimpleTxDebtInBlock struct {
+type DBSimpleDebtInBlock struct {
+	Hash        string `bson:"hash"`
 	TxHash      string `bson:"txHash"`
 	ShardNumber int    `bson:"shardNumber"`
 	Account     string `bson:"account"`
@@ -121,13 +122,14 @@ func CreateDbBlock(b *rpc.BlockInfo) *DBBlock {
 	dbBlock.TotalDifficulty = b.TotalDifficulty.String()
 	dbBlock.Creator = b.Creator
 	dbBlock.Nonce = strconv.FormatUint(b.Nonce, 10)
+	dbBlock.StateHash = b.StateHash
+	dbBlock.TxHash = b.TxHash
 	//exclude coinbase transaction
 	for i := 0; i < len(b.Txs); i++ {
 		var simpleTx DBSimpleTxInBlock
 		simpleTx.Hash = b.Txs[i].Hash
 		simpleTx.From = b.Txs[i].From
 		simpleTx.To = b.Txs[i].To
-		simpleTx.Fee = b.Txs[i].Fee
 		simpleTx.Amount = b.Txs[i].Amount.Int64()
 		simpleTx.Timestamp = strconv.FormatUint(b.Txs[i].Timestamp, 10)
 		dbBlock.Txs = append(dbBlock.Txs, simpleTx)
@@ -144,25 +146,27 @@ func CreateDbBlock(b *rpc.BlockInfo) *DBBlock {
 	}
 
 	for i := 0; i < len(b.Debts); i++ {
-		var simpleTxdebt DBSimpleTxDebtInBlock
-		simpleTxdebt.Account = b.Debts[i].To
-		simpleTxdebt.TxHash = b.Debts[i].TxHash
-		simpleTxdebt.ShardNumber = b.Debts[i].ShardNumber
-		simpleTxdebt.Fee = b.Debts[i].Fee
-		simpleTxdebt.Payload = b.Debts[i].Payload
-		simpleTxdebt.Amount = b.Debts[i].Amount.Int64()
-		dbBlock.Debt = append(dbBlock.Debt, simpleTxdebt)
+		var simpleDebt DBSimpleDebtInBlock
+		simpleDebt.Hash = b.Debts[i].Hash
+		simpleDebt.Account = b.Debts[i].To
+		simpleDebt.TxHash = b.Debts[i].TxHash
+		simpleDebt.ShardNumber = b.Debts[i].ShardNumber
+		simpleDebt.Fee = b.Debts[i].Fee
+		simpleDebt.Payload = b.Debts[i].Payload
+		simpleDebt.Amount = b.Debts[i].Amount.Int64()
+		dbBlock.Debts = append(dbBlock.Debts, simpleDebt)
 	}
 
 	for i := 0; i < len(b.TxDebts); i++ {
-		var simpleTxdebt DBSimpleTxDebtInBlock
-		simpleTxdebt.Account = b.TxDebts[i].To
-		simpleTxdebt.TxHash = b.TxDebts[i].TxHash
-		simpleTxdebt.ShardNumber = b.TxDebts[i].ShardNumber
-		simpleTxdebt.Fee = b.TxDebts[i].Fee
-		simpleTxdebt.Payload = b.TxDebts[i].Payload
-		simpleTxdebt.Amount = b.TxDebts[i].Amount.Int64()
-		dbBlock.TxDebt = append(dbBlock.TxDebt, simpleTxdebt)
+		var simpleTxDebt DBSimpleDebtInBlock
+		simpleTxDebt.Hash = b.TxDebts[i].Hash
+		simpleTxDebt.Account = b.TxDebts[i].To
+		simpleTxDebt.TxHash = b.TxDebts[i].TxHash
+		simpleTxDebt.ShardNumber = b.TxDebts[i].ShardNumber
+		simpleTxDebt.Fee = b.TxDebts[i].Fee
+		simpleTxDebt.Payload = b.TxDebts[i].Payload
+		simpleTxDebt.Amount = b.TxDebts[i].Amount.Int64()
+		dbBlock.TxDebts = append(dbBlock.TxDebts, simpleTxDebt)
 	}
 
 	return &dbBlock
