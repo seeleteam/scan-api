@@ -589,21 +589,21 @@ func (h *BlockHandler) GetTxsDayCount() gin.HandlerFunc {
 			responseError(c, errGetBlockFromDB, http.StatusInternalServerError, apiDBQueryError)
 			return
 		}
-
-		critical, err := strconv.ParseInt(hisCounts[0].Stime, 10, 64)
-		if err != nil {
-			responseError(c, errGetBlockFromDB, http.StatusInternalServerError, apiDBQueryError)
-			return
-		}
-		critical -= 86400
-		var count database.DBHisTxsCount
-		for hisStartDate.Unix() < critical {
-			count.Stime = strconv.FormatInt(critical, 10)
-			count.TxCount = 0
-			db.UpsertTxHis(count)
+		if len(hisCounts) != 0 {
+			critical, err := strconv.ParseInt(hisCounts[0].Stime, 10, 64)
+			if err != nil {
+				responseError(c, errGetBlockFromDB, http.StatusInternalServerError, apiDBQueryError)
+				return
+			}
 			critical -= 86400
+			var count database.DBHisTxsCount
+			for hisStartDate.Unix() < critical {
+				count.Stime = strconv.FormatInt(critical, 10)
+				count.TxCount = 0
+				db.UpsertTxHis(count)
+				critical -= 86400
+			}
 		}
-
 		needGenDays := len(hisCounts) - hisDays - 1
 		genDate := todayDate.AddDate(0, 0, needGenDays)
 		genLogDay := genDate.Format("2006-01-02")
