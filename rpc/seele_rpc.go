@@ -155,11 +155,11 @@ func getBlockByHeight(rpcOutputBlock map[string]interface{}, fullTx bool) *Block
 			de.TxHash = dbets["TxHash"].(string)
 			de.Hash = rpcDebtinfo["Hash"].(string)
 			de.Block = height
-			de.Account = dbets["Account"].(string)
+			de.To = dbets["Account"].(string)
 			de.ShardNumber = int(dbets["Shard"].(float64))
 			amount := int64(dbets["Amount"].(float64))
 			de.Amount = big.NewInt(amount)
-			de.Code = dbets["Code"].(string)
+			de.Payload = dbets["Code"].(string)
 			de.Fee = int64(dbets["Fee"].(float64))
 			Debts = append(Debts, de)
 		}
@@ -175,11 +175,11 @@ func getBlockByHeight(rpcOutputBlock map[string]interface{}, fullTx bool) *Block
 			txdbets := rpcDebtinfo["Data"].(map[string]interface{})
 			txDebt.Hash = rpcDebtinfo["Hash"].(string)
 			txDebt.TxHash = txdbets["TxHash"].(string)
-			txDebt.Account = txdbets["Account"].(string)
+			txDebt.To = txdbets["Account"].(string)
 			txDebt.ShardNumber = int(txdbets["Shard"].(float64))
 			amount := int64(txdbets["Amount"].(float64))
 			txDebt.Amount = big.NewInt(amount)
-			txDebt.Code = txdbets["Code"].(string)
+			txDebt.Payload = txdbets["Code"].(string)
 			txDebt.Fee = int64(txdbets["Fee"].(float64))
 			TxDebts = append(TxDebts, txDebt)
 		}

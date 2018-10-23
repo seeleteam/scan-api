@@ -57,22 +57,22 @@ type BlockInfo struct {
 type Debt struct {
 	Hash        string   `json:"hash"`
 	TxHash      string   `json:"txhash"`
-	Account     string   `json:"to"`
+	To          string   `json:"to"`
 	Block       uint64   `json:"block"`
 	Idx         uint64   `json:"idx"`
 	ShardNumber int      `json:"shardNumber"`
 	Fee         int64    `json:"fee"`
-	Code        string   `json:"payload"`
+	Payload     string   `json:"payload"`
 	Amount      *big.Int `json:"amount"`
 }
 
 type TxDebt struct {
 	Hash        string   `json:"hash"`
 	TxHash      string   `json:"txhash"`
-	Account     string   `json:"to"`
+	To          string   `json:"to"`
 	ShardNumber int      `json:"shardNumber"`
 	Fee         int64    `json:"fee"`
-	Code        string   `json:"payload"`
+	Payload     string   `json:"payload"`
 	Amount      *big.Int `json:"amount"`
 }
 

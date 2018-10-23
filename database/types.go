@@ -67,7 +67,7 @@ type DBSimpleDebtInBlock struct {
 	Account     string `bson:"account"`
 	Amount      int64  `bson:"amount"`
 	Fee         int64  `bson:"fee"`
-	Code        string `bson:"payload"`
+	Payload     string `bson:"payload"`
 }
 
 //DBTx describle a transaction which stored in the database
@@ -152,7 +152,7 @@ func CreateDbBlock(b *rpc.BlockInfo) *DBBlock {
 		simpleDebt.TxHash = b.Debts[i].TxHash
 		simpleDebt.ShardNumber = b.Debts[i].ShardNumber
 		simpleDebt.Fee = b.Debts[i].Fee
-		simpleDebt.Code = b.Debts[i].Code
+		simpleDebt.Payload = b.Debts[i].Code
 		simpleDebt.Amount = b.Debts[i].Amount.Int64()
 		dbBlock.Debts = append(dbBlock.Debts, simpleDebt)
 	}
@@ -164,7 +164,7 @@ func CreateDbBlock(b *rpc.BlockInfo) *DBBlock {
 		simpleTxDebt.TxHash = b.TxDebts[i].TxHash
 		simpleTxDebt.ShardNumber = b.TxDebts[i].ShardNumber
 		simpleTxDebt.Fee = b.TxDebts[i].Fee
-		simpleTxDebt.Code = b.TxDebts[i].Code
+		simpleTxDebt.Payload = b.TxDebts[i].Code
 		simpleTxDebt.Amount = b.TxDebts[i].Amount.Int64()
 		dbBlock.TxDebts = append(dbBlock.TxDebts, simpleTxDebt)
 	}
@@ -197,9 +197,9 @@ func CreateDebtTx(t rpc.Debt) *Debt {
 	var debts Debt
 	debts.Hash = t.Hash
 	debts.TxHash = t.TxHash
-	debts.To = t.Account
+	debts.To = t.To
 	debts.Amount = t.Amount.Int64()
-	debts.Payload = t.Code
+	debts.Payload = t.Payload
 	debts.Height = t.Block
 	debts.Fee = t.Fee
 	return &debts
