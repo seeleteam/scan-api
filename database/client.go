@@ -311,7 +311,7 @@ func (c *Client) GetdebtsByIdx(shardNumber int, begin uint64, end uint64) ([]*De
 func (c *Client) GetPendingTxsByIdx(shardNumber int, begin uint64, end uint64) ([]*DBTx, error) {
 	var trans []*DBTx
 	query := func(c *mgo.Collection) error {
-		return c.Find(bson.M{"shardNumber": shardNumber, "idx": bson.M{"$gte": begin, "$lt": end}}).Sort("idx").All(&trans)
+		return c.Find(bson.M{"shardNumber": shardNumber, "idx": bson.M{"$gt": begin, "$lte": end}}).Sort("-block").All(&trans)
 	}
 	err := c.withCollection(pendingTxTbl, query)
 	return trans, err
