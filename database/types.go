@@ -99,6 +99,7 @@ type DBAccount struct {
 	ShardNumber int    `bson:"shardNumber"`
 	TxCount     int64  `bson:"txCount"`
 	TimeStamp   int64  `bson:"timestamp"`
+	Mined       int64  `bson:"mined"`
 }
 
 //DBMiner describle a miner account which stored in the database
