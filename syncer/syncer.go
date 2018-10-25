@@ -263,6 +263,12 @@ func (s *Syncer) SyncHandle(i uint64) bool {
 		return true
 	}
 
+	// sync txcount
+	if err = s.txcountSync(rpcBlock); err != nil {
+		log.Error(err)
+		return true
+	}
+
 	// sync debts
 	if err = s.debttxSync(rpcBlock); err != nil {
 		log.Error(err)

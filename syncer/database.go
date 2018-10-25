@@ -11,8 +11,10 @@ type Database interface {
 	RemoveTxs(shard int, blockHeight uint64) error
 	GetBlockByHeight(shardNumber int, height uint64) (*database.DBBlock, error)
 	RemoveAllPendingTxs() error
+	RemoveAllTxsCount() error
 	AddTx(tx *database.DBTx) error
 	AddTxs(tx ...interface{}) error
+	AddTxsCount(txcount *database.DBtxcount) error
 	AddDebtTxs(debttxs ...interface{}) error
 	AddPendingTx(tx *database.DBTx) error
 	GetAccountByAddress(address string) (*database.DBAccount, error)
@@ -22,6 +24,7 @@ type Database interface {
 	UpdateMinerAccount(account *database.DBMiner) error
 	UpdateAccountMinedBlock(address string, mined int64) error
 	GetTxCntByShardNumber(shardNumber int) (uint64, error)
+	GetTxCount() (uint64, error)
 	GetPendingTxCntByShardNumber(shardNumber int) (uint64, error)
 	GetTxCntByShardNumberAndAddress(shardNumber int, address string) (int64, error)
 	GetMinedBlocksCntByShardNumberAndAddress(shardNumber int, address string) (int64, error)

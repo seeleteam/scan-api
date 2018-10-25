@@ -47,6 +47,16 @@ func (s *Syncer) txSync(block *rpc.BlockInfo) error {
 	return s.db.AddTxs(txs...)
 }
 
+// txcountSync insert the Total number of transactions into database
+func (s *Syncer) txcountSync(block *rpc.BlockInfo) error {
+	s.db.RemoveAllTxsCount()
+	txcount, _ := s.db.GetTxCount()
+	dbTxCount := database.CreateDbTxCount(txcount)
+
+	return s.db.AddTxsCount(dbTxCount)
+}
+
+// debttxSync insert the debt into database
 func (s *Syncer) debttxSync(block *rpc.BlockInfo) error {
 	debtIdx, _ := s.db.GetTxCntByShardNumber(s.shardNumber)
 	debttxs := []interface{}{}
@@ -67,6 +77,7 @@ func (s *Syncer) debttxSync(block *rpc.BlockInfo) error {
 	return s.db.AddDebtTxs(debttxs...)
 }
 
+// pendingTxsSync insert the pending transactions into database
 func (s *Syncer) pendingTxsSync() error {
 	s.db.RemoveAllPendingTxs()
 	transIdx, err := s.db.GetPendingTxCntByShardNumber(s.shardNumber)

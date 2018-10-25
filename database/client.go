@@ -18,6 +18,7 @@ const (
 	minerTbl     = "miner"
 	debtTbl      = "debt"
 	pendingTxTbl = "pendingtx"
+	txCountTbl   = "txCount"
 
 	chartTxTbl              = "chart_transhistory"
 	chartHashRateTbl        = "chart_hashrate"
@@ -229,6 +230,15 @@ func (c *Client) AddTxs(txs ...interface{}) error {
 	return err
 }
 
+//AddTxsCount insert a total number of transactions into mongo
+func (c *Client) AddTxsCount(count *DBtxcount) error {
+	query := func(c *mgo.Collection) error {
+		return c.Insert(count)
+	}
+	err := c.withCollection(txCountTbl, query)
+	return err
+}
+
 //AddDebtTxs insert a transaction into mongo
 func (c *Client) AddDebtTxs(debttxs ...interface{}) error {
 	query := func(c *mgo.Collection) error {
@@ -254,6 +264,16 @@ func (c *Client) RemoveAllPendingTxs() error {
 		return err
 	}
 	err := c.withCollection(pendingTxTbl, query)
+	return err
+}
+
+//RemoveAllTxsCount remove all transactions Count
+func (c *Client) RemoveAllTxsCount() error {
+	query := func(c *mgo.Collection) error {
+		_, err := c.RemoveAll(nil)
+		return err
+	}
+	err := c.withCollection(txCountTbl, query)
 	return err
 }
 
@@ -534,6 +554,20 @@ func (c *Client) GetTxCntByShardNumber(shardNumber int) (uint64, error) {
 		//TODO: fix this overflow
 		var temp int
 		temp, err = c.Find(bson.M{"shardNumber": shardNumber}).Count()
+		txCnt = uint64(temp)
+		return err
+	}
+	err := c.withCollection(txTbl, query)
+	return txCnt, err
+}
+
+//GetTxCount get tx count by shardNumber
+func (c *Client) GetTxCount() (uint64, error) {
+	var txCnt uint64
+	query := func(c *mgo.Collection) error {
+		var err error
+		var temp int
+		temp, err = c.Find(bson.M{}).Count()
 		txCnt = uint64(temp)
 		return err
 	}

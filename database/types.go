@@ -70,6 +70,10 @@ type DBSimpleDebtInBlock struct {
 	Payload     string `bson:"payload"`
 }
 
+type DBtxcount struct {
+	Count uint64 `bson:"count"`
+}
+
 //DBTx describle a transaction which stored in the database
 type DBTx struct {
 	TxType          int         `bson:"txtype"` // 0 is an normal transaction, 1 is an create contract transaction
@@ -191,6 +195,13 @@ func CreateDbTx(t rpc.Transaction) *DBTx {
 	trans.Idx = int64(t.Idx)
 	trans.Fee = t.Fee
 	return &trans
+}
+
+//CreateDbTxCount create an DBtxcount
+func CreateDbTxCount(count uint64) *DBtxcount {
+	var txcount DBtxcount
+	txcount.Count = count
+	return &txcount
 }
 
 //CreateDebtTx convert an rpc transaction to an dbtransaction

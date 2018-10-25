@@ -55,7 +55,7 @@ func TestCreateDbBlock(t *testing.T) {
 			assert.Equal(t, debt.Amount, int64(10000))
 			assert.Equal(t, debt.Account, "0x0ea2a45ab5a909c309439b0e004c61b7b2a3e831")
 			assert.Equal(t, debt.Fee, int64(0))
-			assert.Equal(t, debt.Code, "")
+			assert.Equal(t, debt.Payload, "")
 		} else {
 			assert.Equal(t, debt.Hash, "")
 		}
@@ -68,9 +68,15 @@ func TestCreateDbBlock(t *testing.T) {
 			assert.Equal(t, txdebt.Amount, int64(10000))
 			assert.Equal(t, txdebt.Account, "0x0ea2a45ab5a909c309439b0e004c61b7b2a3e831")
 			assert.Equal(t, txdebt.Fee, int64(1))
-			assert.Equal(t, txdebt.Code, "")
+			assert.Equal(t, txdebt.Payload, "")
 		} else {
 			assert.Equal(t, txdebt.Hash, "")
 		}
 	}
+}
+
+func TestCreateDbTxCount(t *testing.T) {
+	txcount := 133
+	got := CreateDbTxCount(uint64(txcount))
+	assert.Equal(t, got.Count, uint64(txcount))
 }
