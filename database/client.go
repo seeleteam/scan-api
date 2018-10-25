@@ -2,7 +2,6 @@ package database
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 	"time"
 
@@ -397,10 +396,6 @@ func (c *Client) GetBlockProTime() (int64, int64, error) {
 		end = blocks[0].Timestamp
 		Blockprotime = end - begin
 		lastblockHeight = blocks[0].Height
-		fmt.Println("blocks:", blocks)
-		fmt.Println("lastblockHeight:", lastblockHeight)
-		fmt.Println("begin:", begin)
-		fmt.Println("end:", end)
 		return err
 	}
 	err := c.withCollection(blockTbl, query)
