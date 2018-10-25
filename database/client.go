@@ -510,7 +510,7 @@ func (c *Client) GetBlockTxsTps() (float64, error) {
 		var err error
 		var blocks []*DBLastBlock
 		c.Find(bson.M{}).Sort("-timestamp").Limit(2).All(&blocks)
-		Txs = int64(blocks[1].TxNumber)
+		Txs = int64(blocks[0].TxNumber)
 		Blockprotime = int64(blocks[0].Timestamp - blocks[1].Timestamp)
 		if Blockprotime == 0 {
 			Blockprotime = 1
