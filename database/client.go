@@ -148,6 +148,7 @@ func (c *Client) GetLastBlocksByShard(shard int) ([]*DBLastBlock, error) {
 	return blocks, err
 }
 
+// RemoveLastBlocksByShard remove the last blocks by shard number
 func (c *Client) RemoveLastBlocksByShard(shard int) error {
 	query := func(c *mgo.Collection) error {
 		_, err := c.RemoveAll(bson.M{"shardNumber": shard})
