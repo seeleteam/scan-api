@@ -311,3 +311,11 @@ type DBNodeInfo struct {
 	LastSeen             int64  `bson:"lastseen"`
 	LongitudeAndLatitude string `bson:"longitudeandlatitude"`
 }
+
+// DBLastBlock contains the last block information
+type DBLastBlock struct {
+	ShardNumber int   `bson:"shardNumber"`
+	Height      int64 `bson:"height"`
+	Timestamp   int64 `bson:"timestamp"`
+	TxNumber    int   `bson:"txNumber"`
+}

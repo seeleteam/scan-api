@@ -29,14 +29,12 @@ func (s *Syncer) txSync(block *rpc.BlockInfo) error {
 		receipt, err := s.rpc.GetReceiptByTxHash(trans.Hash)
 		if err == nil {
 			dbTx.Fee = receipt.TotalFee
+			if trans.To == "" {
+				dbTx.TxType = 1
+				dbTx.ContractAddress = receipt.ContractAddress
+				dbTx.Receipt = *receipt
+			}
 		}
-		dbTx.Fee = receipt.TotalFee
-		if trans.To == "" {
-			dbTx.TxType = 1
-			dbTx.ContractAddress = receipt.ContractAddress
-			dbTx.Receipt = *receipt
-		}
-
 		txs = append(txs, dbTx)
 	}
 

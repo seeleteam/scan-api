@@ -289,14 +289,14 @@ func (h *BlockHandler) GetBlockCnt() gin.HandlerFunc {
 	}
 }
 
-//GetBlockProtime Last block information
-func (h *BlockHandler) GetBlockProtime() gin.HandlerFunc {
+// GetBlockProTime get the last block information
+func (h *BlockHandler) GetBlockProTime() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		lastblockHeight, lastblockTime, err := h.DBClient.GetBlockProTime()
+		lastBlockHeight, lastBlockTime, err := h.DBClient.GetBlockProTime()
 		if err != nil {
 			responseError(c, errGetTxCountFromDB, http.StatusInternalServerError, apiDBQueryError)
 		} else {
-			lastblockinfo := createRetLastblockInfo(lastblockHeight, lastblockTime)
+			lastblockinfo := createRetLastblockInfo(lastBlockHeight, lastBlockTime)
 			c.JSON(http.StatusOK, gin.H{
 				"code":    apiOk,
 				"message": "",
