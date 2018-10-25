@@ -390,7 +390,8 @@ func (c *Client) GetBlockProTime() (int64, int64, error) {
 	query := func(c *mgo.Collection) error {
 		var err error
 		var blocks []*DBBlock
-		c.Find(bson.M{}).Sort("-timestamp").Limit(2).All(&blocks)
+		//TODO: fix this shard
+		c.Find(bson.M{"shardNumber": 1, "height": bson.M{"$ne": 0}}).Sort("-timestamp").Limit(2).All(&blocks)
 		begin = blocks[1].Timestamp
 		end = blocks[0].Timestamp
 		Blockprotime = end - begin
