@@ -508,15 +508,19 @@ func (c *Client) GetBlockTxsTps() (float64, error) {
 	var Txs, Blockprotime int64
 	query := func(c *mgo.Collection) error {
 		var err error
-		var blocks []*DBBlock
+		var blocks []*DBLastBlock
 		c.Find(bson.M{}).Sort("-timestamp").Limit(2).All(&blocks)
-		Txs = int64(len(blocks[1].Txs))
+		Txs = int64(blocks[0].TxNumber)
 		Blockprotime = int64(blocks[0].Timestamp - blocks[1].Timestamp)
+		if Blockprotime == 0 {
+			Blockprotime = 1
+		}
+
 		blocksTpx = float64(Txs / Blockprotime)
 		return err
 	}
 
-	err := c.withCollection(blockTbl, query)
+	err := c.withCollection(lastBlocksTbl, query)
 	return blocksTpx, err
 }
 
