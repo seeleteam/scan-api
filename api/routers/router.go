@@ -44,7 +44,7 @@ func (r *Router) Init(e *gin.Engine) {
 	v1.GET("/block", r.BlockHandler.GetBlock())
 	v1.GET("/blocks", r.BlockHandler.GetBlocks())
 	v1.GET("/blockTxsTps", r.BlockHandler.GetBlockTxsTps())
-	v1.GET("/blockprotime", r.BlockHandler.GetBlockProtime())
+	v1.GET("/blockprotime", r.BlockHandler.GetBlockProTime())
 	v1.GET("/blockcount", r.BlockHandler.GetBlockCnt())
 	v1.GET("/blockdebt", r.BlockHandler.GetBlockDebt())
 	v1.GET("/contractcount", r.BlockHandler.GetContractCnt())

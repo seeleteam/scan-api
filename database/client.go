@@ -12,12 +12,13 @@ import (
 )
 
 const (
-	blockTbl     = "block"
-	txTbl        = "transaction"
-	accTbl       = "account"
-	minerTbl     = "miner"
-	debtTbl      = "debt"
-	pendingTxTbl = "pendingtx"
+	blockTbl      = "block"
+	txTbl         = "transaction"
+	lastBlocksTbl = "lastBlocks"
+	accTbl        = "account"
+	minerTbl      = "miner"
+	debtTbl       = "debt"
+	pendingTxTbl  = "pendingtx"
 
 	chartTxTbl              = "chart_transhistory"
 	chartHashRateTbl        = "chart_hashrate"
@@ -115,6 +116,44 @@ func (c *Client) AddBlock(b *DBBlock) error {
 		return c.Insert(b)
 	}
 	err := c.withCollection(blockTbl, query)
+	return err
+}
+
+// AddLastBlocks insert last two blocks into database
+func (c *Client) AddLastBlocks(blocks ...interface{}) error {
+	query := func(c *mgo.Collection) error {
+		return c.Insert(blocks...)
+	}
+	err := c.withCollection(lastBlocksTbl, query)
+	return err
+}
+
+// UpdateLastBlock update the last block
+func (c *Client) UpdateLastBlock(height int64, block *DBLastBlock) error {
+	query := func(c *mgo.Collection) error {
+		err := c.Update(bson.M{"height": height, "shardNumber": block.ShardNumber}, block)
+		return err
+	}
+	err := c.withCollection(lastBlocksTbl, query)
+	return err
+}
+
+// GetLastBlocksByShard get the last blocks by shard number
+func (c *Client) GetLastBlocksByShard(shard int) ([]*DBLastBlock, error) {
+	var blocks []*DBLastBlock
+	query := func(c *mgo.Collection) error {
+		return c.Find(bson.M{"shardNumber": shard}).Sort("-height").All(&blocks)
+	}
+	err := c.withCollection(lastBlocksTbl, query)
+	return blocks, err
+}
+
+func (c *Client) RemoveLastBlocksByShard(shard int) error {
+	query := func(c *mgo.Collection) error {
+		_, err := c.RemoveAll(bson.M{"shardNumber": shard})
+		return err
+	}
+	err := c.withCollection(lastBlocksTbl, query)
 	return err
 }
 
@@ -418,19 +457,18 @@ func (c *Client) GetTxCnt() (uint64, error) {
 
 //GetBlockProTime gets the information of last two blocks
 func (c *Client) GetBlockProTime() (int64, int64, error) {
-	var Blockprotime, lastblockHeight, begin, end int64
+	var blocks []*DBLastBlock
+	var blockProTime, lastBlockHeight int64
 	query := func(c *mgo.Collection) error {
-		var err error
-		var blocks []*DBBlock
-		c.Find(bson.M{}).Sort("-timestamp").Limit(2).All(&blocks)
-		begin = blocks[1].Timestamp
-		end = blocks[0].Timestamp
-		Blockprotime = end - begin
-		lastblockHeight = blocks[0].Height
+		err := c.Find(bson.M{}).Sort("-timestamp").Limit(2).All(&blocks)
+		begin := blocks[1].Timestamp
+		end := blocks[0].Timestamp
+		blockProTime = end - begin
+		lastBlockHeight = blocks[0].Height
 		return err
 	}
-	err := c.withCollection(blockTbl, query)
-	return lastblockHeight, Blockprotime, err
+	err := c.withCollection(lastBlocksTbl, query)
+	return lastBlockHeight, blockProTime, err
 }
 
 //GetBlockCnt get row count of transaction table from mongo
