@@ -15,7 +15,7 @@
     "SyncSwitch":true,
     "BlockCacheLimit":1024,
     "TransCacheLimit":1024,
-    "DataBaseConnUrl":"117.50.0.225:27017",
+    "DataBaseConnUrl":"127.0.0.1:27017",
     "DataBaseName":"seele",
     "Interval":30
 }
