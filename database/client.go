@@ -7,7 +7,7 @@ import (
 
 	"github.com/seeleteam/scan-api/log"
 
-	mgo "gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -19,6 +19,7 @@ const (
 	minerTbl      = "miner"
 	debtTbl       = "debt"
 	pendingTxTbl  = "pendingtx"
+	txHisTbl      = "txhistory"
 
 	chartTxTbl              = "chart_transhistory"
 	chartHashRateTbl        = "chart_hashrate"
@@ -396,26 +397,6 @@ func (c *Client) GetPendingTxByHash(hash string) (*DBTx, error) {
 	}
 	err := c.withCollection(pendingTxTbl, query)
 	return tx, err
-}
-
-//GetTotalTxs get row count of transaction table from mongo
-func (c *Client) GetTotalTxs() ([]*DBSimpleTxs, error) {
-	var DBSimpleTxs []*DBSimpleTxs
-	nTime := time.Now()
-	startDate := nTime.AddDate(0, 0, -30)
-	logDay := startDate.Format("2006-01-02")
-	query := func(c *mgo.Collection) error {
-		m := []bson.M{
-			{"$match": bson.M{"timetxs": bson.M{"$gte": logDay}}},
-			{"$group": bson.M{"_id": "$timetxs", "stime": bson.M{"$first": "$timestamp"}, "txcount": bson.M{"$sum": 1}}},
-			{"$sort": bson.M{"_id": -1}},
-		}
-		pipe := c.Pipe(m)
-		return pipe.All(&DBSimpleTxs)
-	}
-
-	err := c.withCollection(txTbl, query)
-	return DBSimpleTxs, err
 }
 
 //GetTxsDayCount get row count of transaction table from mongo
@@ -1206,4 +1187,65 @@ func (c *Client) GetNodeCntByShardNumber(shardNumber int) (uint64, error) {
 	}
 	err := c.withCollection(nodeInfoTbl, query)
 	return NodeCnt, err
+}
+
+// GetTxsCntByDate get row count of the transaction table
+func (c *Client) GetTxsCntByDate(date string) (uint64, error) {
+	var txsCnt uint64
+	query := func(c *mgo.Collection) error {
+		var err error
+		//TODO: fix this overflow
+		var temp int
+		temp, err = c.Find(bson.M{"timetxs": date}).Count()
+		txsCnt = uint64(temp)
+		return err
+	}
+	err := c.withCollection(txTbl, query)
+	return txsCnt, err
+}
+
+// UpdateTxsCntByDate get transaction count by date
+func (c *Client) UpdateTxsCntByDate(tx *DBSimpleTxs) error {
+	query := func(c *mgo.Collection) error {
+		_, err := c.Upsert(bson.M{"stime": tx.Stime}, tx)
+		return err
+	}
+	return c.withCollection(txHisTbl, query)
+}
+
+// GetTxHisCntByDate get transaction history count by date
+func (c *Client) GetTxHisCntByDate(date string) (uint64, error) {
+	var txsCnt uint64
+	query := func(c *mgo.Collection) error {
+		var err error
+		//TODO: fix this overflow
+		var temp int
+		temp, err = c.Find(bson.M{"stime": date}).Count()
+		txsCnt = uint64(temp)
+		return err
+	}
+	return txsCnt, c.withCollection(txHisTbl, query)
+}
+
+// RemoveOutDateByDate
+func (c *Client) RemoveOutDateByDate(date string) error {
+	query := func(c *mgo.Collection) error {
+		return c.Remove(bson.M{"stime": bson.M{"$lt": date}})
+	}
+	return c.withCollection(txHisTbl, query)
+}
+
+// GetTxHis get transaction history
+func (c *Client) GetTxHis(startDate, today string) ([]*DBSimpleTxs, error) {
+	var hisCounts []*DBSimpleTxs
+	queryTxHis := func(c *mgo.Collection) error {
+		var err error
+		c.Find(bson.M{"stime": bson.M{"$gte": startDate, "$lt": today}}).Sort("-stime").All(&hisCounts)
+		return err
+	}
+
+	if err := c.withCollection(txHisTbl, queryTxHis); err != nil {
+		return nil, err
+	}
+	return hisCounts, nil
 }
