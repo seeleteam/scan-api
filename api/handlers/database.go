@@ -31,7 +31,6 @@ type BlockInfoDB interface {
 	GetAccountsByShardNumber(shardNumber int, max int) ([]*database.DBAccount, error)
 	GetContractCntByShardNumber(shardNumber int) (uint64, error)
 	GetContractsByShardNumber(shardNumber int, max int) ([]*database.DBAccount, error)
-	GetTotalTxs() ([]*database.DBSimpleTxs, error)
 	GetTotalBalance() (map[int]int64, error)
 	GetTxCntByShardNumberAndAddress(shardNumber int, address string) (int64, error)
 	GetMinerAccounts(size int) ([]*database.DBMiner, error)
@@ -39,6 +38,7 @@ type BlockInfoDB interface {
 	GetDebtByHash(hash string) (*database.Debt, error)
 	GetblockdebtCntByShardNumber(shardNumber int, height uint64) (uint64, error)
 	GetblockdebtsByIdx(shardNumber int, height uint64, begin uint64, end uint64) ([]*database.Debt, error)
+	GetTxHis(startDate, today string) ([]*database.DBSimpleTxs, error)
 }
 
 // ChartInfoDB Warpper for access mongodb.

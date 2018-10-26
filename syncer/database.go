@@ -29,4 +29,9 @@ type Database interface {
 	GetPendingTxCntByShardNumber(shardNumber int) (uint64, error)
 	GetTxCntByShardNumberAndAddress(shardNumber int, address string) (int64, error)
 	GetMinedBlocksCntByShardNumberAndAddress(shardNumber int, address string) (int64, error)
+	GetTxsCntByDate(date string) (uint64, error)
+	UpdateTxsCntByDate(*database.DBSimpleTxs) error
+	GetTxHisCntByDate(date string) (uint64, error)
+	RemoveOutDateByDate(date string) error
+	GetTxHis(startDate, today string) ([]*database.DBSimpleTxs, error)
 }

@@ -12,6 +12,8 @@ import (
 	"math/big"
 	"net/http"
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -474,10 +476,24 @@ func (h *BlockHandler) getPendingTxsByBeginAndEnd(shardNumber int, begin, end ui
 //GetTxsDayCount 30 days trading history data
 func (h *BlockHandler) GetTxsDayCount() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		txs, err := h.DBClient.GetTotalTxs()
+		now := time.Now()
+		startDate := now.AddDate(0, 0, -30).Format("2006-01-02")
+		todayDate := now.Format("2006-01-02")
+		txs, err := h.DBClient.GetTxHis(startDate, todayDate)
 		if err != nil {
 			responseError(c, errGetBlockFromDB, http.StatusInternalServerError, apiDBQueryError)
 			return
+		}
+
+		for _, tx := range txs {
+			ymd := strings.Split(tx.Stime, "-")
+			year, _ := strconv.Atoi(ymd[0])
+			month, _ := strconv.Atoi(ymd[1])
+			day, _ := strconv.Atoi(ymd[2])
+
+			dateTime := time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.Local)
+			timestamp := dateTime.Unix()
+			tx.Stime = strconv.FormatInt(timestamp, 10)
 		}
 		c.JSON(http.StatusOK, gin.H{
 			"code":    apiOk,
