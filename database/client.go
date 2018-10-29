@@ -1230,7 +1230,8 @@ func (c *Client) GetTxHisCntByDate(date string) (uint64, error) {
 // RemoveOutDateByDate
 func (c *Client) RemoveOutDateByDate(date string) error {
 	query := func(c *mgo.Collection) error {
-		return c.Remove(bson.M{"stime": bson.M{"$lt": date}})
+		_, err := c.RemoveAll(bson.M{"stime": bson.M{"$lt": date}})
+		return err
 	}
 	return c.withCollection(txHisTbl, query)
 }
