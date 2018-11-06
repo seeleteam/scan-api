@@ -37,7 +37,7 @@ var rootCmd = &cobra.Command{
 			return
 		}
 
-		dbClient := database.NewDBClient(serverCfg.DataBaseName, serverCfg.DataBaseConnURL, 1)
+		dbClient := database.NewDBClient(serverCfg.DataBaseName, serverCfg.DataBaseConnURL[0], serverCfg.ShardNumber)
 		if dbClient == nil {
 			fmt.Printf("init database error")
 			return
