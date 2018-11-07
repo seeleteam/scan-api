@@ -16,7 +16,8 @@ node_service:
 
 seele_syncer:
 	go build -o ./build/syncer/seele_syncer ./cmd/seele_syncer 
-	cp ./cmd/seele_syncer/cmd/server.json ./build/syncer/
+	cp ./cmd/seele_syncer/cmd/server1.json ./build/syncer/
+	cp ./cmd/seele_syncer/cmd/server2.json ./build/syncer/
 	@echo "Done seele_syncer building"
 
 .PHONY: chart_service scan_server node_service seele_syncer

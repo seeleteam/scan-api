@@ -12,6 +12,17 @@ import (
 	"github.com/seeleteam/scan-api/rpc"
 )
 
+// databaseCfg represents database config interface
+type databaseCfg interface {
+	GetDBName() string
+	GetDBMode() string
+	GetReplsetName() string
+	GetConnURLs() []string
+	GetUseAuthentication() bool
+	GetUser() string
+	GetPwd() string
+}
+
 //DBSimpleTxInBlock describle the transaction info contained by dbblock which stored in the database
 type DBSimpleTxInBlock struct {
 	Hash      string `bson:"hash"`

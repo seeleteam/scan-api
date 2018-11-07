@@ -3,9 +3,15 @@
     "WriteLog": true,
     "LogLevel": "debug",
     "LogFile": "seele-syncer",
-    "DataBaseMode": "replset",
-    "DataBaseConnUrl":["127.0.0.1:27017","127.0.0.1:27018","127.0.0.1:27019"],
-    "DataBaseName":"seele",
+    "DataBase": {
+        "DataBaseMode": "replset",
+        "DataBaseReplsetName": "scan",
+        "DataBaseConnUrls":["106.75.86.27:27017","106.75.77.186:27017","106.75.87.4:27017"],
+        "DataBaseName":"seele",
+        "UseAuthentication": false,
+        "User": "scan",
+        "Pwd": "123456"
+    },
     "SyncInterval":3,
     "ShardNumber": 1
 }

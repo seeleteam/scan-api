@@ -41,25 +41,66 @@ var (
 
 //Client warpper for mongodb interactive
 type Client struct {
-	mgo         *mgo.Session
-	dbName      string
-	connUrl     string
-	shardNumber int
+	mgo               *mgo.Session
+	dbName            string
+	dbMode            string
+	replsetName       string
+	connURLs          []string
+	useAuthentication bool
+	user              string
+	pwd               string
+	shardNumber       int
 }
 
 //NewDBClient reuturn an DB client
-func NewDBClient(dbName, connUrl string, shardNumber int) *Client {
-	mgo := getSession(connUrl)
-	if mgo == nil {
+func NewDBClient(dbCfg databaseCfg, shardNumber int) *Client {
+	mgo := new(mgo.Session)
+	if dbCfg.GetDBMode() == "single" {
+		if len(dbCfg.GetConnURLs()) != 1 {
+			log.Error("[DB] err : single mode database should have one db URL")
+		}
+		mgo = getSession(dbCfg.GetConnURLs()[0])
+		if mgo == nil {
+			return nil
+		}
+	} else if dbCfg.GetDBMode() == "replset" {
+		if len(dbCfg.GetConnURLs()) < 3 {
+			log.Error("[DB] err : replset mode database should have three instances at least")
+		}
+		mgo = getReplsetSession(dbCfg.GetReplsetName(), dbCfg.GetConnURLs())
+		if mgo == nil {
+			return nil
+		}
+	} else {
+		log.Error("[DB] err : unrecognized database mode")
 		return nil
 	}
-
 	return &Client{
-		mgo:         mgo,
-		dbName:      dbName,
-		connUrl:     connUrl,
-		shardNumber: shardNumber,
+		mgo:               mgo,
+		dbName:            dbCfg.GetDBName(),
+		dbMode:            dbCfg.GetDBMode(),
+		replsetName:       dbCfg.GetReplsetName(),
+		connURLs:          dbCfg.GetConnURLs(),
+		useAuthentication: dbCfg.GetUseAuthentication(),
+		user:              dbCfg.GetUser(),
+		pwd:               dbCfg.GetPwd(),
+		shardNumber:       shardNumber,
 	}
+}
+
+func getReplsetSession(replsetName string, connURLs []string) *mgo.Session {
+	info := mgo.DialInfo{
+		Addrs:          connURLs,
+		Timeout:        10 * time.Second,
+		ReplicaSetName: replsetName,
+	}
+
+	mgoSession, err := mgo.DialWithInfo(&info)
+	if err != nil {
+		log.Error("[DB] err : %v", err)
+		return nil
+	}
+	return mgoSession
 }
 
 //getSession return an mongo db instance by connurl
@@ -74,7 +115,18 @@ func getSession(connUrl string) *mgo.Session {
 
 func (c *Client) getDBConnection() *mgo.Session {
 	if c.mgo == nil {
-		c.mgo = getSession(c.connUrl)
+		//c.mgo = getSession(c.connURLs[0])
+		if c.dbMode == "single" {
+			if len(c.connURLs) != 1 {
+				log.Error("[DB] err : single mode database should have one db URL")
+			}
+			c.mgo = getSession(c.connURLs[0])
+		} else if c.dbMode == "replset" {
+			if len(c.connURLs) < 3 {
+				log.Error("[DB] err : replset mode database should have three instances at least")
+			}
+			c.mgo = getReplsetSession(c.replsetName, c.connURLs)
+		}
 		return c.mgo.Clone()
 	}
 	return c.mgo.Clone()
@@ -94,7 +146,7 @@ func (c *Client) withCollection(collection string, s func(*mgo.Collection) error
 		processDataBaseError(err)
 		return err
 	}
-	log.Error("[DB] err : could not connect to db, host is %s", c.connUrl)
+	log.Error("[DB] err : could not connect to db, host is %s", c.connURLs)
 	return errDBConnect
 }
 
@@ -107,8 +159,16 @@ func (c *Client) dropCollection(tbl string) error {
 		processDataBaseError(err)
 		return err
 	}
-	log.Error("[DB] err : could not connect to db, host is %s", c.connUrl)
+	log.Error("[DB] err : could not connect to db, host is %s", c.connURLs)
 	return errDBConnect
+}
+
+func (c *Client) LiveServers() []string {
+	return c.mgo.LiveServers()
+}
+
+func (c *Client) SetPrimaryMode() {
+	c.mgo.SetMode(mgo.Primary, true)
 }
 
 //AddBlock insert a block into database
