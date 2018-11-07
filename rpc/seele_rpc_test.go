@@ -107,11 +107,11 @@ func TestGetReceiptByTxHash(t *testing.T) {
 	json.Unmarshal([]byte(receiptJSON), &receiptMp)
 	receipt := getReceiptByTxHash(receiptMp)
 	assert.Equal(t, receipt.ContractAddress, "0x")
-	assert.Equal(t, receipt.UsedGas.Cmp(big.NewInt(21000)), 0)
+	assert.Equal(t, receipt.UsedGas, int64(21000))
 	assert.Equal(t, receipt.Failed, false)
 	assert.Equal(t, receipt.PostState, "0xdd0b0fc6605bbb2e76b8c22ccd466ea5eaa1a80e4860fbdf971be58ded3d782b")
 	assert.Equal(t, receipt.Result, "0x")
-	assert.Equal(t, receipt.TotalFee.Cmp(big.NewInt(21000)), 0)
+	assert.Equal(t, receipt.TotalFee, int64(21000))
 	assert.Equal(t, receipt.TxHash, "0xbd2ca4f9869c714e589ad6a3b16731c8cb066de40d0e27e220cc1e014577baff")
 }
 
@@ -282,9 +282,9 @@ func TestGetBlockByHeight(t *testing.T) {
 			assert.Equal(t, debt.TxHash, "0x58752f8aeb2c69dd2c32059d3ad8b2d3d860c6d92aa2b3b30ff985e564f60fae")
 			assert.Equal(t, debt.ShardNumber, 2)
 			assert.Equal(t, debt.Amount, big.NewInt(10000))
-			assert.Equal(t, debt.Account, "0x0ea2a45ab5a909c309439b0e004c61b7b2a3e831")
+			assert.Equal(t, debt.To, "0x0ea2a45ab5a909c309439b0e004c61b7b2a3e831")
 			assert.Equal(t, debt.Fee, int64(0))
-			assert.Equal(t, debt.Code, "")
+			assert.Equal(t, debt.Payload, "")
 		} else {
 			assert.Equal(t, debt.Hash, "")
 		}
@@ -295,9 +295,9 @@ func TestGetBlockByHeight(t *testing.T) {
 			assert.Equal(t, txdebt.TxHash, "0x0b30a6edf95a16933a0a77ffd3eb15680d4e3cb79466f21c1181c013a68eae62")
 			assert.Equal(t, txdebt.ShardNumber, 2)
 			assert.Equal(t, txdebt.Amount, big.NewInt(10000))
-			assert.Equal(t, txdebt.Account, "0x0ea2a45ab5a909c309439b0e004c61b7b2a3e831")
+			assert.Equal(t, txdebt.To, "0x0ea2a45ab5a909c309439b0e004c61b7b2a3e831")
 			assert.Equal(t, txdebt.Fee, int64(1))
-			assert.Equal(t, txdebt.Code, "")
+			assert.Equal(t, txdebt.Payload, "")
 		} else {
 			assert.Equal(t, txdebt.Hash, "")
 		}

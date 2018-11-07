@@ -3,7 +3,8 @@
     "WriteLog": true,
     "LogLevel": "debug",
     "LogFile": "seele-syncer",
-    "DataBaseConnUrl":"127.0.0.1:27017",
+    "DataBaseMode": "replset",
+    "DataBaseConnUrl":["127.0.0.1:27017","127.0.0.1:27018","127.0.0.1:27019"],
     "DataBaseName":"seele",
     "SyncInterval":3,
     "ShardNumber": 1

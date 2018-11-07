@@ -10,7 +10,8 @@ type Config struct {
 	WriteLog        bool
 	LogLevel        string
 	LogFile         string
-	DataBaseConnURL string
+	DataBaseMode    string
+	DataBaseConnURL []string
 	DataBaseName    string
 	SyncInterval    time.Duration
 	ShardNumber     int
