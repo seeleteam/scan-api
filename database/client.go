@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/seeleteam/scan-api/log"
 	"github.com/seeleteam/scan-api/common"
+	"github.com/seeleteam/scan-api/log"
 
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
@@ -105,8 +105,8 @@ func getReplsetSession(replsetName string, connURLs []string) *mgo.Session {
 }
 
 // getSession return an mongo db instance by connurl
-func getSession(connUrl string) *mgo.Session {
-	mgoSession, err := mgo.Dial(connUrl)
+func getSession(connURL string) *mgo.Session {
+	mgoSession, err := mgo.Dial(connURL)
 	if err != nil {
 		log.Error("[DB] err : %v", err)
 		return nil
@@ -164,20 +164,22 @@ func (c *Client) dropCollection(tbl string) error {
 	return errDBConnect
 }
 
-//
+// LiveServers return the URLs of the alive servers
 func (c *Client) LiveServers() []string {
 	return c.mgo.LiveServers()
 }
 
+// SetPrimaryMode set the primary mode for mongodb
 func (c *Client) SetPrimaryMode() {
 	c.mgo.SetMode(mgo.Primary, true)
 }
 
+// SetSecondaryPreferredMode set the SecondaryPreferred mode for mongodb
 func (c *Client) SetSecondaryPreferredMode() {
 	c.mgo.SetMode(mgo.SecondaryPreferred, true)
 }
 
-//AddBlock insert a block into database
+// AddBlock insert a block into database
 func (c *Client) AddBlock(b *DBBlock) error {
 	query := func(c *mgo.Collection) error {
 		return c.Insert(b)
@@ -225,7 +227,7 @@ func (c *Client) RemoveLastBlocksByShard(shard int) error {
 	return err
 }
 
-//RemoveBlock test use  remove block by height from database
+// RemoveBlock test use  remove block by height from database
 func (c *Client) RemoveBlock(shard int, height uint64) error {
 	query := func(c *mgo.Collection) error {
 		_, err := c.RemoveAll(bson.M{"height": height, "shardNumber": shard})
@@ -235,7 +237,7 @@ func (c *Client) RemoveBlock(shard int, height uint64) error {
 	return err
 }
 
-//UpdateBlock update block by height and shard from database
+// UpdateBlock update block by height and shard from database
 func (c *Client) UpdateBlock(shard int, height uint64, b *DBBlock) error {
 	query := func(c *mgo.Collection) error {
 		_, err := c.Upsert(bson.M{"height": height, "shardNumber": shard}, b)
@@ -245,7 +247,7 @@ func (c *Client) UpdateBlock(shard int, height uint64, b *DBBlock) error {
 	return err
 }
 
-//GetBlockByHeight get block from mongo by block height
+// GetBlockByHeight get block from mongo by block height
 func (c *Client) GetBlockByHeight(shardNumber int, height uint64) (*DBBlock, error) {
 	b := new(DBBlock)
 	query := func(c *mgo.Collection) error {
@@ -255,7 +257,7 @@ func (c *Client) GetBlockByHeight(shardNumber int, height uint64) (*DBBlock, err
 	return b, err
 }
 
-//GetblockdebtCntByShardNumber get block from mongo by block height
+// GetblockdebtCntByShardNumber get block from mongo by block height
 func (c *Client) GetblockdebtCntByShardNumber(shardNumber int, height uint64) (uint64, error) {
 	var debtCnt uint64
 	query := func(c *mgo.Collection) error {
@@ -269,7 +271,7 @@ func (c *Client) GetblockdebtCntByShardNumber(shardNumber int, height uint64) (u
 	return debtCnt, err
 }
 
-//GetBlockByHash get a block from mongo by block header hash
+// GetBlockByHash get a block from mongo by block header hash
 func (c *Client) GetBlockByHash(hash string) (*DBBlock, error) {
 	b := new(DBBlock)
 	query := func(c *mgo.Collection) error {
@@ -279,7 +281,7 @@ func (c *Client) GetBlockByHash(hash string) (*DBBlock, error) {
 	return b, err
 }
 
-//GetBlocksByHeight get a block list from mongo by height range
+// GetBlocksByHeight get a block list from mongo by height range
 func (c *Client) GetBlocksByHeight(shardNumber int, begin uint64, end uint64) ([]*DBBlock, error) {
 	var blocks []*DBBlock
 
@@ -291,7 +293,7 @@ func (c *Client) GetBlocksByHeight(shardNumber int, begin uint64, end uint64) ([
 	return blocks, err
 }
 
-//GetBlocksByTime get a block list from mongo by time period
+// GetBlocksByTime get a block list from mongo by time period
 func (c *Client) GetBlocksByTime(shardNumber int, beginTime, endTime int64) ([]*DBBlock, error) {
 	var blocks []*DBBlock
 
@@ -303,7 +305,7 @@ func (c *Client) GetBlocksByTime(shardNumber int, beginTime, endTime int64) ([]*
 	return blocks, err
 }
 
-//GetBlockHeight get row count of block table from mongo
+// GetBlockHeight get row count of block table from mongo
 func (c *Client) GetBlockHeight(shardNumber int) (uint64, error) {
 	var blockCnt uint64
 	query := func(c *mgo.Collection) error {
@@ -318,7 +320,7 @@ func (c *Client) GetBlockHeight(shardNumber int) (uint64, error) {
 	return blockCnt, err
 }
 
-//AddTx insert a transaction into mongo
+// AddTx insert a transaction into mongo
 func (c *Client) AddTx(tx *DBTx) error {
 	query := func(c *mgo.Collection) error {
 		return c.Insert(tx)
@@ -327,7 +329,7 @@ func (c *Client) AddTx(tx *DBTx) error {
 	return err
 }
 
-//AddTxs insert a transaction into mongo
+// AddTxs insert a transaction into mongo
 func (c *Client) AddTxs(txs ...interface{}) error {
 	query := func(c *mgo.Collection) error {
 		return c.Insert(txs...)
@@ -336,7 +338,7 @@ func (c *Client) AddTxs(txs ...interface{}) error {
 	return err
 }
 
-//AddDebtTxs insert a transaction into mongo
+// AddDebtTxs insert a transaction into mongo
 func (c *Client) AddDebtTxs(debttxs ...interface{}) error {
 	query := func(c *mgo.Collection) error {
 		return c.Insert(debttxs...)
@@ -345,7 +347,7 @@ func (c *Client) AddDebtTxs(debttxs ...interface{}) error {
 	return err
 }
 
-//AddPendingTx insert a pending transaction into mongo
+// AddPendingTx insert a pending transaction into mongo
 func (c *Client) AddPendingTx(tx *DBTx) error {
 	query := func(c *mgo.Collection) error {
 		return c.Insert(tx)
@@ -354,7 +356,7 @@ func (c *Client) AddPendingTx(tx *DBTx) error {
 	return err
 }
 
-//RemoveAllPendingTxs remove all pending transactions
+// RemoveAllPendingTxs remove all pending transactions
 func (c *Client) RemoveAllPendingTxs() error {
 	query := func(c *mgo.Collection) error {
 		_, err := c.RemoveAll(nil)
@@ -364,7 +366,7 @@ func (c *Client) RemoveAllPendingTxs() error {
 	return err
 }
 
-//removeTx test use  remove tx by index from database
+// removeTx test use  remove tx by index from database
 func (c *Client) removeTx(idx uint64) error {
 	query := func(c *mgo.Collection) error {
 		_, err := c.RemoveAll(bson.M{"idx": strconv.FormatUint(idx, 10)})
@@ -374,7 +376,7 @@ func (c *Client) removeTx(idx uint64) error {
 	return err
 }
 
-//RemoveTxs Txs by block height
+// RemoveTxs Txs by block height
 func (c *Client) RemoveTxs(shard int, blockHeight uint64) error {
 	query := func(c *mgo.Collection) error {
 		_, err := c.RemoveAll(bson.M{"block": blockHeight, "shardNumber": shard})
@@ -384,7 +386,7 @@ func (c *Client) RemoveTxs(shard int, blockHeight uint64) error {
 	return err
 }
 
-//GetTxByIdx get transaction from mongo by idx
+// GetTxByIdx get transaction from mongo by idx
 func (c *Client) GetTxByIdx(idx uint64) (*DBTx, error) {
 	tx := new(DBTx)
 	query := func(c *mgo.Collection) error {
@@ -394,7 +396,7 @@ func (c *Client) GetTxByIdx(idx uint64) (*DBTx, error) {
 	return tx, err
 }
 
-//GetTxsByIdx get a transaction list from mongo by time period
+// GetTxsByIdx get a transaction list from mongo by time period
 func (c *Client) GetTxsByIdx(shardNumber int, begin uint64, end uint64) ([]*DBTx, error) {
 	var trans []*DBTx
 	query := func(c *mgo.Collection) error {
@@ -404,7 +406,7 @@ func (c *Client) GetTxsByIdx(shardNumber int, begin uint64, end uint64) ([]*DBTx
 	return trans, err
 }
 
-//GetdebtsByIdx get a debt list from mongo by time period
+// GetdebtsByIdx get a debt list from mongo by time period
 func (c *Client) GetdebtsByIdx(shardNumber int, begin uint64, end uint64) ([]*Debt, error) {
 	var debts []*Debt
 	query := func(c *mgo.Collection) error {
@@ -414,7 +416,7 @@ func (c *Client) GetdebtsByIdx(shardNumber int, begin uint64, end uint64) ([]*De
 	return debts, err
 }
 
-//GetPendingTxsByIdx get a transaction list from mongo by time period
+// GetPendingTxsByIdx get a transaction list from mongo by time period
 func (c *Client) GetPendingTxsByIdx(shardNumber int, begin uint64, end uint64) ([]*DBTx, error) {
 	var trans []*DBTx
 	query := func(c *mgo.Collection) error {
@@ -424,7 +426,7 @@ func (c *Client) GetPendingTxsByIdx(shardNumber int, begin uint64, end uint64) (
 	return trans, err
 }
 
-//GetTxByHash get transaction info by hash from mongo
+// GetTxByHash get transaction info by hash from mongo
 func (c *Client) GetTxByHash(hash string) (*DBTx, error) {
 	tx := new(DBTx)
 	query := func(c *mgo.Collection) error {
@@ -434,7 +436,7 @@ func (c *Client) GetTxByHash(hash string) (*DBTx, error) {
 	return tx, err
 }
 
-//GetDebtByHash get debt info by hash from mongo
+// GetDebtByHash get debt info by hash from mongo
 func (c *Client) GetDebtByHash(hash string) (*Debt, error) {
 	debt := new(Debt)
 	query := func(c *mgo.Collection) error {
@@ -444,7 +446,7 @@ func (c *Client) GetDebtByHash(hash string) (*Debt, error) {
 	return debt, err
 }
 
-//GetblockdebtsByIdx get a debt list from mongo by time period
+// GetblockdebtsByIdx get a debt list from mongo by time period
 func (c *Client) GetblockdebtsByIdx(shardNumber int, height uint64, begin uint64, end uint64) ([]*Debt, error) {
 	var debts []*Debt
 	query := func(c *mgo.Collection) error {
@@ -455,7 +457,7 @@ func (c *Client) GetblockdebtsByIdx(shardNumber int, height uint64, begin uint64
 	return debts, err
 }
 
-//GetPendingTxByHash
+// GetPendingTxByHash get pending transactions by hash
 func (c *Client) GetPendingTxByHash(hash string) (*DBTx, error) {
 	tx := new(DBTx)
 	query := func(c *mgo.Collection) error {
@@ -465,7 +467,7 @@ func (c *Client) GetPendingTxByHash(hash string) (*DBTx, error) {
 	return tx, err
 }
 
-//GetTxsDayCount get row count of transaction table from mongo
+// GetTxsDayCount get row count of transaction table from mongo
 func (c *Client) GetTxsDayCount() ([]*DBTx, error) {
 	var txs []*DBTx
 	nTime := time.Now()
@@ -488,7 +490,7 @@ func (c *Client) GetTxsDayCount() ([]*DBTx, error) {
 
 }
 
-//GetTxCnt get row count of transaction table from mongo
+// GetTxCnt get row count of transaction table from mongo
 func (c *Client) GetTxCnt() (uint64, error) {
 	var txCnt uint64
 	query := func(c *mgo.Collection) error {
@@ -503,7 +505,7 @@ func (c *Client) GetTxCnt() (uint64, error) {
 	return txCnt, err
 }
 
-//GetBlockProTime gets the information of last two blocks
+// GetBlockProTime gets the information of last two blocks
 func (c *Client) GetBlockProTime() (int64, int64, error) {
 	var blocks []*DBLastBlock
 	var blockProTime, lastBlockHeight int64
@@ -519,7 +521,7 @@ func (c *Client) GetBlockProTime() (int64, int64, error) {
 	return lastBlockHeight, blockProTime, err
 }
 
-//GetBlockCnt get row count of transaction table from mongo
+// GetBlockCnt get row count of transaction table from mongo
 func (c *Client) GetBlockCnt() (uint64, error) {
 	var blockCnt uint64
 	query := func(c *mgo.Collection) error {
@@ -534,7 +536,7 @@ func (c *Client) GetBlockCnt() (uint64, error) {
 	return blockCnt, err
 }
 
-//GetAccountCnt get account count
+// GetAccountCnt get account count
 func (c *Client) GetAccountCnt() (uint64, error) {
 	var txCnt uint64
 	query := func(c *mgo.Collection) error {
@@ -549,7 +551,7 @@ func (c *Client) GetAccountCnt() (uint64, error) {
 	return txCnt, err
 }
 
-//GetBlockTxsTps  From a block transaction throughput TPS
+// GetBlockTxsTps  From a block transaction throughput TPS
 func (c *Client) GetBlockTxsTps() (float64, error) {
 	var blocksTpx float64
 	var Txs, Blockprotime int64
@@ -571,7 +573,7 @@ func (c *Client) GetBlockTxsTps() (float64, error) {
 	return blocksTpx, err
 }
 
-//GetContractCnt get contract count
+// GetContractCnt get contract count
 func (c *Client) GetContractCnt() (uint64, error) {
 	var txCnt uint64
 	query := func(c *mgo.Collection) error {
@@ -586,7 +588,7 @@ func (c *Client) GetContractCnt() (uint64, error) {
 	return txCnt, err
 }
 
-//GetAccountCntByShardNumber get contract count
+// GetAccountCntByShardNumber get contract count
 func (c *Client) GetAccountCntByShardNumber(shardNumber int) (uint64, error) {
 	var txCnt uint64
 	query := func(c *mgo.Collection) error {
@@ -601,7 +603,7 @@ func (c *Client) GetAccountCntByShardNumber(shardNumber int) (uint64, error) {
 	return txCnt, err
 }
 
-//GetContractCntByShardNumber get contract count
+// GetContractCntByShardNumber get contract count
 func (c *Client) GetContractCntByShardNumber(shardNumber int) (uint64, error) {
 	var txCnt uint64
 	query := func(c *mgo.Collection) error {
@@ -616,7 +618,7 @@ func (c *Client) GetContractCntByShardNumber(shardNumber int) (uint64, error) {
 	return txCnt, err
 }
 
-//GetTxCntByShardNumber get tx count by shardNumber
+// GetTxCntByShardNumber get tx count by shardNumber
 func (c *Client) GetTxCntByShardNumber(shardNumber int) (uint64, error) {
 	var txCnt uint64
 	query := func(c *mgo.Collection) error {
@@ -631,7 +633,7 @@ func (c *Client) GetTxCntByShardNumber(shardNumber int) (uint64, error) {
 	return txCnt, err
 }
 
-//GetdebtCntByShardNumber get tx count by shardNumber
+// GetdebtCntByShardNumber get tx count by shardNumber
 func (c *Client) GetdebtCntByShardNumber(shardNumber int) (uint64, error) {
 	var txCnt uint64
 	query := func(c *mgo.Collection) error {
@@ -645,6 +647,7 @@ func (c *Client) GetdebtCntByShardNumber(shardNumber int) (uint64, error) {
 	return txCnt, err
 }
 
+// GetPendingTxCntByShardNumber get pending transactions by shard number
 func (c *Client) GetPendingTxCntByShardNumber(shardNumber int) (uint64, error) {
 	var txCnt uint64
 	query := func(c *mgo.Collection) error {
@@ -659,7 +662,7 @@ func (c *Client) GetPendingTxCntByShardNumber(shardNumber int) (uint64, error) {
 	return txCnt, err
 }
 
-//GetTxCntByShardNumberAndAddress get tx count for the account
+// GetTxCntByShardNumberAndAddress get tx count for the account
 func (c *Client) GetTxCntByShardNumberAndAddress(shardNumber int, address string) (int64, error) {
 	var txCnt int64
 	query := func(c *mgo.Collection) error {
@@ -675,7 +678,7 @@ func (c *Client) GetTxCntByShardNumberAndAddress(shardNumber int, address string
 	return txCnt, err
 }
 
-//GetMinedBlocksCntByShardNumberAndAddress
+// GetMinedBlocksCntByShardNumberAndAddress get the blocks number by the miner
 func (c *Client) GetMinedBlocksCntByShardNumberAndAddress(shardNumber int, address string) (int64, error) {
 	var blockCnt int64
 	query := func(c *mgo.Collection) error {
@@ -691,7 +694,7 @@ func (c *Client) GetMinedBlocksCntByShardNumberAndAddress(shardNumber int, addre
 	return blockCnt, err
 }
 
-//GetBlockfee
+// GetBlockfee get the total fee of the block
 func (c *Client) GetBlockfee(block uint64) (int64, error) {
 	var blockFee int64
 	query := func(c *mgo.Collection) error {
@@ -709,7 +712,7 @@ func (c *Client) GetBlockfee(block uint64) (int64, error) {
 	return blockFee, err
 }
 
-//removeAccount test use  remove account by address from database
+// removeAccount test use  remove account by address from database
 func (c *Client) removeAccount(address string) error {
 	query := func(c *mgo.Collection) error {
 		return c.Remove(bson.M{"address": address})
@@ -718,21 +721,20 @@ func (c *Client) removeAccount(address string) error {
 	return err
 }
 
-//GetTxsByAddresss return a tx list by address
+// GetTxsByAddresss return a tx list by address
 func (c *Client) GetTxsByAddresss(address string, max int, order bool) ([]*DBTx, error) {
 	var trans []*DBTx
 	query := func(c *mgo.Collection) error {
 		if !order {
 			return c.Find(bson.M{"$or": []bson.M{bson.M{"from": address}, bson.M{"to": address}, bson.M{"contractAddress": address}}}).Sort("-block", "-idx").Limit(max).All(&trans)
-		} else {
-			return c.Find(bson.M{"$or": []bson.M{bson.M{"from": address}, bson.M{"to": address}, bson.M{"contractAddress": address}}}).Sort("block", "idx").Limit(max).All(&trans)
 		}
+		return c.Find(bson.M{"$or": []bson.M{bson.M{"from": address}, bson.M{"to": address}, bson.M{"contractAddress": address}}}).Sort("block", "idx").Limit(max).All(&trans)
 	}
 	err := c.withCollection(txTbl, query)
 	return trans, err
 }
 
-//GetPendingTxsByAddress return a pengding tx list by address
+// GetPendingTxsByAddress return a pending tx list by address
 func (c *Client) GetPendingTxsByAddress(address string) ([]*DBTx, error) {
 	var trans []*DBTx
 	query := func(c *mgo.Collection) error {
@@ -752,7 +754,7 @@ func (c *Client) GetAccountByAddress(address string) (*DBAccount, error) {
 	return account, err
 }
 
-//getMinerAccountAndCount get an dbaccount by account address
+// GetMinerAccountByAddress get an dbaccount by account address
 func (c *Client) GetMinerAccountByAddress(address string) (*DBMiner, error) {
 	miner := new(DBMiner)
 	query := func(c *mgo.Collection) error {
@@ -771,7 +773,7 @@ func (c *Client) AddAccount(account *DBAccount) error {
 	return err
 }
 
-//UpdateAccount update account
+// UpdateMinerAccount update account
 func (c *Client) UpdateMinerAccount(miner *DBMiner) error {
 	query := func(c *mgo.Collection) error {
 		_, err := c.Upsert(bson.M{"address": miner.Address}, miner)
@@ -785,7 +787,7 @@ func (c *Client) UpdateMinerAccount(miner *DBMiner) error {
 	return err
 }
 
-//GetMinerAccounts get the size of DBMiner
+// GetMinerAccounts get the size of DBMiner
 func (c *Client) GetMinerAccounts(size int) ([]*DBMiner, error) {
 	var miners []*DBMiner
 	query := func(c *mgo.Collection) error {
@@ -795,7 +797,7 @@ func (c *Client) GetMinerAccounts(size int) ([]*DBMiner, error) {
 	return miners, err
 }
 
-//UpdateAccount update account
+// UpdateAccount update account
 func (c *Client) UpdateAccount(account *DBAccount) error {
 	query := func(c *mgo.Collection) error {
 		_, err := c.Upsert(bson.M{"address": account.Address}, account)
@@ -809,7 +811,7 @@ func (c *Client) UpdateAccount(account *DBAccount) error {
 	return err
 }
 
-//UpdateAccountMinedBlock update field mined block in the account info
+// UpdateAccountMinedBlock update field mined block in the account info
 func (c *Client) UpdateAccountMinedBlock(address string, mined int64) error {
 	query := func(c *mgo.Collection) error {
 		return c.Update(bson.M{"address": address},
@@ -821,7 +823,7 @@ func (c *Client) UpdateAccountMinedBlock(address string, mined int64) error {
 	return err
 }
 
-//GetAccountsByShardNumber get an dbaccount list sort by balance
+// GetAccountsByShardNumber get an dbaccount list sort by balance
 func (c *Client) GetAccountsByShardNumber(shardNumber int, max int) ([]*DBAccount, error) {
 	var accounts []*DBAccount
 	query := func(c *mgo.Collection) error {
@@ -831,7 +833,7 @@ func (c *Client) GetAccountsByShardNumber(shardNumber int, max int) ([]*DBAccoun
 	return accounts, err
 }
 
-//GetContractsByShardNumber
+// GetContractsByShardNumber get the contracts number by shard number
 func (c *Client) GetContractsByShardNumber(shardNumber int, max int) ([]*DBAccount, error) {
 	var accounts []*DBAccount
 	query := func(c *mgo.Collection) error {
@@ -841,7 +843,7 @@ func (c *Client) GetContractsByShardNumber(shardNumber int, max int) ([]*DBAccou
 	return accounts, err
 }
 
-//GetTotalBalance return the sum of all account
+// GetTotalBalance return the sum of all account
 func (c *Client) GetTotalBalance() (map[int]int64, error) {
 	totalBalance := make(map[int]int64)
 	query := func(c *mgo.Collection) error {
@@ -853,7 +855,7 @@ func (c *Client) GetTotalBalance() (map[int]int64, error) {
 					}`,
 		}
 		var result []struct {
-			Id    int "_id"
+			ID    int "_id"
 			Value int64
 		}
 		_, err := c.Find(nil).MapReduce(job, &result)
@@ -861,7 +863,7 @@ func (c *Client) GetTotalBalance() (map[int]int64, error) {
 			return err
 		}
 		for _, item := range result {
-			totalBalance[item.Id] = item.Value
+			totalBalance[item.ID] = item.Value
 		}
 
 		return err
@@ -870,7 +872,7 @@ func (c *Client) GetTotalBalance() (map[int]int64, error) {
 	return totalBalance, err
 }
 
-//processDataBaseError shutdown database connection and log it
+// processDataBaseError shutdown database connection and log it
 func processDataBaseError(err error) {
 	if err == nil || err == mgo.ErrNotFound || err == mgo.ErrCursor {
 		return
@@ -879,7 +881,7 @@ func processDataBaseError(err error) {
 	log.Error("[DB] err : %v", err)
 }
 
-//AddOneDayTransInfo insert one dya transaction info into mongo
+// AddOneDayTransInfo insert one dya transaction info into mongo
 func (c *Client) AddOneDayTransInfo(shardNumber int, t *DBOneDayTxInfo) error {
 	t.ShardNumber = shardNumber
 	query := func(c *mgo.Collection) error {
@@ -889,7 +891,7 @@ func (c *Client) AddOneDayTransInfo(shardNumber int, t *DBOneDayTxInfo) error {
 	return err
 }
 
-//GetOneDayTransInfo get one day transaction info from mongo by zero hour timestamp
+// GetOneDayTransInfo get one day transaction info from mongo by zero hour timestamp
 func (c *Client) GetOneDayTransInfo(shardNumber int, zeroTime int64) (*DBOneDayTxInfo, error) {
 	oneDayTransInfo := new(DBOneDayTxInfo)
 	query := func(c *mgo.Collection) error {
@@ -899,7 +901,7 @@ func (c *Client) GetOneDayTransInfo(shardNumber int, zeroTime int64) (*DBOneDayT
 	return oneDayTransInfo, err
 }
 
-//GetTransInfoChart get all rows int the transhistory table
+// GetTransInfoChart get all rows int the transhistory table
 func (c *Client) GetTransInfoChart() ([]*DBOneDayTxInfo, error) {
 	var oneDayTrans []*DBOneDayTxInfo
 	query := func(c *mgo.Collection) error {
@@ -909,6 +911,7 @@ func (c *Client) GetTransInfoChart() ([]*DBOneDayTxInfo, error) {
 	return oneDayTrans, err
 }
 
+// GetTransInfoChartByShardNumber get transactions info chart by shard number
 func (c *Client) GetTransInfoChartByShardNumber(shardNumber int) ([]*DBOneDayTxInfo, error) {
 	var oneDayTrans []*DBOneDayTxInfo
 	query := func(c *mgo.Collection) error {
@@ -918,7 +921,7 @@ func (c *Client) GetTransInfoChartByShardNumber(shardNumber int) ([]*DBOneDayTxI
 	return oneDayTrans, err
 }
 
-//AddOneDayHashRate insert one dya hashrate info into mongo
+// AddOneDayHashRate insert one dya hashrate info into mongo
 func (c *Client) AddOneDayHashRate(shardNumber int, t *DBOneDayHashRate) error {
 	t.ShardNumber = shardNumber
 	query := func(c *mgo.Collection) error {
@@ -928,7 +931,7 @@ func (c *Client) AddOneDayHashRate(shardNumber int, t *DBOneDayHashRate) error {
 	return err
 }
 
-//GetOneDayHashRate get one day hashrate info from mongo by zero hour timestamp
+// GetOneDayHashRate get one day hashrate info from mongo by zero hour timestamp
 func (c *Client) GetOneDayHashRate(shardNumber int, zeroTime int64) (*DBOneDayHashRate, error) {
 	oneDayHashRate := new(DBOneDayHashRate)
 	query := func(c *mgo.Collection) error {
@@ -938,7 +941,7 @@ func (c *Client) GetOneDayHashRate(shardNumber int, zeroTime int64) (*DBOneDayHa
 	return oneDayHashRate, err
 }
 
-//GetHashRateChart get all rows int the hashrate table
+// GetHashRateChart get all rows int the hashrate table
 func (c *Client) GetHashRateChart() ([]*DBOneDayHashRate, error) {
 	var oneDayHashRates []*DBOneDayHashRate
 	query := func(c *mgo.Collection) error {
@@ -948,7 +951,7 @@ func (c *Client) GetHashRateChart() ([]*DBOneDayHashRate, error) {
 	return oneDayHashRates, err
 }
 
-//GetHashRateChartByShardNumber get ratechart by shardnumber
+// GetHashRateChartByShardNumber get ratechart by shardnumber
 func (c *Client) GetHashRateChartByShardNumber(shardNumber int) ([]*DBOneDayHashRate, error) {
 	var oneDayHashRates []*DBOneDayHashRate
 	query := func(c *mgo.Collection) error {
@@ -958,7 +961,7 @@ func (c *Client) GetHashRateChartByShardNumber(shardNumber int) ([]*DBOneDayHash
 	return oneDayHashRates, err
 }
 
-//AddOneDayBlockDifficulty insert one dya avg block difficulty info into mongo
+// AddOneDayBlockDifficulty insert one dya avg block difficulty info into mongo
 func (c *Client) AddOneDayBlockDifficulty(shardNumber int, t *DBOneDayBlockDifficulty) error {
 	t.ShardNumber = shardNumber
 	query := func(c *mgo.Collection) error {
@@ -968,7 +971,7 @@ func (c *Client) AddOneDayBlockDifficulty(shardNumber int, t *DBOneDayBlockDiffi
 	return err
 }
 
-//GetOneDayBlockDifficulty get one day hashrate info from mongo by zero hour timestamp
+// GetOneDayBlockDifficulty get one day hashrate info from mongo by zero hour timestamp
 func (c *Client) GetOneDayBlockDifficulty(shardNumber int, zeroTime int64) (*DBOneDayBlockDifficulty, error) {
 	oneDayBlockDifficulty := new(DBOneDayBlockDifficulty)
 	query := func(c *mgo.Collection) error {
@@ -978,7 +981,7 @@ func (c *Client) GetOneDayBlockDifficulty(shardNumber int, zeroTime int64) (*DBO
 	return oneDayBlockDifficulty, err
 }
 
-//GetAccountsByHome get an dbaccount list sort by balance
+// GetAccountsByHome get an dbaccount list sort by balance
 func (c *Client) GetAccountsByHome() []*DBAccount {
 	var accounts []*DBAccount
 	query := func(c *mgo.Collection) error {
@@ -988,7 +991,7 @@ func (c *Client) GetAccountsByHome() []*DBAccount {
 	return accounts
 }
 
-//GetOneDayBlockDifficultyChart get all rows int the hashrate table
+// GetOneDayBlockDifficultyChart get all rows int the hashrate table
 func (c *Client) GetOneDayBlockDifficultyChart() ([]*DBOneDayBlockDifficulty, error) {
 	var oneDayBlockDifficulties []*DBOneDayBlockDifficulty
 	query := func(c *mgo.Collection) error {
@@ -998,6 +1001,7 @@ func (c *Client) GetOneDayBlockDifficultyChart() ([]*DBOneDayBlockDifficulty, er
 	return oneDayBlockDifficulties, err
 }
 
+// GetOneDayBlockDifficultyChartByShardNumber get the td chart of block by shard number
 func (c *Client) GetOneDayBlockDifficultyChartByShardNumber(shardNumber int) ([]*DBOneDayBlockDifficulty, error) {
 	var oneDayBlockDifficulties []*DBOneDayBlockDifficulty
 	query := func(c *mgo.Collection) error {
@@ -1007,7 +1011,7 @@ func (c *Client) GetOneDayBlockDifficultyChartByShardNumber(shardNumber int) ([]
 	return oneDayBlockDifficulties, err
 }
 
-//AddOneDayBlockAvgTime insert one dya avg block time info into mongo
+// AddOneDayBlockAvgTime insert one dya avg block time info into mongo
 func (c *Client) AddOneDayBlockAvgTime(shardNumber int, t *DBOneDayBlockAvgTime) error {
 	t.ShardNumber = shardNumber
 	query := func(c *mgo.Collection) error {
@@ -1017,7 +1021,7 @@ func (c *Client) AddOneDayBlockAvgTime(shardNumber int, t *DBOneDayBlockAvgTime)
 	return err
 }
 
-//GetOneDayBlockAvgTime get one day avg block time info from mongo by zero hour timestamp
+// GetOneDayBlockAvgTime get one day avg block time info from mongo by zero hour timestamp
 func (c *Client) GetOneDayBlockAvgTime(shardNumber int, zeroTime int64) (*DBOneDayBlockAvgTime, error) {
 	oneDayBlockAvgTime := new(DBOneDayBlockAvgTime)
 	query := func(c *mgo.Collection) error {
@@ -1027,7 +1031,7 @@ func (c *Client) GetOneDayBlockAvgTime(shardNumber int, zeroTime int64) (*DBOneD
 	return oneDayBlockAvgTime, err
 }
 
-//GetOneDayBlockAvgTimeChart get all rows int the hashrate table
+// GetOneDayBlockAvgTimeChart get all rows int the hashrate table
 func (c *Client) GetOneDayBlockAvgTimeChart() ([]*DBOneDayBlockAvgTime, error) {
 	var oneDayBlockAvgTimes []*DBOneDayBlockAvgTime
 	query := func(c *mgo.Collection) error {
@@ -1037,6 +1041,7 @@ func (c *Client) GetOneDayBlockAvgTimeChart() ([]*DBOneDayBlockAvgTime, error) {
 	return oneDayBlockAvgTimes, err
 }
 
+// GetOneDayBlockAvgTimeChartByShardNumber get avg time chart of one day by shard number
 func (c *Client) GetOneDayBlockAvgTimeChartByShardNumber(shardNumber int) ([]*DBOneDayBlockAvgTime, error) {
 	var oneDayBlockAvgTimes []*DBOneDayBlockAvgTime
 	query := func(c *mgo.Collection) error {
@@ -1046,7 +1051,7 @@ func (c *Client) GetOneDayBlockAvgTimeChartByShardNumber(shardNumber int) ([]*DB
 	return oneDayBlockAvgTimes, err
 }
 
-//AddOneDayBlock insert one dya block info into mongo
+// AddOneDayBlock insert one dya block info into mongo
 func (c *Client) AddOneDayBlock(shardNumber int, t *DBOneDayBlockInfo) error {
 	t.ShardNumber = shardNumber
 	query := func(c *mgo.Collection) error {
@@ -1056,7 +1061,7 @@ func (c *Client) AddOneDayBlock(shardNumber int, t *DBOneDayBlockInfo) error {
 	return err
 }
 
-//GetOneDayBlock get one day block info from mongo by zero hour timestamp
+// GetOneDayBlock get one day block info from mongo by zero hour timestamp
 func (c *Client) GetOneDayBlock(shardNumber int, zeroTime int64) (*DBOneDayBlockInfo, error) {
 	oneDayBlock := new(DBOneDayBlockInfo)
 	query := func(c *mgo.Collection) error {
@@ -1066,7 +1071,7 @@ func (c *Client) GetOneDayBlock(shardNumber int, zeroTime int64) (*DBOneDayBlock
 	return oneDayBlock, err
 }
 
-//GetOneDayBlocksChart get all rows int the hashrate table
+// GetOneDayBlocksChart get all rows int the hashrate table
 func (c *Client) GetOneDayBlocksChart() ([]*DBOneDayBlockInfo, error) {
 	var oneDayBlocks []*DBOneDayBlockInfo
 	query := func(c *mgo.Collection) error {
@@ -1076,6 +1081,7 @@ func (c *Client) GetOneDayBlocksChart() ([]*DBOneDayBlockInfo, error) {
 	return oneDayBlocks, err
 }
 
+// GetOneDayBlocksChartByShardNumber get block chart of one day by shard number
 func (c *Client) GetOneDayBlocksChartByShardNumber(shardNumber int) ([]*DBOneDayBlockInfo, error) {
 	var oneDayBlocks []*DBOneDayBlockInfo
 	query := func(c *mgo.Collection) error {
@@ -1085,7 +1091,7 @@ func (c *Client) GetOneDayBlocksChartByShardNumber(shardNumber int) ([]*DBOneDay
 	return oneDayBlocks, err
 }
 
-//AddOneDayAddress insert one dya block info into mongo
+// AddOneDayAddress insert one dya block info into mongo
 func (c *Client) AddOneDayAddress(shardNumber int, t *DBOneDayAddressInfo) error {
 	t.ShardNumber = shardNumber
 	query := func(c *mgo.Collection) error {
@@ -1095,7 +1101,7 @@ func (c *Client) AddOneDayAddress(shardNumber int, t *DBOneDayAddressInfo) error
 	return err
 }
 
-//GetOneDayAddress get one day block info from mongo by zero hour timestamp
+// GetOneDayAddress get one day block info from mongo by zero hour timestamp
 func (c *Client) GetOneDayAddress(shardNumber int, zeroTime int64) (*DBOneDayAddressInfo, error) {
 	oneDayAddress := new(DBOneDayAddressInfo)
 	query := func(c *mgo.Collection) error {
@@ -1105,7 +1111,7 @@ func (c *Client) GetOneDayAddress(shardNumber int, zeroTime int64) (*DBOneDayAdd
 	return oneDayAddress, err
 }
 
-//GetOneDayAddressesChart get all rows int the address table
+// GetOneDayAddressesChart get all rows int the address table
 func (c *Client) GetOneDayAddressesChart() ([]*DBOneDayAddressInfo, error) {
 	var oneDayAddresses []*DBOneDayAddressInfo
 	query := func(c *mgo.Collection) error {
@@ -1115,6 +1121,7 @@ func (c *Client) GetOneDayAddressesChart() ([]*DBOneDayAddressInfo, error) {
 	return oneDayAddresses, err
 }
 
+// GetOneDayAddressesChartByShardNumber get address chart of one day by shard number
 func (c *Client) GetOneDayAddressesChartByShardNumber(shardNumber int) ([]*DBOneDayAddressInfo, error) {
 	var oneDayAddresses []*DBOneDayAddressInfo
 	query := func(c *mgo.Collection) error {
@@ -1124,7 +1131,7 @@ func (c *Client) GetOneDayAddressesChartByShardNumber(shardNumber int) ([]*DBOne
 	return oneDayAddresses, err
 }
 
-//AddOneDaySingleAddressInfo insert one dya single address info into mongo
+// AddOneDaySingleAddressInfo insert one dya single address info into mongo
 func (c *Client) AddOneDaySingleAddressInfo(shardNumber int, t *DBOneDaySingleAddressInfo) error {
 	t.ShardNumber = shardNumber
 	query := func(c *mgo.Collection) error {
@@ -1134,7 +1141,7 @@ func (c *Client) AddOneDaySingleAddressInfo(shardNumber int, t *DBOneDaySingleAd
 	return err
 }
 
-//GetOneDaySingleAddressInfo get one day block info from mongo by zero hour timestamp
+// GetOneDaySingleAddressInfo get one day block info from mongo by zero hour timestamp
 func (c *Client) GetOneDaySingleAddressInfo(shardNumber int, address string) (*DBOneDaySingleAddressInfo, error) {
 	oneDaySingleAddress := new(DBOneDaySingleAddressInfo)
 	query := func(c *mgo.Collection) error {
@@ -1144,7 +1151,7 @@ func (c *Client) GetOneDaySingleAddressInfo(shardNumber int, address string) (*D
 	return oneDaySingleAddress, err
 }
 
-//RemoveTopMinerInfo remove last 7 days top miner info
+// RemoveTopMinerInfo remove last 7 days top miner info
 func (c *Client) RemoveTopMinerInfo() error {
 	query := func(c *mgo.Collection) error {
 		return c.DropCollection()
@@ -1153,7 +1160,7 @@ func (c *Client) RemoveTopMinerInfo() error {
 	return err
 }
 
-//AddTopMinerInfo add top miner rank info into database
+// AddTopMinerInfo add top miner rank info into database
 func (c *Client) AddTopMinerInfo(shardNumber int, rankInfo *DBMinerRankInfo) error {
 	rankInfo.ShardNumber = shardNumber
 	query := func(c *mgo.Collection) error {
@@ -1163,7 +1170,7 @@ func (c *Client) AddTopMinerInfo(shardNumber int, rankInfo *DBMinerRankInfo) err
 	return err
 }
 
-//GetTopMinerChart get all rows int the address table
+// GetTopMinerChart get all rows int the address table
 func (c *Client) GetTopMinerChart() ([]*DBMinerRankInfo, error) {
 	var topMinerInfo []*DBMinerRankInfo
 	query := func(c *mgo.Collection) error {
@@ -1173,6 +1180,7 @@ func (c *Client) GetTopMinerChart() ([]*DBMinerRankInfo, error) {
 	return topMinerInfo, err
 }
 
+// GetTopMinerChartByShardNumber get top miner char by shard number
 func (c *Client) GetTopMinerChartByShardNumber(shardNumber int) ([]*DBMinerRankInfo, error) {
 	var topMinerInfo []*DBMinerRankInfo
 	query := func(c *mgo.Collection) error {
@@ -1182,7 +1190,7 @@ func (c *Client) GetTopMinerChartByShardNumber(shardNumber int) ([]*DBMinerRankI
 	return topMinerInfo, err
 }
 
-//AddNodeInfo add node info into database
+// AddNodeInfo add node info into database
 func (c *Client) AddNodeInfo(nodeInfo *DBNodeInfo) error {
 	query := func(c *mgo.Collection) error {
 		return c.Insert(nodeInfo)
@@ -1191,7 +1199,7 @@ func (c *Client) AddNodeInfo(nodeInfo *DBNodeInfo) error {
 	return err
 }
 
-//DeleteNodeInfo delete node info from database
+// DeleteNodeInfo delete node info from database
 func (c *Client) DeleteNodeInfo(nodeInfo *DBNodeInfo) error {
 	query := func(c *mgo.Collection) error {
 		return c.Remove(bson.M{"id": nodeInfo.ID})
@@ -1200,7 +1208,7 @@ func (c *Client) DeleteNodeInfo(nodeInfo *DBNodeInfo) error {
 	return err
 }
 
-//GetNodeInfo get node info from database
+// GetNodeInfo get node info from database
 func (c *Client) GetNodeInfo(host string) (*DBNodeInfo, error) {
 	dbNodeInfo := new(DBNodeInfo)
 	query := func(c *mgo.Collection) error {
@@ -1210,7 +1218,7 @@ func (c *Client) GetNodeInfo(host string) (*DBNodeInfo, error) {
 	return dbNodeInfo, err
 }
 
-//GetNodeInfoByID get node info from database by node id
+// GetNodeInfoByID get node info from database by node id
 func (c *Client) GetNodeInfoByID(id string) (*DBNodeInfo, error) {
 	dbNodeInfo := new(DBNodeInfo)
 	query := func(c *mgo.Collection) error {
@@ -1220,7 +1228,7 @@ func (c *Client) GetNodeInfoByID(id string) (*DBNodeInfo, error) {
 	return dbNodeInfo, err
 }
 
-//GetNodeInfosByShardNumber get all node infos from database by shardNumber
+// GetNodeInfosByShardNumber get all node infos from database by shardNumber
 func (c *Client) GetNodeInfosByShardNumber(shardNumber int) ([]*DBNodeInfo, error) {
 	var nodeInfos []*DBNodeInfo
 	query := func(c *mgo.Collection) error {
@@ -1230,7 +1238,7 @@ func (c *Client) GetNodeInfosByShardNumber(shardNumber int) ([]*DBNodeInfo, erro
 	return nodeInfos, err
 }
 
-//GetNodeInfos get all node infos from database
+// GetNodeInfos get all node infos from database
 func (c *Client) GetNodeInfos() ([]*DBNodeInfo, error) {
 	var nodeInfos []*DBNodeInfo
 	query := func(c *mgo.Collection) error {
@@ -1240,7 +1248,7 @@ func (c *Client) GetNodeInfos() ([]*DBNodeInfo, error) {
 	return nodeInfos, err
 }
 
-//GetNodeCntByShardNumber get row count of the node table
+// GetNodeCntByShardNumber get row count of the node table
 func (c *Client) GetNodeCntByShardNumber(shardNumber int) (uint64, error) {
 	var NodeCnt uint64
 	query := func(c *mgo.Collection) error {
@@ -1293,7 +1301,7 @@ func (c *Client) GetTxHisCntByDate(date string) (uint64, error) {
 	return txsCnt, c.withCollection(txHisTbl, query)
 }
 
-// RemoveOutDateByDate
+// RemoveOutDateByDate remove the outdate data by date
 func (c *Client) RemoveOutDateByDate(date string) error {
 	query := func(c *mgo.Collection) error {
 		_, err := c.RemoveAll(bson.M{"stime": bson.M{"$lt": date}})
