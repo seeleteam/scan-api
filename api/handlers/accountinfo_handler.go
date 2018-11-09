@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	shardCount        = 20
+	shardCount        = 2
 	maxShowAccountNum = 10000
 	txCount           = 25
 	//exclude divide zero problem

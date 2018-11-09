@@ -1,5 +1,5 @@
 {
-    "RPCURL": "127.0.0.1:55028",
+    "RPCURL": "127.0.0.1:8027",
     "WriteLog": true,
     "LogLevel": "debug",
     "LogFile": "chart_service",
