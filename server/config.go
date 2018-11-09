@@ -7,6 +7,8 @@ package server
 
 import (
 	"time"
+
+	"github.com/seeleteam/scan-api/common"
 )
 
 //Config server config
@@ -27,7 +29,6 @@ type Config struct {
 	SyncSwitch          bool
 	BlockCacheLimit     int
 	TransCacheLimit     int
-	DataBaseConnURL     string
-	DataBaseName        string
+	DataBase            *common.DataBaseConfig
 	Interval            time.Duration
 }

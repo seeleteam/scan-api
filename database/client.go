@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/seeleteam/scan-api/log"
+	"github.com/seeleteam/scan-api/common"
 
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
@@ -35,11 +36,11 @@ const (
 
 var (
 	mgoSession *mgo.Session
-	//db connect error
+	// db connect error
 	errDBConnect = errors.New("could not connect to database")
 )
 
-//Client warpper for mongodb interactive
+// Client warpper for mongodb interactive
 type Client struct {
 	mgo               *mgo.Session
 	dbName            string
@@ -52,22 +53,22 @@ type Client struct {
 	shardNumber       int
 }
 
-//NewDBClient reuturn an DB client
-func NewDBClient(dbCfg databaseCfg, shardNumber int) *Client {
+// NewDBClient reuturn an DB client
+func NewDBClient(cfg *common.DataBaseConfig, shardNumber int) *Client {
 	mgo := new(mgo.Session)
-	if dbCfg.GetDBMode() == "single" {
-		if len(dbCfg.GetConnURLs()) != 1 {
+	if cfg.DataBaseMode == "single" {
+		if len(cfg.DataBaseConnURLs) != 1 {
 			log.Error("[DB] err : single mode database should have one db URL")
 		}
-		mgo = getSession(dbCfg.GetConnURLs()[0])
+		mgo = getSession(cfg.DataBaseConnURLs[0])
 		if mgo == nil {
 			return nil
 		}
-	} else if dbCfg.GetDBMode() == "replset" {
-		if len(dbCfg.GetConnURLs()) < 3 {
+	} else if cfg.DataBaseMode == "replset" {
+		if len(cfg.DataBaseConnURLs) < 3 {
 			log.Error("[DB] err : replset mode database should have three instances at least")
 		}
-		mgo = getReplsetSession(dbCfg.GetReplsetName(), dbCfg.GetConnURLs())
+		mgo = getReplsetSession(cfg.DataBaseReplsetName, cfg.DataBaseConnURLs)
 		if mgo == nil {
 			return nil
 		}
@@ -77,13 +78,13 @@ func NewDBClient(dbCfg databaseCfg, shardNumber int) *Client {
 	}
 	return &Client{
 		mgo:               mgo,
-		dbName:            dbCfg.GetDBName(),
-		dbMode:            dbCfg.GetDBMode(),
-		replsetName:       dbCfg.GetReplsetName(),
-		connURLs:          dbCfg.GetConnURLs(),
-		useAuthentication: dbCfg.GetUseAuthentication(),
-		user:              dbCfg.GetUser(),
-		pwd:               dbCfg.GetPwd(),
+		dbName:            cfg.DataBaseName,
+		dbMode:            cfg.DataBaseMode,
+		replsetName:       cfg.DataBaseReplsetName,
+		connURLs:          cfg.DataBaseConnURLs,
+		useAuthentication: cfg.UseAuthentication,
+		user:              cfg.User,
+		pwd:               cfg.Pwd,
 		shardNumber:       shardNumber,
 	}
 }
@@ -103,7 +104,7 @@ func getReplsetSession(replsetName string, connURLs []string) *mgo.Session {
 	return mgoSession
 }
 
-//getSession return an mongo db instance by connurl
+// getSession return an mongo db instance by connurl
 func getSession(connUrl string) *mgo.Session {
 	mgoSession, err := mgo.Dial(connUrl)
 	if err != nil {
@@ -132,7 +133,7 @@ func (c *Client) getDBConnection() *mgo.Session {
 	return c.mgo.Clone()
 }
 
-//withCollection perform an database query
+// withCollection perform an database query
 func (c *Client) withCollection(collection string, s func(*mgo.Collection) error) error {
 	session := c.getDBConnection()
 	defer func() {
@@ -150,7 +151,7 @@ func (c *Client) withCollection(collection string, s func(*mgo.Collection) error
 	return errDBConnect
 }
 
-//dropCollection test use remove the tbl
+// dropCollection test use remove the tbl
 func (c *Client) dropCollection(tbl string) error {
 	session := c.getDBConnection()
 	if session != nil {
@@ -163,12 +164,17 @@ func (c *Client) dropCollection(tbl string) error {
 	return errDBConnect
 }
 
+//
 func (c *Client) LiveServers() []string {
 	return c.mgo.LiveServers()
 }
 
 func (c *Client) SetPrimaryMode() {
 	c.mgo.SetMode(mgo.Primary, true)
+}
+
+func (c *Client) SetSecondaryPreferredMode() {
+	c.mgo.SetMode(mgo.SecondaryPreferred, true)
 }
 
 //AddBlock insert a block into database

@@ -42,6 +42,9 @@ var rootCmd = &cobra.Command{
 			fmt.Printf("init database error")
 			return
 		}
+		if serverCfg.DataBase.DataBaseMode == "replset" {
+			dbClient.SetPrimaryMode()
+		}
 
 		syncer := syncer.NewSyncer(dbClient, serverCfg.RpcURL, serverCfg.ShardNumber)
 		if syncer == nil {

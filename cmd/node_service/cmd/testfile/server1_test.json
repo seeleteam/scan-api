@@ -1,8 +1,8 @@
 {
-    "RpcURL": "127.0.0.1:8027",
+    "RpcNodes" : ["106.75.80.93:55026"],
     "WriteLog": true,
     "LogLevel": "debug",
-    "LogFile": "seele-syncer",
+    "LogFile": "node_service",
     "DataBase": {
         "DataBaseMode": "single",
         "DataBaseConnUrls":["127.0.0.1:27017"],
@@ -11,7 +11,7 @@
         "User": "scan",
         "Pwd": "123456"
     },
-    "SyncInterval":3,
-    "ShardNumber": 1
+    "Interval": 60,
+    "ExpireTime": 60
 }
   
