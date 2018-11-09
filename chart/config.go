@@ -5,17 +5,20 @@
 
 package chart
 
-import "sync"
+import (
+	"sync"
+
+	"github.com/seeleteam/scan-api/common"
+)
 
 //Config server config
 type Config struct {
-	RPCURL          string
-	WriteLog        bool
-	LogLevel        string
-	LogFile         string
-	DataBaseConnURL string
-	DataBaseName    string
-	ShardCount      int
+	RPCURL     string
+	WriteLog   bool
+	LogLevel   string
+	LogFile    string
+	DataBase   *common.DataBaseConfig
+	ShardCount int
 }
 
 //ProcessFunc ChartProcessFunc is entrance of the chart service needed to be start

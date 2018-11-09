@@ -15,8 +15,14 @@
     "SyncSwitch":true,
     "BlockCacheLimit":1024,
     "TransCacheLimit":1024,
-    "DataBaseConnUrl":"127.0.0.1:27017",
-    "DataBaseName":"seele",
+    "DataBase": {
+        "DataBaseMode": "single",
+        "DataBaseConnUrls":["127.0.0.1:27017"],
+        "DataBaseName":"seele",
+        "UseAuthentication": false,
+        "User": "scan",
+        "Pwd": "123456"
+    },
     "Interval":30
 }
   

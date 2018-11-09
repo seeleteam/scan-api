@@ -1,0 +1,29 @@
+{
+    "GinMode":"debug",
+    "Addr": ":8888", 
+    "LimitConnection": 0,
+    "DefaultHammerTime": 30,
+    "WriteLog": true,
+    "LogLevel": "debug",
+    "LogFile": "scan-api",
+    "DisableConsoleColor": true,
+    "LimitConnections": 0,
+    "MaxHeaderBytes": 20, 
+    "ReadTimeout":300,
+    "IdleTimeout": 0,
+    "WriteTimeout":120,
+    "SyncSwitch":true,
+    "BlockCacheLimit":1024,
+    "TransCacheLimit":1024,
+    "DataBase": {
+        "DataBaseMode": "replset",
+        "DataBaseReplsetName": "scan",
+        "DataBaseConnUrls":["127.0.0.1:27017","127.0.0.1:27018","127.0.0.1:27019"],
+        "DataBaseName":"seele",
+        "UseAuthentication": false,
+        "User": "scan",
+        "Pwd": "123456"
+    },
+    "Interval":30
+}
+  

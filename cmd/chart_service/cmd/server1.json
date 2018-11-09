@@ -1,8 +1,8 @@
 {
-    "RpcURL": "127.0.0.1:55027",
+    "RPCURL": "127.0.0.1:55028",
     "WriteLog": true,
     "LogLevel": "debug",
-    "LogFile": "seele-syncer",
+    "LogFile": "chart_service",
     "DataBase": {
         "DataBaseMode": "single",
         "DataBaseConnUrls":["127.0.0.1:27017"],
@@ -11,7 +11,6 @@
         "User": "scan",
         "Pwd": "123456"
     },
-    "SyncInterval":3,
-    "ShardNumber": 1
+    "ShardCount":2
 }
   

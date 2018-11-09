@@ -71,7 +71,7 @@ func GetServer(g *errgroup.Group, config *Config) (server *ScanServer) {
 
 	ginHandler := initGin(config)
 
-	dbClient := database.NewDBClient(config.DataBaseName, config.DataBaseConnURL, 1)
+	dbClient := database.NewDBClient(config.DataBase, 1)
 	if dbClient == nil {
 		fmt.Printf("init database error")
 		return

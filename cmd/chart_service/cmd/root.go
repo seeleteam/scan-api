@@ -41,7 +41,7 @@ var rootCmd = &cobra.Command{
 			return
 		}
 
-		chart.GChartDB = database.NewDBClient(serverCfg.DataBaseName, serverCfg.DataBaseConnURL, 1)
+		chart.GChartDB = database.NewDBClient(serverCfg.DataBase, 1)
 		if chart.GChartDB == nil {
 			fmt.Printf("init database error")
 			return
