@@ -789,7 +789,7 @@ func (c *Client) UpdateMinerAccount(miner *DBMiner) error {
 func (c *Client) GetMinerAccounts(size int) ([]*DBMiner, error) {
 	var miners []*DBMiner
 	query := func(c *mgo.Collection) error {
-		return c.Find(bson.M{}).Sort("-balance").Limit(size).All(&miners)
+		return c.Find(bson.M{}).Sort("-total").Limit(size).All(&miners)
 	}
 	err := c.withCollection(minerTbl, query)
 	return miners, err
