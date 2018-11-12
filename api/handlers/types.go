@@ -280,7 +280,7 @@ func createRetSimpleAccountInfo(account *database.DBAccount, ttBalance int64) *R
 	ret.Address = account.Address
 	ret.Balance = account.Balance
 	ret.TxCount = account.TxCount
-	ret.Percentage = (float64(ret.Balance) / float64(ttBalance))
+	ret.Percentage = (float64(ret.Balance) / 100000000) / 1000000000 //Fan turn seele, divided by total
 	ret.ShardNumber = account.ShardNumber
 	return &ret
 }
