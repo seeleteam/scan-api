@@ -117,8 +117,9 @@ type RetSimpleAccountInfo struct {
 
 //RetSimpleAccountHome
 type RetSimpleAccountHome struct {
-	Address string `json:"address"`
-	Balance int64  `json:"balance"`
+	Address    string  `json:"address"`
+	Balance    int64   `json:"balance"`
+	Percentage float64 `json:"percentage"`
 }
 
 //RetDetailAccountTxInfo describle the tx info contained by the RetDetailAccountInfo
@@ -290,6 +291,7 @@ func createHomeRetSimpleAccountInfo(account *database.DBAccount) *RetSimpleAccou
 	var ret RetSimpleAccountHome
 	ret.Address = account.Address
 	ret.Balance = account.Balance
+	ret.Percentage = (float64(ret.Balance) / 100000000) / 1000000000 //Fan turn seele, divided by total
 	return &ret
 }
 
