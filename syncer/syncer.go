@@ -213,24 +213,13 @@ func (s *Syncer) sync() error {
 
 	log.Info("sync begin-------")
 	log.Info("sync dbBlockHeight[%d]", dbBlockHeight)
-	if dbBlockHeight == 0 {
-		s.SyncHandle(0)
-		block, err := s.db.GetBlockByHeight(s.shardNumber, 0)
-		if err != nil {
-			log.Error(err)
-			return err
+	for i := dbBlockHeight; i <= curHeight; i++ {
+		log.Info("begin to sync block[%d]:", i)
+		if s.SyncHandle(i) {
+			log.Info("failed to sync block[%d]:", i)
+			break
 		}
-		block.Timestamp = time.Now().Add(-time.Hour).Unix()
-		s.db.UpdateBlock(s.shardNumber, 0, block)
-	} else {
-		for i := dbBlockHeight; i <= curHeight; i++ {
-			log.Info("begin to sync block[%d]:", i)
-			if s.SyncHandle(i) {
-				log.Info("failed to sync block[%d]:", i)
-				break
-			}
-			log.Info("successfully to sync block[%d]:", i)
-		}
+		log.Info("successfully to sync block[%d]:", i)
 	}
 	log.Info("sync end-------")
 
