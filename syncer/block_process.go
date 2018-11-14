@@ -7,6 +7,16 @@ import (
 
 func (s *Syncer) blockSync(block *rpc.BlockInfo) error {
 	dbBlock := database.CreateDbBlock(block)
+	var blockgas int64
+	for i := 0; i < len(block.Txs); i++ {
+		trans := block.Txs[i]
+		receipt, err := s.rpc.GetReceiptByTxHash(trans.Hash)
+		if err == nil {
+			blockgas += receipt.UsedGas
+		}
+	}
+
+	dbBlock.UsedGas = blockgas
 	dbBlock.ShardNumber = s.shardNumber
 	// insert block info into database
 	if err := s.db.AddBlock(dbBlock); err != nil {

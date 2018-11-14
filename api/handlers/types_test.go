@@ -14,21 +14,25 @@ import (
 
 func newTestDBBlock(t *testing.T) *database.DBBlock {
 	return &database.DBBlock{
-		Reward: 99,
-		Height: 133853,
-		Txs:    []database.DBSimpleTxInBlock{{Fee: 99}},
+		Reward:  99,
+		Height:  133853,
+		UsedGas: 900,
+		Txs:     []database.DBSimpleTxInBlock{{Fee: 99, GasPrice: 88}},
 	}
 }
 
 func Test_CreateRetSimpleBlockInfo(t *testing.T) {
-	var TxFee int64
+	var TxFee, TxPrice int64
 	header := newTestDBBlock(t)
 	got := createRetSimpleBlockInfo(header)
 
 	for i := 0; i < len(header.Txs); i++ {
 		TxFee += header.Txs[i].Fee
+		TxPrice += header.Txs[i].GasPrice
 	}
 	assert.Equal(t, got.Fee, TxFee)
+	assert.Equal(t, got.Gasprice, TxPrice)
+	assert.Equal(t, got.UsedGas, header.UsedGas)
 	assert.Equal(t, int64(got.Height), header.Height)
 	assert.Equal(t, got.Reward, header.Reward)
 }

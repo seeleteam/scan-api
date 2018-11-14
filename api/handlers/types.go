@@ -31,6 +31,8 @@ type RetSimpleBlockInfo struct {
 	Miner       string `json:"miner"`
 	Reward      int64  `json:"reward"`
 	Fee         int64  `json:"fee"`
+	UsedGas     int64  `json:"usedGas"`
+	Gasprice    int64  `json:"gasprice"`
 }
 
 //RetDetailBlockInfo describle the block info in the block detail page which send to the frontend
@@ -160,7 +162,7 @@ func createRetLastblockInfo(lastblockHeight int64, lastblockTime int64) *Lastblo
 //createRetSimpleBlockInfo converts the given dbblock to the retsimpleblockinfo
 func createRetSimpleBlockInfo(blockInfo *database.DBBlock) *RetSimpleBlockInfo {
 	var ret RetSimpleBlockInfo
-	var blockFee int64
+	var blockFee, gasprice int64
 	ret.Miner = blockInfo.Creator
 	ret.Height = uint64(blockInfo.Height)
 	ret.Txn = len(blockInfo.Txs)
@@ -168,11 +170,20 @@ func createRetSimpleBlockInfo(blockInfo *database.DBBlock) *RetSimpleBlockInfo {
 	ret.Age = getElpasedTimeDesc(timeStamp)
 	ret.ShardNumber = blockInfo.ShardNumber
 	ret.Reward = blockInfo.Reward
-
-	for i := 0; i < len(blockInfo.Txs); i++ {
+	txscnt := len(blockInfo.Txs)
+	for i := 0; i < txscnt; i++ {
 		blockFee += blockInfo.Txs[i].Fee
+		gasprice += blockInfo.Txs[i].GasPrice
+
 	}
+
+	if txscnt == 0 {
+		txscnt = 1
+	}
+
+	ret.Gasprice = gasprice / int64(txscnt)
 	ret.Fee = blockFee
+	ret.UsedGas = blockInfo.UsedGas
 	return &ret
 }
 
