@@ -32,7 +32,7 @@ type RetSimpleBlockInfo struct {
 	Reward      int64  `json:"reward"`
 	Fee         int64  `json:"fee"`
 	UsedGas     int64  `json:"usedGas"`
-	Avegasprice int64  `json:"avegasprice"`
+	Gasprice    int64  `json:"gasprice"`
 }
 
 //RetDetailBlockInfo describle the block info in the block detail page which send to the frontend
@@ -177,10 +177,12 @@ func createRetSimpleBlockInfo(blockInfo *database.DBBlock) *RetSimpleBlockInfo {
 		gasprice += blockInfo.Txs[i].GasPrice
 
 	}
+
 	if txscnt == 0 {
 		txscnt = 1
 	}
-	ret.Avegasprice = gasprice / int64(txscnt)
+
+	ret.Gasprice = gasprice / int64(txscnt)
 	ret.Fee = blockFee
 	ret.UsedGas = blockInfo.UsedGas
 	return &ret
