@@ -20,6 +20,7 @@ type DBSimpleTxInBlock struct {
 	Amount    int64  `bson:"amount"`
 	Timestamp string `bson:"timestamp"`
 	Fee       int64  `bson:"fee"`
+	GasPrice  int64  `bson:"gasPrice"`
 }
 
 type DBSimpleTxs struct {
@@ -40,6 +41,7 @@ type DBBlock struct {
 	Nonce           string                `bson:"nonce"`
 	TxHash          string                `bson:"txHash"`
 	Reward          int64                 `bson:"reward"`
+	UsedGas         int64                 `bson:"usedGas"`
 	Txs             []DBSimpleTxInBlock   `bson:"transactions"`
 	Debts           []DBSimpleDebtInBlock `bson:"debt"`
 	TxDebts         []DBSimpleDebtInBlock `bson:"txDebt"`
