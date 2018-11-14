@@ -31,7 +31,7 @@ func Test_CreateRetSimpleBlockInfo(t *testing.T) {
 		TxPrice += header.Txs[i].GasPrice
 	}
 	assert.Equal(t, got.Fee, TxFee)
-	assert.Equal(t, got.gasprice, TxPrice)
+	assert.Equal(t, got.Gasprice, TxPrice)
 	assert.Equal(t, got.UsedGas, header.UsedGas)
 	assert.Equal(t, int64(got.Height), header.Height)
 	assert.Equal(t, got.Reward, header.Reward)

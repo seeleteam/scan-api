@@ -162,8 +162,7 @@ func createRetLastblockInfo(lastblockHeight int64, lastblockTime int64) *Lastblo
 //createRetSimpleBlockInfo converts the given dbblock to the retsimpleblockinfo
 func createRetSimpleBlockInfo(blockInfo *database.DBBlock) *RetSimpleBlockInfo {
 	var ret RetSimpleBlockInfo
-	var blockFee int64
-	var gasprice int64
+	var blockFee, gasprice int64
 	ret.Miner = blockInfo.Creator
 	ret.Height = uint64(blockInfo.Height)
 	ret.Txn = len(blockInfo.Txs)
