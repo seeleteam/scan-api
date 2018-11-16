@@ -122,7 +122,6 @@ func getBlockByHeight(rpcOutputBlock map[string]interface{}, fullTx bool) *Block
 	timestamp := int64(headerMp["CreateTimestamp"].(float64))
 	difficulty := int64(headerMp["Difficulty"].(float64))
 	totalDifficulty := int64(rpcOutputBlock["totalDifficulty"].(float64))
-
 	var Txs []Transaction
 	if fullTx {
 		var rpcTxs []interface{}
@@ -137,7 +136,6 @@ func getBlockByHeight(rpcOutputBlock map[string]interface{}, fullTx bool) *Block
 			tx.Amount = big.NewInt(amount)
 			tx.AccountNonce = uint64(rpcTx["accountNonce"].(float64))
 			tx.Payload = rpcTx["payload"].(string)
-			tx.Timestamp = uint64(rpcTx["timestamp"].(float64))
 			tx.GasLimit = int64(rpcTx["gasLimit"].(float64))
 			tx.GasPrice = int64(rpcTx["gasPrice"].(float64))
 			Txs = append(Txs, tx)
