@@ -271,7 +271,7 @@ func (s *Syncer) SyncHandle(lock *sync.Mutex) bool {
 	fmt.Println("======blockheight = ", height)
 	rpcBlock, err := s.rpc.GetBlockByHeight(height, true)
 	height++
-	fmt.Println("======rpcBlock = ", rpcBlock)
+	//fmt.Println("======rpcBlock = ", rpcBlock)
 	if err != nil {
 		s.rpc.Release()
 		log.Error(err)
