@@ -2,6 +2,8 @@ package syncer
 
 import (
 	"fmt"
+	"runtime"
+	"sync"
 	"time"
 
 	"github.com/gammazero/workerpool"
@@ -210,17 +212,50 @@ func (s *Syncer) sync() error {
 		log.Error(err)
 		return err
 	}
-
+	anum := curHeight - dbBlockHeight
+	if anum >= 1000 {
+		anum = 1000
+	}
 	log.Info("sync begin-------")
 	log.Info("sync dbBlockHeight[%d]", dbBlockHeight)
-	for i := dbBlockHeight; i <= curHeight; i++ {
-		log.Info("begin to sync block[%d]:", i)
-		if s.SyncHandle(i) {
-			log.Info("failed to sync block[%d]:", i)
+	//---------------------------------------
+	lock := &sync.Mutex{}
+	//for i := dbBlockHeight; i <= curHeight; i++ {
+	for i := 0; i < int(anum); i++ {
+		fmt.Println("===dbBlockHeight[]===", dbBlockHeight)
+		fmt.Println("===curHeight-1[]===", curHeight-1)
+		go s.SyncHandle(lock)
+		//	go Count(chs[i])
+	}
+	for {
+		// fmt.Println("===============================================")
+		// fmt.Println("===height===", height)
+		// fmt.Println("===curHeight===", curHeight)
+		// fmt.Println("===============================================")
+		// fmt.Println("===curHeight11111111111===", curHeight)
+		lock.Lock()
+		//c := height
+		lock.Unlock()
+		runtime.Gosched()
+		// fmt.Println("===============================================")
+		// fmt.Println("===ccccccccc----height===", c)
+		// fmt.Println("===curHeight===", curHeight)
+		// fmt.Println("===============================================")
+
+		//if height >= curHeight-3 {
+		if height >= anum {
 			break
 		}
-		log.Info("successfully to sync block[%d]:", i)
 	}
+	//---------------------------------------
+	// for i := dbBlockHeight; i <= curHeight; i++ {
+	// 	log.Info("begin to sync block[%d]:", i)
+	// 	if s.SyncHandle(i) {
+	// 		log.Info("failed to sync block[%d]:", i)
+	// 		break
+	// 	}
+	// 	log.Info("successfully to sync block[%d]:", i)
+	// }
 	log.Info("sync end-------")
 
 	err = s.pendingTxsSync()
@@ -233,8 +268,20 @@ func (s *Syncer) sync() error {
 }
 
 // SyncHandle sync the block data from seele node, and handle tx or account
-func (s *Syncer) SyncHandle(i uint64) bool {
-	rpcBlock, err := s.rpc.GetBlockByHeight(i, true)
+// func (s *Syncer) SyncHandle(i uint64) bool {
+
+var a = 0
+var height = uint64(a)
+
+func (s *Syncer) SyncHandle(lock *sync.Mutex) bool {
+	lock.Lock()
+	dbBlockHeight, _ := s.db.GetBlockHeight(s.shardNumber)
+	fmt.Println("---height---", height)
+	height = dbBlockHeight
+	fmt.Println("======blockheight = ", height)
+	rpcBlock, err := s.rpc.GetBlockByHeight(height, true)
+	height++
+	fmt.Println("======rpcBlock = ", rpcBlock)
 	if err != nil {
 		s.rpc.Release()
 		log.Error(err)
@@ -246,24 +293,30 @@ func (s *Syncer) SyncHandle(i uint64) bool {
 		return true
 	}
 
+	fmt.Println("-----------block执行完毕---------------")
 	// sync transactions
 	if err = s.txSync(rpcBlock); err != nil {
 		log.Error(err)
 		return true
 	}
-
+	fmt.Println("-----------block执行完毕1111---------------")
 	// sync debts
 	if err = s.debttxSync(rpcBlock); err != nil {
 		log.Error(err)
 		return true
 	}
-
+	fmt.Println("-----------block执行完毕2222222222---------------")
 	// sync accounts
 	if err = s.accountSync(rpcBlock); err != nil {
 		log.Error(err)
 		return true
 	}
+	fmt.Println("-----------block执行完毕3333333333333---------------")
+
+	fmt.Println("-----------block执行完毕4444444444444---------------")
 	s.accountUpdateSync()
+	fmt.Println("-----------block执行完毕accountUpdateSync---------------")
+	lock.Unlock()
 	return false
 }
 
