@@ -225,23 +225,13 @@ func (s *Syncer) sync() error {
 		fmt.Println("===dbBlockHeight[]===", dbBlockHeight)
 		fmt.Println("===curHeight-1[]===", curHeight-1)
 		go s.SyncHandle(lock)
-		//	go Count(chs[i])
+		log.Info("successfully to sync block[%d]:", i)
+
 	}
 	for {
-		// fmt.Println("===============================================")
-		// fmt.Println("===height===", height)
-		// fmt.Println("===curHeight===", curHeight)
-		// fmt.Println("===============================================")
-		// fmt.Println("===curHeight11111111111===", curHeight)
 		lock.Lock()
-		//c := height
 		lock.Unlock()
 		runtime.Gosched()
-		// fmt.Println("===============================================")
-		// fmt.Println("===ccccccccc----height===", c)
-		// fmt.Println("===curHeight===", curHeight)
-		// fmt.Println("===============================================")
-
 		//if height >= curHeight-3 {
 		if height >= anum {
 			break
@@ -312,8 +302,6 @@ func (s *Syncer) SyncHandle(lock *sync.Mutex) bool {
 		return true
 	}
 	fmt.Println("-----------block执行完毕3333333333333---------------")
-
-	fmt.Println("-----------block执行完毕4444444444444---------------")
 	s.accountUpdateSync()
 	fmt.Println("-----------block执行完毕accountUpdateSync---------------")
 	lock.Unlock()
