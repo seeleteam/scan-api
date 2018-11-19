@@ -90,7 +90,7 @@ func (s *Syncer) accountSync(b *rpc.BlockInfo) error {
 
 	//exclude genesis block
 	if b.Creator != nullAddress {
-		minerAccount :=s.getAccountFromDBOrCache(b.Creator)
+		minerAccount := s.getAccountFromDBOrCache(b.Creator)
 		blockCnt, err := s.db.GetMinedBlocksCntByShardNumberAndAddress(s.shardNumber, b.Creator)
 		if err != nil {
 			log.Error(err)
