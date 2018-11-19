@@ -265,7 +265,7 @@ func getPeerInfos(infos []map[string]interface{}) []PeerInfo {
 func (rpc *SeeleRPC) GetBalance(account string) (int64, error) {
 	balanceMp := make(map[string]interface{})
 	var request []interface{}
-	request = append(request, account)
+	request = append(request, account, "", -1)
 	if err := rpc.call("seele_getBalance", request, &balanceMp); err != nil {
 		return 0, err
 	}
