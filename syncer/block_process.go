@@ -1,6 +1,9 @@
 package syncer
 
 import (
+	"fmt"
+	"time"
+
 	"github.com/seeleteam/scan-api/database"
 	"github.com/seeleteam/scan-api/rpc"
 )
@@ -8,6 +11,7 @@ import (
 func (s *Syncer) blockSync(block *rpc.BlockInfo) error {
 	dbBlock := database.CreateDbBlock(block)
 	var blockgas int64
+
 	for i := 0; i < len(block.Txs); i++ {
 		trans := block.Txs[i]
 		receipt, err := s.rpc.GetReceiptByTxHash(trans.Hash)
@@ -15,7 +19,36 @@ func (s *Syncer) blockSync(block *rpc.BlockInfo) error {
 			blockgas += receipt.UsedGas
 		}
 	}
+	//30----------start
+	nTime := time.Now()
 
+	for i := 0; i < 2; i++ {
+		yesTime := nTime.AddDate(0, 0, -i)
+		yesTimeend := nTime.AddDate(0, 0, -i+1)
+		logDay := yesTime.Format("20060102")
+		logDayend := yesTimeend.Format("20060102")
+		timeLayout := "20060102"
+		loc, _ := time.LoadLocation("Local")
+		theTime, _ := time.ParseInLocation(timeLayout, logDay, loc)
+		theTimeend, _ := time.ParseInLocation(timeLayout, logDayend, loc)
+		begin := theTime.Unix()
+		end := theTimeend.Unix()
+		fmt.Println("begin:", begin)
+		fmt.Println("end:", end)
+		fmt.Println("block.Timestamp:", block.Timestamp)
+		a := block.Timestamp
+		//big1 := new(big.Int).SetUint64(uint64(begin)) //可以转int
+		// big1 := strconv.ParseInt(a, 10, 64)
+		// fmt.Println("big1 is: ", big1)
+		// if block.Timestamp >= big1 {
+
+		// }
+		// priv.D = new(big.Int).SetBytes(d)
+		// if block.Timestamp >= strconv.FormatInt(begin, 10) && block.Timestamp < strconv.FormatInt(end, 10) {
+
+		// }
+	}
+	// 30----------end
 	dbBlock.UsedGas = blockgas
 	dbBlock.ShardNumber = s.shardNumber
 	// insert block info into database
