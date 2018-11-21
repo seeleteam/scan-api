@@ -34,7 +34,6 @@ func (s *Syncer) blockSync(block *rpc.BlockInfo) error {
 }
 
 func (s *Syncer) blockTxNumSync() {
-	//30----------start
 	nTime := time.Now()
 	startDate := nTime.AddDate(0, 0, -30).Format("2006-01-02")
 	s.db.RemoveOutDateByDate(startDate)
@@ -61,8 +60,8 @@ func (s *Syncer) blockTxNumSync() {
 		tx.TxCount = cnt
 		s.db.UpdateTxsCntByDate(tx)
 	}
-	// 30----------end
 }
+
 func storeLastBlocks(db Database, block *database.DBBlock) error {
 	// get last block
 	last := &database.DBLastBlock{
