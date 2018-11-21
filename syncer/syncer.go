@@ -218,34 +218,22 @@ func (s *Syncer) sync() error {
 	}
 	log.Info("sync begin-------")
 	log.Info("sync dbBlockHeight[%d]", dbBlockHeight)
-	//---------------------------------------
 	lock := &sync.Mutex{}
-	//for i := dbBlockHeight; i <= curHeight; i++ {
 	for i := 0; i < int(anum); i++ {
-		fmt.Println("===dbBlockHeight[]===", dbBlockHeight)
-		fmt.Println("===curHeight-1[]===", curHeight-1)
 		go s.SyncHandle(lock)
-		log.Info("successfully to sync block[%d]:", i)
+		log.Info("successfully to sync block[%d]:", dbBlockHeight+uint64(i))
 
 	}
+
 	for {
 		lock.Lock()
 		lock.Unlock()
 		runtime.Gosched()
-		//if height >= curHeight-3 {
 		if height >= anum {
 			break
 		}
 	}
-	//---------------------------------------
-	// for i := dbBlockHeight; i <= curHeight; i++ {
-	// 	log.Info("begin to sync block[%d]:", i)
-	// 	if s.SyncHandle(i) {
-	// 		log.Info("failed to sync block[%d]:", i)
-	// 		break
-	// 	}
-	// 	log.Info("successfully to sync block[%d]:", i)
-	// }
+
 	log.Info("sync end-------")
 
 	err = s.pendingTxsSync()
@@ -257,21 +245,15 @@ func (s *Syncer) sync() error {
 	return nil
 }
 
+var height = uint64(0)
+
 // SyncHandle sync the block data from seele node, and handle tx or account
-// func (s *Syncer) SyncHandle(i uint64) bool {
-
-var a = 0
-var height = uint64(a)
-
 func (s *Syncer) SyncHandle(lock *sync.Mutex) bool {
 	lock.Lock()
 	dbBlockHeight, _ := s.db.GetBlockHeight(s.shardNumber)
-	fmt.Println("---height---", height)
 	height = dbBlockHeight
-	fmt.Println("======blockheight = ", height)
 	rpcBlock, err := s.rpc.GetBlockByHeight(height, true)
 	height++
-	//fmt.Println("======rpcBlock = ", rpcBlock)
 	if err != nil {
 		s.rpc.Release()
 		log.Error(err)
@@ -283,27 +265,25 @@ func (s *Syncer) SyncHandle(lock *sync.Mutex) bool {
 		return true
 	}
 
-	fmt.Println("-----------block执行完毕---------------")
 	// sync transactions
 	if err = s.txSync(rpcBlock); err != nil {
 		log.Error(err)
 		return true
 	}
-	fmt.Println("-----------block执行完毕1111---------------")
+
 	// sync debts
 	if err = s.debttxSync(rpcBlock); err != nil {
 		log.Error(err)
 		return true
 	}
-	fmt.Println("-----------block执行完毕2222222222---------------")
+
 	// sync accounts
 	if err = s.accountSync(rpcBlock); err != nil {
 		log.Error(err)
 		return true
 	}
-	fmt.Println("-----------block执行完毕3333333333333---------------")
+
 	s.accountUpdateSync()
-	fmt.Println("-----------block执行完毕accountUpdateSync---------------")
 	lock.Unlock()
 	return false
 }

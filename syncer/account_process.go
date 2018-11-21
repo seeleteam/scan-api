@@ -1,7 +1,6 @@
 package syncer
 
 import (
-	"fmt"
 	"sync"
 	"time"
 
@@ -107,11 +106,9 @@ func (s *Syncer) accountSync(b *rpc.BlockInfo) error {
 func (s *Syncer) accountUpdateSync() {
 	var wg sync.WaitGroup
 	wg.Add(len(s.updateAccount) + len(s.updateMinerAccount))
-	//fmt.Println("---s.updateAccount--------s.updateMinerAccount-------", s.updateAccount, s.updateMinerAccount)
 	for _, v := range s.updateAccount {
 
 		txCnt, err := s.db.GetTxCntByShardNumberAndAddress(s.shardNumber, v.Address)
-		fmt.Println("-----------block执行完毕55555555555555---------------")
 		if err != nil {
 			log.Error(err)
 			txCnt = 0
