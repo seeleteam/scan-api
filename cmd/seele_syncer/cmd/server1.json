@@ -1,5 +1,5 @@
 {
-    "RpcURL": "117.50.7.77:8027",
+    "RpcURL": "127.0.0.1:8027",
     "WriteLog": true,
     "LogLevel": "debug",
     "LogFile": "seele-syncer",

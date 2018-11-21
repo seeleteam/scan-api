@@ -52,70 +52,7 @@ func (s *Syncer) txSync(block *rpc.BlockInfo) error {
 		return err
 	}
 
-	// insert 30 days history transaction number into database
-	s.txHisSync(dbTxs)
-
 	return nil
-}
-
-func (s *Syncer) txHisSync(txs []*database.DBTx) error {
-	now := time.Now()
-	// get the start date of 30 days history
-	startDate := now.AddDate(0, 0, -30).Format("2006-01-02")
-	// get which day the txs belong to
-	dates := getTxDate(txs)
-	// filter the dates, farther than startDate will be filtered out
-	dates = filterDate(dates, startDate)
-	todayDate := now.Format("2006-01-02")
-	// update the transactions count of the days
-	updateTxHisForDates(s.db, dates, todayDate, startDate)
-	// if the history number is not 30, insert the other days after start day
-	checkTxHis(s.db, startDate, todayDate)
-	return nil
-}
-
-func getTxDate(txs []*database.DBTx) []string {
-	dateTxs := make(map[string]bool)
-	for _, tx := range txs {
-		dateTxs[tx.Timetxs] = true
-	}
-	dates := make([]string, 0, len(dateTxs))
-	for date := range dateTxs {
-		dates = append(dates, date)
-	}
-	return dates
-}
-
-func filterDate(dates []string, limit string) []string {
-	var validDates []string
-	for _, date := range dates {
-		if date >= limit {
-			validDates = append(validDates, date)
-		}
-	}
-	return validDates
-}
-
-func updateTxHisForDates(db Database, dates []string, today, startDate string) {
-	for _, date := range dates {
-		if date == today {
-			dropOutDate(db, today, startDate)
-		}
-		updateTxHis(db, date)
-	}
-}
-
-func updateTxHis(db Database, date string) {
-	tx := new(database.DBSimpleTxs)
-	var cnt uint64
-	tx.Stime = date
-	cnt, err := db.GetTxsCntByDate(date)
-	if err != nil {
-		cnt = 0
-	}
-	tx.TxCount = int(cnt)
-
-	db.UpdateTxsCntByDate(tx)
 }
 
 func dropOutDate(db Database, today, startDate string) {
@@ -133,19 +70,6 @@ func hasOutDate(db Database, today string) bool {
 		return true
 	}
 	return false
-}
-
-func checkTxHis(db Database, startDate, today string) {
-	txs, err := db.GetTxHis(startDate, today)
-	if err != nil {
-		return
-	}
-	if len(txs) == 30 {
-		return
-	}
-	for date := startDate; date < today; nextDate(&date) {
-		updateTxHis(db, date)
-	}
 }
 
 func nextDate(date *string) {

@@ -1264,17 +1264,19 @@ func (c *Client) GetNodeCntByShardNumber(shardNumber int) (uint64, error) {
 }
 
 // GetTxsCntByDate get row count of the transaction table
-func (c *Client) GetTxsCntByDate(date string) (uint64, error) {
-	var txsCnt uint64
+func (c *Client) GetTxsCntByDate(begin, end int64) (int, error) {
+	var txsCnt int
 	query := func(c *mgo.Collection) error {
 		var err error
-		//TODO: fix this overflow
-		var temp int
-		temp, err = c.Find(bson.M{"timetxs": date}).Count()
-		txsCnt = uint64(temp)
+		var blocks []*DBBlock
+		c.Find(bson.M{"timestamp": bson.M{"$gte": begin, "$lt": end}}).All(&blocks)
+		for i := 0; i < len(blocks); i++ {
+			data := len(blocks[i].Txs)
+			txsCnt += data
+		}
 		return err
 	}
-	err := c.withCollection(txTbl, query)
+	err := c.withCollection(blockTbl, query)
 	return txsCnt, err
 }
 

@@ -264,6 +264,8 @@ func (s *Syncer) SyncHandle(i uint64) bool {
 		return true
 	}
 	s.accountUpdateSync()
+	// insert 30 days history transaction number into database
+	s.blockTxNumSync()
 	return false
 }
 
