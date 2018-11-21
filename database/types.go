@@ -6,6 +6,7 @@
 package database
 
 import (
+	"fmt"
 	"strconv"
 	"time"
 
@@ -134,7 +135,7 @@ func CreateDbBlock(b *rpc.BlockInfo) *DBBlock {
 		simpleTx.From = b.Txs[i].From
 		simpleTx.To = b.Txs[i].To
 		simpleTx.Amount = b.Txs[i].Amount.Int64()
-		simpleTx.Timestamp = strconv.FormatUint(b.Txs[i].Timestamp, 10)
+		simpleTx.Timestamp = b.Timestamp.String()
 		dbBlock.Txs = append(dbBlock.Txs, simpleTx)
 
 		if i != len(b.Txs)-1 {
@@ -186,6 +187,9 @@ func CreateDbTx(t rpc.Transaction) *DBTx {
 	trans.Amount = t.Amount.Int64()
 	timetxs := time.Unix(int64(t.Timestamp), 0)
 	trans.Timetxs = timetxs.Format("2006-01-02")
+	fmt.Println("-------------------------")
+	fmt.Println("--------t.Timestamp-----------------", t.Timestamp)
+	fmt.Println("-------------------------")
 	trans.Timestamp = strconv.FormatUint(t.Timestamp, 10)
 	trans.AccountNonce = strconv.FormatUint(t.AccountNonce, 10)
 	trans.Payload = t.Payload
