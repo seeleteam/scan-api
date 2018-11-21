@@ -6,7 +6,6 @@
 package database
 
 import (
-	"fmt"
 	"strconv"
 	"time"
 
@@ -187,9 +186,6 @@ func CreateDbTx(t rpc.Transaction) *DBTx {
 	trans.Amount = t.Amount.Int64()
 	timetxs := time.Unix(int64(t.Timestamp), 0)
 	trans.Timetxs = timetxs.Format("2006-01-02")
-	fmt.Println("-------------------------")
-	fmt.Println("--------t.Timestamp-----------------", t.Timestamp)
-	fmt.Println("-------------------------")
 	trans.Timestamp = strconv.FormatUint(t.Timestamp, 10)
 	trans.AccountNonce = strconv.FormatUint(t.AccountNonce, 10)
 	trans.Payload = t.Payload
