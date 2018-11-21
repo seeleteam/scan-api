@@ -134,7 +134,7 @@ func CreateDbBlock(b *rpc.BlockInfo) *DBBlock {
 		simpleTx.From = b.Txs[i].From
 		simpleTx.To = b.Txs[i].To
 		simpleTx.Amount = b.Txs[i].Amount.Int64()
-		simpleTx.Timestamp = strconv.FormatUint(b.Txs[i].Timestamp, 10)
+		simpleTx.Timestamp = b.Timestamp.String()
 		dbBlock.Txs = append(dbBlock.Txs, simpleTx)
 
 		if i != len(b.Txs)-1 {

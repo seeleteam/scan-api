@@ -17,6 +17,7 @@ func (s *Syncer) txSync(block *rpc.BlockInfo) error {
 	var dbTxs []*database.DBTx
 	for i := 0; i < len(block.Txs); i++ {
 		trans := block.Txs[i]
+		trans.Timestamp = block.Timestamp.Uint64()
 		for j := 0; j < len(block.TxDebts); j++ {
 			if block.Txs[i].Hash == block.TxDebts[j].TxHash {
 				trans.DebtTxHash = block.TxDebts[j].Hash
