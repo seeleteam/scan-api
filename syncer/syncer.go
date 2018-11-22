@@ -2,6 +2,7 @@ package syncer
 
 import (
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/gammazero/workerpool"
@@ -193,6 +194,8 @@ func (s *Syncer) checkOlderBlocks() bool {
 	return fallBack
 }
 
+var wg sync.WaitGroup
+
 // sync get block data from seele node and store it in the mongodb
 func (s *Syncer) sync() error {
 	log.Info("[BlockSync syncCnt:%d]Begin Sync", s.syncCnt)
@@ -213,14 +216,31 @@ func (s *Syncer) sync() error {
 
 	log.Info("sync begin-------")
 	log.Info("sync dbBlockHeight[%d]", dbBlockHeight)
-	for i := dbBlockHeight; i <= curHeight; i++ {
-		log.Info("begin to sync block[%d]:", i)
-		if s.SyncHandle(i) {
-			log.Info("failed to sync block[%d]:", i)
-			break
-		}
-		log.Info("successfully to sync block[%d]:", i)
+	//协程开始
+
+	anum := curHeight - dbBlockHeight
+	fmt.Println("---anum总数---", anum)
+	fmt.Println("---共需要同步数据量curHeight---", curHeight)
+
+	if anum >= 2000 {
+		anum = 2000
 	}
+	//协程结束
+	wg.Add(int(anum))
+	fmt.Println("---anum协程数---", anum)
+	fmt.Println("---已同步数据dbBlockHeight---", dbBlockHeight)
+	abc := dbBlockHeight + anum
+	var i uint64
+	for i = dbBlockHeight; i < abc; i++ {
+		log.Info("begin to sync block[%d]:", i)
+		go func(i uint64) {
+			//	defer wg.Add(-1)
+			defer wg.Done()
+			s.SyncHandle(i)
+			log.Info("successfully to sync block[%d]:", i)
+		}(i)
+	}
+	wg.Wait() // 等待，直到计数为0
 	log.Info("sync end-------")
 
 	err = s.pendingTxsSync()
@@ -263,7 +283,9 @@ func (s *Syncer) SyncHandle(i uint64) bool {
 		log.Error(err)
 		return true
 	}
-	s.accountUpdateSync()
+
+	//	s.accountUpdateSync()
+	fmt.Println("accountUpdateSync1111111111-------------")
 	return false
 }
 

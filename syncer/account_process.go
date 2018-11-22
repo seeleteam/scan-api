@@ -1,6 +1,7 @@
 package syncer
 
 import (
+	"fmt"
 	"sync"
 	"time"
 
@@ -14,6 +15,8 @@ const (
 )
 
 func (s *Syncer) getAccountFromDBOrCache(address string) *database.DBAccount {
+	var wga sync.WaitGroup
+	wga.Add(1)
 	account, ok := s.cacheAccount[address]
 	if ok {
 		s.updateAccount[address] = account
@@ -24,9 +27,10 @@ func (s *Syncer) getAccountFromDBOrCache(address string) *database.DBAccount {
 	if err != nil {
 		fromAccount = database.CreateEmptyAccount(address, s.shardNumber)
 	}
-
+	wga.Done()
 	s.updateAccount[address] = fromAccount
 	s.cacheAccount[address] = fromAccount
+	wga.Wait()
 	return fromAccount
 }
 
@@ -62,33 +66,59 @@ func (s *Syncer) getMinerAccount(account *database.DBAccount, reward int64, txFe
 
 //ProcessAccount Process All Account included in the block
 func (s *Syncer) accountSync(b *rpc.BlockInfo) error {
+	fmt.Println("----bbbbbbbbbb----", b.Height)
 	txFees := int64(0)
+	var mutex sync.Mutex
+	mutex.Lock()
+	channels := make([]chan int, len(b.Txs))
 	for i := 0; i < len(b.Txs); i++ {
-		tx := b.Txs[i]
-		txFees += tx.Fee
-		//exclude coinbase transaction
-		if tx.From != nullAddress {
-			fromAccount := s.getAccountFromDBOrCache(tx.From)
-			fromAccount.TxCount++
-		}
-
-		if tx.To == "" {
-			//create contract transaction
-			//Get contract address from receipt
-			receipt, err := s.rpc.GetReceiptByTxHash(tx.Hash)
-			if err == nil {
-				contractAddress := receipt.ContractAddress
-				contractAccount := s.getAccountFromDBOrCache(contractAddress)
-				contractAccount.AccType = 1
-				contractAccount.TxCount++
+		channels[i] = make(chan int)
+		go func(i int, c chan int) {
+			mutex.Lock()
+			fmt.Println("Locked: ", i)
+			//-----------------------------------------------
+			tx := b.Txs[i]
+			txFees += tx.Fee
+			//exclude coinbase transaction
+			if tx.From != nullAddress {
+				fromAccount := s.getAccountFromDBOrCache(tx.From)
+				fromAccount.TxCount++
 			}
-		} else {
-			toAccount := s.getAccountFromDBOrCache(tx.To)
-			toAccount.TxCount++
-		}
+			if tx.To == "" {
+				//create contract transaction
+				//Get contract address from receipt
+				receipt, err := s.rpc.GetReceiptByTxHash(tx.Hash)
+				if err == nil {
+					contractAddress := receipt.ContractAddress
+					contractAccount := s.getAccountFromDBOrCache(contractAddress)
+					contractAccount.AccType = 1
+					contractAccount.TxCount++
+				}
+			} else {
+				toAccount := s.getAccountFromDBOrCache(tx.To)
+				toAccount.TxCount++
+			}
+			//-----------------------------------------------
+			fmt.Println("Unlock the lock: ", i)
+			mutex.Unlock()
+			c <- i
+		}(i, channels[i])
+	}
+	//time.Sleep(time.Second)
+	fmt.Println("Unlock the lock")
+	mutex.Unlock()
+	//time.Sleep(time.Second)
+
+	for _, c := range channels {
+		fmt.Println("channelschannelschannelschannels: ", channels)
+		<-c
 	}
 
 	//exclude genesis block
+	var wgg sync.WaitGroup
+	fmt.Println("[[[[[[[[[[[[[[[[[[wgg]]]]]]]]]]]]]]]]]]]")
+	wgg.Add(1)
+	fmt.Println("[[[[[[[[[[[[[[[[[[wgg1111111]]]]]]]]]]]]]]]]]]]")
 	if b.Creator != nullAddress {
 		minerAccount := s.getAccountFromDBOrCache(b.Creator)
 		blockCnt, err := s.db.GetMinedBlocksCntByShardNumberAndAddress(s.shardNumber, b.Creator)
@@ -99,17 +129,22 @@ func (s *Syncer) accountSync(b *rpc.BlockInfo) error {
 
 		minerAccount.Mined = blockCnt
 		s.getMinerAccountAndCount(minerAccount, b.Txs[0].Amount.Int64(), txFees)
+		wgg.Done()
+	} else {
+		wgg.Done()
 	}
+	wgg.Wait()
 	return nil
 }
 
 func (s *Syncer) accountUpdateSync() {
 	var wg sync.WaitGroup
 	wg.Add(len(s.updateAccount) + len(s.updateMinerAccount))
-
+	fmt.Println("---s.updateAccount--------s.updateMinerAccount-------", s.updateAccount, s.updateMinerAccount)
 	for _, v := range s.updateAccount {
 
 		txCnt, err := s.db.GetTxCntByShardNumberAndAddress(s.shardNumber, v.Address)
+
 		if err != nil {
 			log.Error(err)
 			txCnt = 0
@@ -127,11 +162,8 @@ func (s *Syncer) accountUpdateSync() {
 				log.Error(err)
 				balance = 0
 			}
-
 			account.Balance = balance
-
 			s.db.UpdateAccount(account)
-
 			wg.Done()
 		})
 	}
