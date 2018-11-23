@@ -284,7 +284,7 @@ func (s *Syncer) SyncHandle(i uint64) bool {
 		return true
 	}
 
-	//	s.accountUpdateSync()
+	s.accountUpdateSync()
 	fmt.Println("accountUpdateSync1111111111-------------")
 	return false
 }

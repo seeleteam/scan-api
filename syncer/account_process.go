@@ -15,8 +15,6 @@ const (
 )
 
 func (s *Syncer) getAccountFromDBOrCache(address string) *database.DBAccount {
-	var wga sync.WaitGroup
-	wga.Add(1)
 	account, ok := s.cacheAccount[address]
 	if ok {
 		s.updateAccount[address] = account
@@ -27,10 +25,8 @@ func (s *Syncer) getAccountFromDBOrCache(address string) *database.DBAccount {
 	if err != nil {
 		fromAccount = database.CreateEmptyAccount(address, s.shardNumber)
 	}
-	wga.Done()
 	s.updateAccount[address] = fromAccount
 	s.cacheAccount[address] = fromAccount
-	wga.Wait()
 	return fromAccount
 }
 
@@ -48,20 +44,51 @@ func (s *Syncer) getMinerAccountAndCount(account *database.DBAccount, reward int
 }
 
 func (s *Syncer) getMinerAccount(account *database.DBAccount, reward int64, txFee int64) {
-	minerAccount, err := s.db.GetMinerAccountByAddress(account.Address)
-	if err != nil {
-		minerAccount = &database.DBMiner{
-			Address:     account.Address,
-			ShardNumber: account.ShardNumber,
-			TimeStamp:   time.Now().Unix(),
-		}
+	// var wgg sync.WaitGroup
+	// wgg.Add(1)
+	var mutex sync.Mutex
+	mutex.Lock()
+	channels := make([]chan int, 1)
+	for i := 0; i < 1; i++ {
+		channels[i] = make(chan int)
+		go func(i int, c chan int) {
+			mutex.Lock()
+			fmt.Println("----channels[i]----", i)
+			minerAccount, err := s.db.GetMinerAccountByAddress(account.Address)
+			if err != nil {
+				minerAccount = &database.DBMiner{
+					Address:     account.Address,
+					ShardNumber: account.ShardNumber,
+					TimeStamp:   time.Now().Unix(),
+				}
+			}
+
+			minerAccount.Reward += reward
+			minerAccount.TxFee += txFee
+			minerAccount.Revenue = minerAccount.Reward + minerAccount.TxFee
+			s.cacheMinerAccount[account.Address] = minerAccount
+			s.updateMinerAccount[account.Address] = minerAccount
+			mutex.Unlock()
+			c <- i
+		}(i, channels[i])
 	}
 
-	minerAccount.Reward += reward
-	minerAccount.TxFee += txFee
-	minerAccount.Revenue = minerAccount.Reward + minerAccount.TxFee
-	s.cacheMinerAccount[account.Address] = minerAccount
-	s.updateMinerAccount[account.Address] = minerAccount
+	// minerAccount, err := s.db.GetMinerAccountByAddress(account.Address)
+	// if err != nil {
+	// 	minerAccount = &database.DBMiner{
+	// 		Address:     account.Address,
+	// 		ShardNumber: account.ShardNumber,
+	// 		TimeStamp:   time.Now().Unix(),
+	// 	}
+	// }
+
+	// minerAccount.Reward += reward
+	// minerAccount.TxFee += txFee
+	// minerAccount.Revenue = minerAccount.Reward + minerAccount.TxFee
+	// s.cacheMinerAccount[account.Address] = minerAccount
+	// s.updateMinerAccount[account.Address] = minerAccount
+	// wgg.Done()
+	// wgg.Wait()
 }
 
 //ProcessAccount Process All Account included in the block
@@ -115,10 +142,9 @@ func (s *Syncer) accountSync(b *rpc.BlockInfo) error {
 	}
 
 	//exclude genesis block
-	var wgg sync.WaitGroup
-	fmt.Println("[[[[[[[[[[[[[[[[[[wgg]]]]]]]]]]]]]]]]]]]")
-	wgg.Add(1)
-	fmt.Println("[[[[[[[[[[[[[[[[[[wgg1111111]]]]]]]]]]]]]]]]]]]")
+	// var wgg sync.WaitGroup
+	// wgg.Add(1)
+	// fmt.Println("[[[[[[[[[[[[[[[[[[wgg1111111]]]]]]]]]]]]]]]]]]]")
 	if b.Creator != nullAddress {
 		minerAccount := s.getAccountFromDBOrCache(b.Creator)
 		blockCnt, err := s.db.GetMinedBlocksCntByShardNumberAndAddress(s.shardNumber, b.Creator)
@@ -129,14 +155,96 @@ func (s *Syncer) accountSync(b *rpc.BlockInfo) error {
 
 		minerAccount.Mined = blockCnt
 		s.getMinerAccountAndCount(minerAccount, b.Txs[0].Amount.Int64(), txFees)
-		wgg.Done()
+		// wgg.Done()
 	} else {
-		wgg.Done()
+		// wgg.Done()
 	}
-	wgg.Wait()
+	// wgg.Wait()
 	return nil
 }
 
+// func (s *Syncer) accountUpdateSync() {
+// 	fmt.Println("===============================================")
+// 	fmt.Println("s.updateMinerAccount[string(i)]:", s.updateMinerAccount)
+// 	fmt.Println("s.updateAccount[string(i)]:", s.updateAccount)
+// 	fmt.Println("===============================================")
+// 	var mutex sync.Mutex
+// 	mutex.Lock()
+// 	channels := make([]chan int, len(s.updateMinerAccount))
+// 	for i := 0; i < len(s.updateMinerAccount); i++ {
+// 		fmt.Println("s.updateMinerAccount[string(i)]:", s.updateMinerAccount[string(i)])
+// 		channels[i] = make(chan int)
+// 		go func(i int, c chan int) {
+// 			mutex.Lock()
+// 			// for _, m := range s.updateMinerAccount {
+// 			s.workerpool.Submit(func() {
+// 				s.db.UpdateMinerAccount(s.updateMinerAccount[string(i)])
+// 			})
+
+// 			// end
+
+// 			mutex.Unlock()
+// 			c <- i
+// 		}(i, channels[i])
+// 	}
+// 	mutex.Unlock()
+// 	for _, c := range channels {
+// 		<-c
+// 	}
+// 	s.updateAccount = make(map[string]*database.DBAccount)
+// 	s.updateMinerAccount = make(map[string]*database.DBMiner)
+// }
+// func (s *Syncer) accountUpdateSync() {
+// 	var mutex sync.Mutex
+// 	mutex.Lock()
+// 	fmt.Println("The lock is locked")
+// 	channels := make([]chan int, 1)
+// 	for i := 0; i < 1; i++ {
+// 		channels[i] = make(chan int)
+// 		go func(i int, c chan int) {
+// 			mutex.Lock()
+// 			fmt.Println("Locked: ", i)
+// 			// start
+// 			for _, v := range s.updateAccount {
+// 				txCnt, err := s.db.GetTxCntByShardNumberAndAddress(s.shardNumber, v.Address)
+// 				if err != nil {
+// 					log.Error(err)
+// 					txCnt = 0
+// 				}
+
+// 				v.TxCount = txCnt
+
+// 				v := v
+
+// 				s.workerpool.Submit(func() {
+
+// 					account := v
+// 					balance, err := s.rpc.GetBalance(account.Address)
+// 					if err != nil {
+// 						log.Error(err)
+// 						balance = 0
+// 					}
+// 					account.Balance = balance
+// 					s.db.UpdateAccount(account)
+// 				})
+// 			}
+// 			for _, m := range s.updateMinerAccount {
+// 				s.workerpool.Submit(func() {
+// 					s.db.UpdateMinerAccount(m)
+// 				})
+// 			}
+// 			s.updateAccount = make(map[string]*database.DBAccount)
+// 			s.updateMinerAccount = make(map[string]*database.DBMiner)
+// 			// end
+// 			fmt.Println("Unlock the lock: ", i)
+// 			mutex.Unlock()
+// 			c <- i
+// 		}(i, channels[i])
+// 	}
+// 	mutex.Unlock()
+// 	for _, c := range channels {
+// 		<-c
+// 	}
 func (s *Syncer) accountUpdateSync() {
 	var wg sync.WaitGroup
 	wg.Add(len(s.updateAccount) + len(s.updateMinerAccount))
