@@ -25,6 +25,7 @@ func (s *Syncer) getAccountFromDBOrCache(address string) *database.DBAccount {
 	if err != nil {
 		fromAccount = database.CreateEmptyAccount(address, s.shardNumber)
 	}
+	fmt.Println("fromAccount", fromAccount)
 	s.updateAccount[address] = fromAccount
 	s.cacheAccount[address] = fromAccount
 	return fromAccount
@@ -45,7 +46,8 @@ func (s *Syncer) getMinerAccountAndCount(account *database.DBAccount, reward int
 
 func (s *Syncer) getMinerAccount(account *database.DBAccount, reward int64, txFee int64) {
 	// var wgg sync.WaitGroup
-	// wgg.Add(1)
+	// wgg.Add(1)(
+	fmt.Println("----((((((((((((()))))))))))))----")
 	var mutex sync.Mutex
 	mutex.Lock()
 	channels := make([]chan int, 1)
@@ -144,22 +146,41 @@ func (s *Syncer) accountSync(b *rpc.BlockInfo) error {
 	//exclude genesis block
 	// var wgg sync.WaitGroup
 	// wgg.Add(1)
-	// fmt.Println("[[[[[[[[[[[[[[[[[[wgg1111111]]]]]]]]]]]]]]]]]]]")
-	if b.Creator != nullAddress {
-		minerAccount := s.getAccountFromDBOrCache(b.Creator)
-		blockCnt, err := s.db.GetMinedBlocksCntByShardNumberAndAddress(s.shardNumber, b.Creator)
-		if err != nil {
-			log.Error(err)
-			blockCnt = 0
-		}
+	//status
+	var mutexx sync.Mutex
+	mutexx.Lock()
+	channelss := make([]chan int, 1)
+	for i := 0; i < 1; i++ {
+		channelss[i] = make(chan int)
+		go func(i int, cc chan int) {
+			mutexx.Lock()
+			fmt.Println("[[[[[[[[[[[[[[[[[[wgg1111111]]]]]]]]]]]]]]]]]]]")
+			if b.Creator != nullAddress {
+				fmt.Println("[[[[[[[[[[[[[[[[[[b.Creator]]]]]]]]]]]]]]]]]]]", b.Creator)
+				minerAccount := s.getAccountFromDBOrCache(b.Creator)
+				blockCnt, err := s.db.GetMinedBlocksCntByShardNumberAndAddress(s.shardNumber, b.Creator)
+				if err != nil {
+					log.Error(err)
+					blockCnt = 0
+				}
 
-		minerAccount.Mined = blockCnt
-		s.getMinerAccountAndCount(minerAccount, b.Txs[0].Amount.Int64(), txFees)
-		// wgg.Done()
-	} else {
-		// wgg.Done()
+				minerAccount.Mined = blockCnt
+				s.getMinerAccountAndCount(minerAccount, b.Txs[0].Amount.Int64(), txFees)
+				// wgg.Done()
+			}
+			fmt.Println("Unlock the lock: ", i)
+			mutexx.Unlock()
+			cc <- i
+		}(i, channelss[i])
+		// wgg.Wait()
+
 	}
-	// wgg.Wait()
+	mutexx.Unlock()
+	for _, cc := range channelss {
+		fmt.Println("channelschannelschannelschannels: ", channelss)
+		<-cc
+	}
+	//end
 	return nil
 }
 
@@ -246,45 +267,45 @@ func (s *Syncer) accountSync(b *rpc.BlockInfo) error {
 // 		<-c
 // 	}
 func (s *Syncer) accountUpdateSync() {
-	var wg sync.WaitGroup
-	wg.Add(len(s.updateAccount) + len(s.updateMinerAccount))
-	fmt.Println("---s.updateAccount--------s.updateMinerAccount-------", s.updateAccount, s.updateMinerAccount)
-	for _, v := range s.updateAccount {
+	// var wg sync.WaitGroup
+	// wg.Add(len(s.updateAccount) + len(s.updateMinerAccount))
+	//fmt.Println("---s.updateAccount--------s.updateMinerAccount-------", s.updateAccount, s.updateMinerAccount)
+	// for _, v := range s.updateAccount {
 
-		txCnt, err := s.db.GetTxCntByShardNumberAndAddress(s.shardNumber, v.Address)
+	// 	txCnt, err := s.db.GetTxCntByShardNumberAndAddress(s.shardNumber, v.Address)
 
-		if err != nil {
-			log.Error(err)
-			txCnt = 0
-		}
+	// 	if err != nil {
+	// 		log.Error(err)
+	// 		txCnt = 0
+	// 	}
 
-		v.TxCount = txCnt
+	// 	v.TxCount = txCnt
 
-		v := v
+	// 	v := v
 
-		s.workerpool.Submit(func() {
+	// 	s.workerpool.Submit(func() {
 
-			account := v
-			balance, err := s.rpc.GetBalance(account.Address)
-			if err != nil {
-				log.Error(err)
-				balance = 0
-			}
-			account.Balance = balance
-			s.db.UpdateAccount(account)
-			wg.Done()
-		})
-	}
+	// 		account := v
+	// 		balance, err := s.rpc.GetBalance(account.Address)
+	// 		if err != nil {
+	// 			log.Error(err)
+	// 			balance = 0
+	// 		}
+	// 		account.Balance = balance
+	// 		s.db.UpdateAccount(account)
+	// 		wg.Done()
+	// 	})
+	// }
 
-	for _, m := range s.updateMinerAccount {
-		s.workerpool.Submit(func() {
-			s.db.UpdateMinerAccount(m)
-			wg.Done()
-		})
-	}
+	// for _, m := range s.updateMinerAccount {
+	// 	s.workerpool.Submit(func() {
+	// 		s.db.UpdateMinerAccount(m)
+	// 		wg.Done()
+	// 	})
+	// }
 
-	wg.Wait()
+	// wg.Wait()
 
-	s.updateAccount = make(map[string]*database.DBAccount)
-	s.updateMinerAccount = make(map[string]*database.DBMiner)
+	// s.updateAccount = make(map[string]*database.DBAccount)
+	// s.updateMinerAccount = make(map[string]*database.DBMiner)
 }
