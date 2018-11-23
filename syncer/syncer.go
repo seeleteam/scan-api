@@ -17,12 +17,12 @@ const (
 
 // Syncer is Seele synchronization handler
 type Syncer struct {
-	rpc         *rpc.SeeleRPC
-	db          Database
-	shardNumber int
-	syncCnt     int
-	workerpool  *workerpool.WorkerPool
-
+	rpc                *rpc.SeeleRPC
+	db                 Database
+	shardNumber        int
+	syncCnt            int
+	workerpool         *workerpool.WorkerPool
+	mu                 sync.Mutex
 	cacheAccount       map[string]*database.DBAccount
 	updateAccount      map[string]*database.DBAccount
 	cacheMinerAccount  map[string]*database.DBMiner

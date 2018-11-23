@@ -14,39 +14,27 @@ const (
 )
 
 func (s *Syncer) getAccountFromDBOrCache(address string) *database.DBAccount {
-	var mutex sync.Mutex
-	mutex.Lock()
-	channels := make([]chan int, 1)
-	for i := 0; i < 1; i++ {
-		channels[i] = make(chan int)
-		go func(i int, c chan int) {
-			mutex.Lock()
-			//start
-			account, ok := s.cacheAccount[address]
-			if ok {
-				s.updateAccount[address] = account
-				return account
-			}
-
-			fromAccount, err := s.db.GetAccountByAddress(address)
-			if err != nil {
-				fromAccount = database.CreateEmptyAccount(address, s.shardNumber)
-			}
-
-			s.updateAccount[address] = fromAccount
-			s.cacheAccount[address] = fromAccount
-			return fromAccount
-			//end
-			mutex.Unlock()
-			c <- i
-		}(i, channels[i])
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	account, ok := s.cacheAccount[address]
+	if ok {
+		s.updateAccount[address] = account
+		return account
 	}
-	for _, c := range channels {
-		<-c
+
+	fromAccount, err := s.db.GetAccountByAddress(address)
+	if err != nil {
+		fromAccount = database.CreateEmptyAccount(address, s.shardNumber)
 	}
+
+	s.updateAccount[address] = fromAccount
+	s.cacheAccount[address] = fromAccount
+	return fromAccount
 }
 
 func (s *Syncer) getMinerAccountAndCount(account *database.DBAccount, reward int64, txFee int64) {
+	// s.mu.Lock()
+	// defer s.mu.Unlock()
 	miner, ok := s.cacheMinerAccount[account.Address]
 	if ok {
 		miner.Reward += reward
@@ -56,10 +44,11 @@ func (s *Syncer) getMinerAccountAndCount(account *database.DBAccount, reward int
 		return
 	}
 
-	s.getMinerAccount(account, reward, txFee)
+	//s.getMinerAccount(account, reward, txFee)
 }
 
 func (s *Syncer) getMinerAccount(account *database.DBAccount, reward int64, txFee int64) {
+
 	minerAccount, err := s.db.GetMinerAccountByAddress(account.Address)
 	if err != nil {
 		minerAccount = &database.DBMiner{
@@ -68,7 +57,8 @@ func (s *Syncer) getMinerAccount(account *database.DBAccount, reward int64, txFe
 			TimeStamp:   time.Now().Unix(),
 		}
 	}
-
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	minerAccount.Reward += reward
 	minerAccount.TxFee += txFee
 	minerAccount.Revenue = minerAccount.Reward + minerAccount.TxFee
