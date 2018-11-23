@@ -222,8 +222,8 @@ func (s *Syncer) sync() error {
 	fmt.Println("---anum总数---", anum)
 	fmt.Println("---共需要同步数据量curHeight---", curHeight)
 
-	if anum >= 2000 {
-		anum = 2000
+	if anum >= 5000 {
+		anum = 5000
 	}
 	//协程结束
 	wg.Add(int(anum))
@@ -284,7 +284,7 @@ func (s *Syncer) SyncHandle(i uint64) bool {
 		return true
 	}
 
-	s.accountUpdateSync()
+	//s.accountUpdateSync()
 	fmt.Println("accountUpdateSync1111111111-------------")
 	return false
 }
