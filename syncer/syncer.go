@@ -2,6 +2,7 @@ package syncer
 
 import (
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/gammazero/workerpool"
@@ -16,12 +17,12 @@ const (
 
 // Syncer is Seele synchronization handler
 type Syncer struct {
-	rpc         *rpc.SeeleRPC
-	db          Database
-	shardNumber int
-	syncCnt     int
-	workerpool  *workerpool.WorkerPool
-
+	rpc                *rpc.SeeleRPC
+	db                 Database
+	shardNumber        int
+	syncCnt            int
+	workerpool         *workerpool.WorkerPool
+	mu                 sync.Mutex
 	cacheAccount       map[string]*database.DBAccount
 	updateAccount      map[string]*database.DBAccount
 	cacheMinerAccount  map[string]*database.DBMiner
@@ -178,13 +179,6 @@ func (s *Syncer) checkOlderBlocks() bool {
 				}
 			}
 
-			blockCnt, err := s.db.GetMinedBlocksCntByShardNumberAndAddress(s.shardNumber, dbBlock.Creator)
-			if err != nil {
-				log.Error(err)
-				blockCnt = 0
-			}
-
-			s.db.UpdateAccountMinedBlock(dbBlock.Creator, blockCnt)
 		}
 
 		fallBack = true
@@ -193,11 +187,14 @@ func (s *Syncer) checkOlderBlocks() bool {
 	return fallBack
 }
 
+var wg sync.WaitGroup
+
 // sync get block data from seele node and store it in the mongodb
 func (s *Syncer) sync() error {
 	log.Info("[BlockSync syncCnt:%d]Begin Sync", s.syncCnt)
 	s.checkOlderBlocks()
 	// get seele node block height
+ErrContinue:
 	curHeight, err := s.rpc.CurrentBlockHeight()
 	if err != nil {
 		log.Error(err)
@@ -213,13 +210,25 @@ func (s *Syncer) sync() error {
 
 	log.Info("sync begin-------")
 	log.Info("sync dbBlockHeight[%d]", dbBlockHeight)
-	for i := dbBlockHeight; i <= curHeight; i++ {
+
+	anum := curHeight - dbBlockHeight
+	if anum >= 200 {
+		anum = 200
+	}
+	wg.Add(int(anum))
+	abc := dbBlockHeight + anum
+	var i uint64
+	for i = dbBlockHeight; i < abc; i++ {
 		log.Info("begin to sync block[%d]:", i)
-		if s.SyncHandle(i) {
-			log.Info("failed to sync block[%d]:", i)
-			break
-		}
-		log.Info("successfully to sync block[%d]:", i)
+		go func(i uint64) {
+			defer wg.Done()
+			s.SyncHandle(i)
+			log.Info("successfully to sync block[%d]:", i)
+		}(i)
+	}
+	wg.Wait()
+	if anum >= 200 {
+		goto ErrContinue
 	}
 	log.Info("sync end-------")
 
@@ -263,7 +272,13 @@ func (s *Syncer) SyncHandle(i uint64) bool {
 		log.Error(err)
 		return true
 	}
-	s.accountUpdateSync()
+
+	// sync minersaccount
+	if err = s.minersaccountSync(rpcBlock); err != nil {
+		log.Error(err)
+		return true
+	}
+
 	return false
 }
 
