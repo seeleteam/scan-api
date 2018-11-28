@@ -179,13 +179,6 @@ func (s *Syncer) checkOlderBlocks() bool {
 				}
 			}
 
-			blockCnt, err := s.db.GetMinedBlocksCntByShardNumberAndAddress(s.shardNumber, dbBlock.Creator)
-			if err != nil {
-				log.Error(err)
-				blockCnt = 0
-			}
-
-			s.db.UpdateAccountMinedBlock(dbBlock.Creator, blockCnt)
 		}
 
 		fallBack = true
@@ -201,6 +194,7 @@ func (s *Syncer) sync() error {
 	log.Info("[BlockSync syncCnt:%d]Begin Sync", s.syncCnt)
 	s.checkOlderBlocks()
 	// get seele node block height
+ErrContinue:
 	curHeight, err := s.rpc.CurrentBlockHeight()
 	if err != nil {
 		log.Error(err)
@@ -216,31 +210,26 @@ func (s *Syncer) sync() error {
 
 	log.Info("sync begin-------")
 	log.Info("sync dbBlockHeight[%d]", dbBlockHeight)
-	//协程开始
 
 	anum := curHeight - dbBlockHeight
-	fmt.Println("---anum总数---", anum)
-	fmt.Println("---共需要同步数据量curHeight---", curHeight)
-
-	if anum >= 5000 {
-		anum = 5000
+	if anum >= 200 {
+		anum = 200
 	}
-	//协程结束
 	wg.Add(int(anum))
-	fmt.Println("---anum协程数---", anum)
-	fmt.Println("---已同步数据dbBlockHeight---", dbBlockHeight)
 	abc := dbBlockHeight + anum
 	var i uint64
 	for i = dbBlockHeight; i < abc; i++ {
 		log.Info("begin to sync block[%d]:", i)
 		go func(i uint64) {
-			//	defer wg.Add(-1)
 			defer wg.Done()
 			s.SyncHandle(i)
 			log.Info("successfully to sync block[%d]:", i)
 		}(i)
 	}
-	wg.Wait() // 等待，直到计数为0
+	wg.Wait()
+	if anum >= 200 {
+		goto ErrContinue
+	}
 	log.Info("sync end-------")
 
 	err = s.pendingTxsSync()
@@ -284,8 +273,12 @@ func (s *Syncer) SyncHandle(i uint64) bool {
 		return true
 	}
 
-	//s.accountUpdateSync()
-	fmt.Println("accountUpdateSync1111111111-------------")
+	// sync minersaccount
+	if err = s.minersaccountSync(rpcBlock); err != nil {
+		log.Error(err)
+		return true
+	}
+
 	return false
 }
 

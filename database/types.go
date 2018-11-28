@@ -101,7 +101,6 @@ type DBAccount struct {
 	ShardNumber int    `bson:"shardNumber"`
 	TxCount     int64  `bson:"txCount"`
 	TimeStamp   int64  `bson:"timestamp"`
-	Mined       int64  `bson:"mined"`
 }
 
 //DBMiner describle a miner account which stored in the database
@@ -112,6 +111,7 @@ type DBMiner struct {
 	Reward      int64  `bson:"reward"`
 	TxFee       int64  `bson:"fee"`
 	TimeStamp   int64  `bson:"timestamp"`
+	Mined       int64  `bson:"mined"`
 }
 
 //CreateDbBlock convert an rpc block to an dbblock
@@ -215,24 +215,6 @@ func CreateEmptyAccount(address string, shardNumber int) *DBAccount {
 		ShardNumber: shardNumber,
 	}
 }
-
-//CreateDBAccountTx create an dbaccounttx stored in DBAccount for quickly search
-/*
-func CreateDBAccountTx(b *rpc.BlockInfo, rpcTx *rpc.Transaction, inOrOut bool) *DBAccountTx {
-	tx := &DBAccountTx{
-		Hash:      rpcTx.Hash,
-		Block:     int64(b.Height),
-		From:      rpcTx.From,
-		To:        rpcTx.To,
-		Amount:    rpcTx.Amount.Int64(),
-		Timestamp: int64(rpcTx.Timestamp),
-		TxFee:     0.0,
-		InOrOut:   inOrOut,
-	}
-
-	return tx
-}
-*/
 
 //DBOneDayTxInfo describle all transactions in an single day
 type DBOneDayTxInfo struct {

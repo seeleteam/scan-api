@@ -694,6 +694,28 @@ func (c *Client) GetMinedBlocksCntByShardNumberAndAddress(shardNumber int, addre
 	return blockCnt, err
 }
 
+// GetMinedBlocksByShardNumberAndAddress get the blocks number by the miner
+func (c *Client) GetMinedBlocksByShardNumberAndAddress(shardNumber int, address string) (int64, int64, int64, error) {
+	var blockCnt, blockFee, blockAmount int64
+	var blocks []*DBBlock
+	query := func(c *mgo.Collection) error {
+		var err error
+		c.Find(bson.M{"shardNumber": shardNumber, "creator": address}).All(&blocks)
+		blockCnt = int64(len(blocks))
+		blockFee = 0
+		for i := 0; i < len(blocks); i++ {
+			for j := 0; j < len(blocks[i].Txs); j++ {
+				data := blocks[i].Txs[j]
+				blockFee += data.Fee
+				blockAmount += data.Amount
+			}
+		}
+		return err
+	}
+	err := c.withCollection(blockTbl, query)
+	return blockCnt, blockFee, blockAmount, err
+}
+
 // GetBlockfee get the total fee of the block
 func (c *Client) GetBlockfee(block uint64) (int64, error) {
 	var blockFee int64
