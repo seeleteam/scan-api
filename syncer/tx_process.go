@@ -35,6 +35,7 @@ func (s *Syncer) txSync(block *rpc.BlockInfo) error {
 		receipt, err := s.rpc.GetReceiptByTxHash(trans.Hash)
 		if err == nil {
 			dbTx.Fee = receipt.TotalFee
+			dbTx.UsedGas = receipt.UsedGas
 			if trans.To == "" {
 				dbTx.TxType = 1
 				dbTx.ContractAddress = receipt.ContractAddress
@@ -52,7 +53,6 @@ func (s *Syncer) txSync(block *rpc.BlockInfo) error {
 	if err := s.db.AddTxs(txs...); err != nil {
 		return err
 	}
-
 	// insert 30 days history transaction number into database
 	s.txHisSync(dbTxs)
 
