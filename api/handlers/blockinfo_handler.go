@@ -413,7 +413,6 @@ func (h *BlockHandler) getTxsByBeginAndEnd(shardNumber int, begin, end uint64) [
 		simpleTransaction := createRetSimpleTxInfo(data)
 		txs = append(txs, simpleTransaction)
 	}
-
 	return txs
 }
 

@@ -71,6 +71,8 @@ type RetSimpleTxInfo struct {
 	Value       int64       `json:"value"`
 	Pending     bool        `json:"pending"`
 	Fee         int64       `json:"fee"`
+	UsedGas     int64       `json:"usedGas"`
+	Gasprice    int64       `json:"gasprice"`
 	Receipt     rpc.Receipt `json:"receipt"`
 	Nonce       string      `json:"nonce"`
 }
@@ -224,6 +226,8 @@ func createRetSimpleTxInfo(transaction *database.DBTx) *RetSimpleTxInfo {
 	ret.Value = transaction.Amount
 	ret.Pending = transaction.Pending
 	ret.Fee = transaction.Fee
+	ret.UsedGas = transaction.UsedGas
+	ret.Gasprice = transaction.GasPrice
 	ret.Nonce = transaction.AccountNonce
 	timeStamp := big.NewInt(0)
 	if timeStamp.UnmarshalText([]byte(transaction.Timestamp)) == nil {

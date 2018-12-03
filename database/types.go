@@ -91,6 +91,7 @@ type DBTx struct {
 	Fee             int64       `bson:"fee"`
 	GasPrice        int64       `bson:"gasPrice"`
 	GasLimit        int64       `bson:"gasLimit"`
+	UsedGas         int64       `bson:"usedGas"`
 	Pending         bool        `bson:"pending"`
 	ContractAddress string      `bson:"contractAddress"`
 	Receipt         rpc.Receipt `bson:"receipt"`
