@@ -21,6 +21,7 @@ type DBSimpleTxInBlock struct {
 	Timestamp string `bson:"timestamp"`
 	Fee       int64  `bson:"fee"`
 	GasPrice  int64  `bson:"gasPrice"`
+	GasLimit  int64  `bson:"gasLimit"`
 }
 
 type DBSimpleTxs struct {
@@ -88,6 +89,8 @@ type DBTx struct {
 	Idx             int64       `bson:"idx"`
 	ShardNumber     int         `bson:"shardNumber"`
 	Fee             int64       `bson:"fee"`
+	GasPrice        int64       `bson:"gasPrice"`
+	GasLimit        int64       `bson:"gasLimit"`
 	Pending         bool        `bson:"pending"`
 	ContractAddress string      `bson:"contractAddress"`
 	Receipt         rpc.Receipt `bson:"receipt"`
@@ -135,6 +138,8 @@ func CreateDbBlock(b *rpc.BlockInfo) *DBBlock {
 		simpleTx.To = b.Txs[i].To
 		simpleTx.Amount = b.Txs[i].Amount.Int64()
 		simpleTx.Timestamp = b.Timestamp.String()
+		simpleTx.GasLimit = b.Txs[i].GasLimit
+		simpleTx.GasPrice = b.Txs[i].GasPrice
 		dbBlock.Txs = append(dbBlock.Txs, simpleTx)
 
 		if i != len(b.Txs)-1 {
@@ -192,6 +197,8 @@ func CreateDbTx(t rpc.Transaction) *DBTx {
 	trans.Block = t.Block
 	trans.Idx = int64(t.Idx)
 	trans.Fee = t.Fee
+	trans.GasPrice = t.GasPrice
+	trans.GasLimit = t.GasLimit
 	return &trans
 }
 
