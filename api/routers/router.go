@@ -63,6 +63,7 @@ func (r *Router) Init(e *gin.Engine) {
 	v1.GET("/miners", r.AccountHandler.GetMinerAccounts())
 	v1.GET("/contracts", r.ContractHandler.GetContracts())
 	v1.GET("/contract", r.ContractHandler.GetContractByAddress())
+	v1.GET("/Avegas", r.BlockHandler.GetGasPrice())
 	//v1.GET("/difficulty", r.BlockHandler.GetDifficulty())
 	//v1.GET("/hashrate", r.BlockHandler.GetHashRate())
 
