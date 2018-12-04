@@ -110,7 +110,7 @@ func updateTxHis(db Database, date string) {
 	tx := new(database.DBSimpleTxs)
 	var cnt, sumgas uint64
 	tx.Stime = date
-	cnt, sumgas, err := db.GetTxsCntByDate(date)
+	cnt, sumgas, err := db.GetTxsinfoByDate(date)
 	if err != nil {
 		cnt = 0
 	}

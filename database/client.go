@@ -1285,8 +1285,8 @@ func (c *Client) GetNodeCntByShardNumber(shardNumber int) (uint64, error) {
 	return NodeCnt, err
 }
 
-// GetTxsCntByDate get row count of the transaction table
-func (c *Client) GetTxsCntByDate(date string) (uint64, uint64, error) {
+// GetTxsinfoByDate get row count of the transaction table
+func (c *Client) GetTxsinfoByDate(date string) (uint64, uint64, error) {
 	var txsCnt, gasPrice uint64
 	query := func(c *mgo.Collection) error {
 		var err error
