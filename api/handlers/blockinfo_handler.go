@@ -503,6 +503,36 @@ func (h *BlockHandler) GetTxsDayCount() gin.HandlerFunc {
 	}
 }
 
+//GetGasPrice Calculate the average gasprice values
+func (h *BlockHandler) GetGasPrice() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		now := time.Now()
+		startDate := now.AddDate(0, 0, -10).Format("2006-01-02")
+		todayDate := now.Format("2006-01-02")
+		txs, err := h.DBClient.GetTxHis(startDate, todayDate)
+		if err != nil {
+			responseError(c, errGetBlockFromDB, http.StatusInternalServerError, apiDBQueryError)
+			return
+		}
+
+		var sumgas, TxCount uint64
+		for _, tx := range txs {
+			TxCount += uint64(tx.TxCount)
+			sumgas += tx.GasPrice
+		}
+		if TxCount == 0 {
+			TxCount = 1
+		}
+		avegas := sumgas / TxCount
+		c.JSON(http.StatusOK, gin.H{
+			"code":    apiOk,
+			"message": "",
+			"data":    avegas,
+		})
+
+	}
+}
+
 //GetTxsInBlock get all transactions in block by height
 func (h *BlockHandler) GetTxsInBlock(c *gin.Context, shardNumber int, height, p, ps uint64) {
 	dbClient := h.DBClient

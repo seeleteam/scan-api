@@ -25,8 +25,9 @@ type DBSimpleTxInBlock struct {
 }
 
 type DBSimpleTxs struct {
-	Stime   string `json:"stime"`
-	TxCount int    `json:"txcount"`
+	Stime    string `json:"stime"`
+	TxCount  int    `json:"txcount"`
+	GasPrice uint64 `json:"gasprice"`
 }
 
 //DBBlock describle the block info which stored in the database
