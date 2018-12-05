@@ -514,16 +514,23 @@ func (h *BlockHandler) GetGasPrice() gin.HandlerFunc {
 			responseError(c, errGetBlockFromDB, http.StatusInternalServerError, apiDBQueryError)
 			return
 		}
+		var TxCount int
+		var sumgas, highGasPrice, lowGasPrice int64
 
-		var sumgas, TxCount uint64
-		for _, tx := range txs {
-			TxCount += uint64(tx.TxCount)
+		highGasPrice = txs[0].HighGasPrice
+		lowGasPrice = txs[0].LowGasPrice
+		for i, tx := range txs {
+			TxCount += tx.TxCount
 			sumgas += tx.GasPrice
+			if highGasPrice < txs[i].HighGasPrice {
+				highGasPrice = txs[i].HighGasPrice
+			}
+			if lowGasPrice > txs[i].LowGasPrice {
+				lowGasPrice = txs[i].LowGasPrice
+			}
+
 		}
-		if TxCount == 0 {
-			TxCount = 1
-		}
-		avegas := sumgas / TxCount
+		avegas := sumgas / int64(TxCount)
 		c.JSON(http.StatusOK, gin.H{
 			"code":    apiOk,
 			"message": "",

@@ -108,14 +108,16 @@ func updateTxHisForDates(db Database, dates []string, today, startDate string) {
 
 func updateTxHis(db Database, date string) {
 	tx := new(database.DBSimpleTxs)
-	var cnt, sumgas uint64
+	var cnt, sumgas int64
 	tx.Stime = date
-	cnt, sumgas, err := db.GetTxsinfoByDate(date)
+	highGasPrice, lowGasPrice, cnt, sumgas, err := db.GetTxsinfoByDate(date)
 	if err != nil {
 		cnt = 0
 	}
 	tx.TxCount = int(cnt)
 	tx.GasPrice = sumgas
+	tx.HighGasPrice = highGasPrice
+	tx.LowGasPrice = lowGasPrice
 	db.UpdateTxsCntByDate(tx)
 }
 
