@@ -1286,22 +1286,34 @@ func (c *Client) GetNodeCntByShardNumber(shardNumber int) (uint64, error) {
 }
 
 // GetTxsinfoByDate get row count of the transaction table
-func (c *Client) GetTxsinfoByDate(date string) (uint64, uint64, error) {
-	var txsCnt, gasPrice uint64
+func (c *Client) GetTxsinfoByDate(date string) (int64, int64, int64, int64, error) {
+	var txsCnt, gasPrice, highGasPrice, lowGasPrice int64
+	//var txsCnt, gasPrice, abc uint64
 	query := func(c *mgo.Collection) error {
 		var err error
 		var trans []*DBTx
 		c.Find(bson.M{"timetxs": date}).All(&trans)
 		gasPrice = 0
-		txsCnt = uint64(len(trans))
+		if len(trans) > 0 {
+			highGasPrice = trans[0].GasPrice
+			lowGasPrice = trans[0].GasPrice
+		}
+
+		txsCnt = int64(len(trans))
 		for i := 0; i < len(trans); i++ {
 			data := trans[i]
-			gasPrice += uint64(data.GasPrice)
+			gasPrice += data.GasPrice
+			if highGasPrice < trans[i].GasPrice {
+				highGasPrice = trans[i].GasPrice
+			}
+			if lowGasPrice > trans[i].GasPrice {
+				lowGasPrice = trans[i].GasPrice
+			}
 		}
 		return err
 	}
 	err := c.withCollection(txTbl, query)
-	return txsCnt, gasPrice, err
+	return highGasPrice, lowGasPrice, txsCnt, gasPrice, err
 }
 
 // UpdateTxsCntByDate get transaction count by date
