@@ -531,10 +531,11 @@ func (h *BlockHandler) GetGasPrice() gin.HandlerFunc {
 
 		}
 		avegas := sumgas / int64(TxCount)
+		walletgas := createwalletInfo(highGasPrice, lowGasPrice, avegas)
 		c.JSON(http.StatusOK, gin.H{
 			"code":    apiOk,
 			"message": "",
-			"data":    avegas,
+			"data":    walletgas,
 		})
 
 	}
