@@ -52,6 +52,13 @@ type RetDetailBlockInfo struct {
 	MinHeight uint64 `json:"minheight"`
 }
 
+//walletgas
+type Walletgas struct {
+	HighGasPrice int64 `json:"highGasPrice"`
+	LowGasPrice  int64 `json:"lowGasPrice"`
+	Avegas       int64 `json:"avegas"`
+}
+
 //Lastblock
 type Lastblock struct {
 	LastblockHeight int64 `json:"lastblockHeight"`
@@ -158,6 +165,15 @@ func createRetLastblockInfo(lastblockHeight int64, lastblockTime int64) *Lastblo
 	var ret Lastblock
 	ret.LastblockHeight = lastblockHeight
 	ret.LastblockTime = lastblockTime
+	return &ret
+}
+
+//createwalletInfo converts the given dbblock to the Lastblock
+func createwalletInfo(highGasPrice int64, lowGasPrice int64, avegas int64) *Walletgas {
+	var ret Walletgas
+	ret.HighGasPrice = highGasPrice
+	ret.LowGasPrice = lowGasPrice
+	ret.Avegas = avegas
 	return &ret
 }
 
