@@ -227,7 +227,6 @@ ErrContinue:
 		}(i)
 	}
 	wg.Wait()
-
 	if anum >= 200 {
 		goto ErrContinue
 	}
