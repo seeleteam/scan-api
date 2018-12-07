@@ -509,6 +509,7 @@ func (h *BlockHandler) GetGasPrice() gin.HandlerFunc {
 		now := time.Now()
 		startDate := now.AddDate(0, 0, -10).Format("2006-01-02")
 		todayDate := now.Format("2006-01-02")
+		fmt.Println("startDate->todayDate", startDate, todayDate)
 		txs, err := h.DBClient.GetTxHis(startDate, todayDate)
 		if err != nil {
 			responseError(c, errGetBlockFromDB, http.StatusInternalServerError, apiDBQueryError)
@@ -520,6 +521,7 @@ func (h *BlockHandler) GetGasPrice() gin.HandlerFunc {
 		highGasPrice = txs[0].HighGasPrice
 		lowGasPrice = txs[0].LowGasPrice
 		for i, tx := range txs {
+			fmt.Println("tx.GasPrice", tx.GasPrice)
 			TxCount += tx.TxCount
 			sumgas += tx.GasPrice
 			if highGasPrice < txs[i].HighGasPrice {

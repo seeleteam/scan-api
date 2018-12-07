@@ -368,7 +368,6 @@ func getPendingTransactions(txsMp []map[string]interface{}) []Transaction {
 		tx.Amount = big.NewInt(amount)
 		tx.AccountNonce = uint64(rpcTx["accountNonce"].(float64))
 		tx.Payload = rpcTx["payload"].(string)
-		tx.Timestamp = uint64(rpcTx["timestamp"].(float64))
 		tx.GasLimit = int64(rpcTx["gasLimit"].(float64))
 		tx.GasPrice = int64(rpcTx["gasPrice"].(float64))
 		Txs = append(Txs, tx)

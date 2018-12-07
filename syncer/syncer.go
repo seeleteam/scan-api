@@ -212,12 +212,14 @@ ErrContinue:
 	log.Info("sync dbBlockHeight[%d]", dbBlockHeight)
 
 	anum := curHeight - dbBlockHeight
+	fmt.Println("==>anum", anum)
 	if anum >= 200 {
 		anum = 200
 	}
 	wg.Add(int(anum))
 	abc := dbBlockHeight + anum
 	var i uint64
+	fmt.Println("1:curHeight=dbBlockHeight=anum", curHeight, dbBlockHeight, anum)
 	for i = dbBlockHeight; i < abc; i++ {
 		log.Info("begin to sync block[%d]:", i)
 		go func(i uint64) {
@@ -227,7 +229,9 @@ ErrContinue:
 		}(i)
 	}
 	wg.Wait()
+	fmt.Println("2:curHeight=dbBlockHeight=anum", curHeight, dbBlockHeight, anum)
 	if anum >= 200 {
+		fmt.Println("3:curHeight=dbBlockHeight=anum", curHeight, dbBlockHeight, anum)
 		goto ErrContinue
 	}
 	log.Info("sync end-------")
