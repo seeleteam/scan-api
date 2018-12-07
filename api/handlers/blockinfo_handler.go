@@ -521,7 +521,6 @@ func (h *BlockHandler) GetGasPrice() gin.HandlerFunc {
 		highGasPrice = txs[0].HighGasPrice
 		lowGasPrice = txs[0].LowGasPrice
 		for i, tx := range txs {
-			fmt.Println("tx.GasPrice", tx.GasPrice)
 			TxCount += tx.TxCount
 			sumgas += tx.GasPrice
 			if highGasPrice < txs[i].HighGasPrice {
