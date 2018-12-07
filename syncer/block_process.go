@@ -7,7 +7,6 @@ import (
 
 func (s *Syncer) blockSync(block *rpc.BlockInfo) error {
 	dbBlock := database.CreateDbBlock(block)
-	//dbBlock.Txs[0]
 	var blockgas int64
 	for i := 0; i < len(dbBlock.Txs); i++ {
 		trans := dbBlock.Txs[i]

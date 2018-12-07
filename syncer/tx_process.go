@@ -69,6 +69,8 @@ func (s *Syncer) txHisSync(txs []*database.DBTx) error {
 	dates = filterDate(dates, startDate)
 	todayDate := now.Format("2006-01-02")
 	// update the transactions count of the days
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	updateTxHisForDates(s.db, dates, todayDate, startDate)
 	// if the history number is not 30, insert the other days after start day
 	checkTxHis(s.db, startDate, todayDate)

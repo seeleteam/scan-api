@@ -1353,7 +1353,7 @@ func (c *Client) GetTxHis(startDate, today string) ([]*DBSimpleTxs, error) {
 	var hisCounts []*DBSimpleTxs
 	queryTxHis := func(c *mgo.Collection) error {
 		var err error
-		c.Find(bson.M{"stime": bson.M{"$gte": startDate, "$lt": today}}).Sort("-stime").All(&hisCounts)
+		c.Find(bson.M{"stime": bson.M{"$gt": startDate, "$lte": today}}).Sort("-stime").All(&hisCounts)
 		return err
 	}
 
