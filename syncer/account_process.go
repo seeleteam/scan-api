@@ -61,8 +61,9 @@ func (s *Syncer) accountUpdateSync() {
 func (s *Syncer) accountSync(b *rpc.BlockInfo) error {
 	var address string
 	var AccType int
+	s.mu.Lock()
 	for i := 0; i < len(b.Txs); i++ {
-		s.mu.Lock()
+
 		tx := b.Txs[i]
 		if tx.From != nullAddress {
 			address = tx.From
@@ -100,10 +101,9 @@ func (s *Syncer) accountSync(b *rpc.BlockInfo) error {
 			Balance:     balance,
 			TimeStamp:   b.Timestamp.Int64(),
 		}
-
 		s.db.UpdateAccount(accounts)
-		defer s.mu.Unlock()
 	}
+	defer s.mu.Unlock()
 	return nil
 
 }
