@@ -33,3 +33,33 @@ func Benchmark_LastBlock(b *testing.B) {
 		}
 	}
 }
+
+func Benchmark_txcount(b *testing.B) {
+	dbClient := database.NewDBClient(db, 1)
+	if dbClient == nil {
+		fmt.Printf("init database error")
+		return
+	}
+
+	for i := 0; i < b.N; i++ {
+		_, err := dbClient.GetTxCnt()
+		if err != nil {
+			b.Errorf("error:%s", err)
+		}
+	}
+}
+
+func Benchmark_blockTxsTps(b *testing.B) {
+	dbClient := database.NewDBClient(db, 1)
+	if dbClient == nil {
+		fmt.Printf("init database error")
+		return
+	}
+
+	for i := 0; i < b.N; i++ {
+		_, err := dbClient.GetBlockTxsTps()
+		if err != nil {
+			b.Errorf("error:%s", err)
+		}
+	}
+}
