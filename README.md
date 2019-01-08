@@ -36,6 +36,8 @@ mongo 3.6.3
 
 ## Start
 ```
+cd somewhere/you/want/to/download/
+go get -u -v github.com/seeleteam/scan-api
 cd scan-api
 # generate the executable file
 make
