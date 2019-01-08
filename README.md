@@ -39,16 +39,25 @@ mongo 3.6.3
 cd somewhere/you/want/to/download/
 go get -u -v github.com/seeleteam/scan-api
 cd scan-api
+
 # generate the executable file
 make
+
 # start seele_syncer
-./build/syncer/seele_syncer -c server.json
+cd build/syncer/
+./seele_syncer -c server.json
+
 # start scan_server
-./build/server/scan_server -c server.json
+cd build/server/
+./scan_server -c server.json
+
 # start chart_service
-./build/chart/chart_service -c server.json
+ cd build/chart
+ ./chart_service -c server.json
+ 
 # start node_service
-./build/node/node_service -c server.json
+cd build/node
+./node_service -c server.json
 ```
 
 ## Config
