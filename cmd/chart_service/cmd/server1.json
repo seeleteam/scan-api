@@ -11,6 +11,6 @@
         "User": "scan",
         "Pwd": "123456"
     },
-    "ShardCount":2
+    "ShardCount":4
 }
   

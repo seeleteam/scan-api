@@ -65,7 +65,7 @@ func (h *NodeHandler) GetNodes() gin.HandlerFunc {
 			p--
 		}
 
-		if s <= 0 || s > 20 {
+		if s <= 0 || s > shardCount {
 			responseError(c, errParamInvalid, http.StatusBadRequest, apiParmaInvalid)
 		}
 
