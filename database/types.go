@@ -146,14 +146,18 @@ func CreateDbBlock(b *rpc.BlockInfo) *DBBlock {
 		simpleTx.GasPrice = b.Txs[i].GasPrice
 		dbBlock.Txs = append(dbBlock.Txs, simpleTx)
 
-		if i != len(b.Txs)-1 {
+		//if i != len(b.Txs)-1 {
+		//	dbBlock.Reward += b.Txs[i].Fee
+		//}
+		if i != 0 {
 			dbBlock.Reward += b.Txs[i].Fee
 		}
 	}
 
 	//coinbase reward
 	if len(b.Txs) > 0 {
-		tx := b.Txs[len(b.Txs)-1]
+		//tx := b.Txs[len(b.Txs)-1]
+		tx := b.Txs[0]
 		dbBlock.Reward = tx.Amount.Int64()
 	}
 
