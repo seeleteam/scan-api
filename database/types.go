@@ -22,6 +22,7 @@ type DBSimpleTxInBlock struct {
 	Fee       int64  `bson:"fee"`
 	GasPrice  int64  `bson:"gasPrice"`
 	GasLimit  int64  `bson:"gasLimit"`
+	DebtTxHash string `bson:"debtTxHash"`
 }
 
 type DBSimpleTxs struct {

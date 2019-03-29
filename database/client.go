@@ -706,9 +706,14 @@ func (c *Client) GetMinedBlocksByShardNumberAndAddress(shardNumber int, address 
 		for i := 0; i < len(blocks); i++ {
 			for j := 0; j < len(blocks[i].Txs); j++ {
 				data := blocks[i].Txs[j]
-				blockFee += data.Fee
-				blockAmount += data.Amount
+				if(len(data.DebtTxHash)>0){
+					blockFee += data.Fee/3  // cross shard txs
+				}else{
+					blockFee += data.Fee
+				}
+				//blockAmount += data.Amount
 			}
+			blockAmount += blocks[i].Reward
 		}
 		return err
 	}

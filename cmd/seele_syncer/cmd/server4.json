@@ -1,5 +1,5 @@
 {
-    "RpcURL": "127.0.0.1:8028",
+    "RpcURL": "127.0.0.1:8026",
     "WriteLog": true,
     "LogLevel": "debug",
     "LogFile": "seele-syncer",
@@ -12,6 +12,6 @@
         "Pwd": "123456"
     },
     "SyncInterval":3,
-    "ShardNumber": 2
+    "ShardNumber": 4
 }
   
