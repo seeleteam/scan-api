@@ -136,7 +136,7 @@ func CreateDbBlock(b *rpc.BlockInfo) *DBBlock {
 	dbBlock.StateHash = b.StateHash
 	dbBlock.TxHash = b.TxHash
 	//exclude coinbase transaction
-	/*
+
 	for i := 0; i < len(b.Txs); i++ {
 		var simpleTx DBSimpleTxInBlock
 		simpleTx.Hash = b.Txs[i].Hash
@@ -157,7 +157,7 @@ func CreateDbBlock(b *rpc.BlockInfo) *DBBlock {
 		}
 		
 	}
-	*/
+
 	//coinbase reward
 	if len(b.Txs) > 0 {
 		//tx := b.Txs[len(b.Txs)-1]
