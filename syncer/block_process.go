@@ -14,6 +14,8 @@ func (s *Syncer) blockSync(block *rpc.BlockInfo) error {
 		if err == nil {
 			blockgas += receipt.UsedGas
 			dbBlock.Txs[i].Fee = receipt.TotalFee
+		}else{
+			return err
 		}
 	}
 
@@ -40,7 +42,7 @@ func storeLastBlocks(db Database, block *database.DBBlock) error {
 	}
 	// get last two blocks by shard number
 	lastBlocks, err := db.GetLastBlocksByShard(block.ShardNumber)
-	if err != nil {
+	if err != nil  || lastBlocks==nil{
 		// if blocks don't exist, insert the last block twice
 		return initLastBlocks(db, last)
 	}
