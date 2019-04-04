@@ -61,12 +61,34 @@ func (s *Syncer) accountUpdateSync() {
 func (s *Syncer) accountSync(b *rpc.BlockInfo) error {
 	var address string
 	var AccType int
+	txDebtsTo := map[string]int{} // get all the txDebts in block
+	for i:=0 ;i<len(b.TxDebts);i++ {
+		txDebtsTo[b.TxDebts[i].To]=1
+	}
 	s.mu.Lock()
 	for i := 0; i < len(b.Txs); i++ {
-
 		tx := b.Txs[i]
 		if tx.From != nullAddress {
 			address = tx.From
+			balance, err := s.rpc.GetBalance(address)
+			if err != nil {
+				log.Error(err)
+				balance = 0
+			}
+			txCnt, err := s.db.GetTxCntByShardNumberAndAddress(s.shardNumber, address)
+			if err != nil {
+				log.Error(err)
+				txCnt = 0
+			}
+			accounts := &database.DBAccount{
+				AccType:     AccType,
+				ShardNumber: s.shardNumber,
+				Address:     address,
+				TxCount:     txCnt,
+				Balance:     balance,
+				TimeStamp:   b.Timestamp.Int64(),
+			}
+			s.db.UpdateAccount(accounts)
 		}
 
 		if tx.To == "" {
@@ -79,7 +101,11 @@ func (s *Syncer) accountSync(b *rpc.BlockInfo) error {
 				AccType = 1
 			}
 		} else {
-			address = tx.To
+			address = tx.To  // To might be another shard account for cross-shard transaction
+			_, ok := txDebtsTo[address]
+			if(ok){ // to is debt account
+				continue;
+			}
 		}
 
 		balance, err := s.rpc.GetBalance(address)
