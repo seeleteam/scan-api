@@ -2,6 +2,7 @@ package database
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -204,7 +205,10 @@ func (c *Client) UpdateLastBlock(height int64, block *DBLastBlock) error {
 		return err
 	}
 	err := c.withCollection(lastBlocksTbl, query)
-	return err
+	if(err!=nil){
+		log.Info("data not found in lastBlock height:"+ fmt.Sprint(height) +",shardNumber:"+ fmt.Sprint(block.ShardNumber))
+	}
+	return nil
 }
 
 // GetLastBlocksByShard get the last blocks by shard number
