@@ -11,7 +11,7 @@
         "User": "scan",
         "Pwd": "123456"
     },
-    "Interval": 60,
-    "ExpireTime": 60
+    "Interval": 10,
+    "ExpireTime": 300
 }
   
