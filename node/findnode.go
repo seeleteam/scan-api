@@ -133,6 +133,7 @@ func (n *NodeService) ProcessSinglePeer(peer *rpc.PeerInfo, c chan int) {
 	_, err := n.nodeDB.GetNodeInfoByID(nodeInfo.ID)
 	if err == mgo.ErrNotFound {
 		n.nodeDB.AddNodeInfo(&nodeInfo)
+		log.Info("Add nodeInfo to DB, Shard:%d,IP:%s, Port:%s:",nodeInfo.ShardNumber,nodeInfo.Host, nodeInfo.Port)
 	}
 }
 
@@ -143,6 +144,7 @@ func (n *NodeService) DeleteExpireNode() {
 		if now-v.LastSeen > n.cfg.ExpireTime {
 			n.nodeDB.DeleteNodeInfo(&v)
 			delete(n.nodeMap, k)
+			log.Info("Delete expired nodeInfo from DB, Shard:%d,IP:%s, Port:%s:",v.ShardNumber, v.Host, v.Port)
 		}
 	}
 }
@@ -211,6 +213,7 @@ func (n *NodeService) FindNode() {
 	for i := 0; i < len(allPeerInfos); i++ {
 		<-cnum
 	}
+
 }
 
 //RestoreNodeFromDB restore data from database into nodemap
@@ -232,12 +235,13 @@ func (n *NodeService) RestoreNodeFromDB() {
 func (n *NodeService) StartFindNodeService() {
 	n.RestoreNodeFromDB()
 	n.FindNode()
-
+	n.DeleteExpireNode()
 	ticks := time.NewTicker(n.cfg.Interval * time.Second)
 	tick := ticks.C
 	go func() {
 		for range tick {
 			n.FindNode()
+			n.DeleteExpireNode()
 			_, ok := <-tick
 			if !ok {
 				break
