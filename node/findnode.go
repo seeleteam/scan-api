@@ -151,12 +151,11 @@ func (n *NodeService) DeleteExpireNode() {
 
 func getNodeKey(p *rpc.PeerInfo) string {
 	ipAndPort := strings.Split(p.RemoteAddress, ":")
-	host := ipAndPort[0]
-	return p.ID + "-" + host
+	return p.ID + "-" + ipAndPort[0] + "-" + ipAndPort[1]
 }
 
 func getNodeKeyByNodeInfo(n *database.DBNodeInfo) string {
-	return n.ID + "-" + n.Host
+	return n.ID + "-" + n.Host + "-" + n.Port
 }
 
 //FindNode get all peers info and store them into database
@@ -183,11 +182,12 @@ func (n *NodeService) FindNode() {
 		}
 
 		peerInfos, err := rpc.GetPeersInfo()
+
 		if err != nil {
 			log.Fatal(err)
 			continue
 		}
-
+		log.Info("getPeersInfo cnt: %d",len(peerInfos))
 		allPeerInfos = append(allPeerInfos, peerInfos...)
 	}
 
@@ -235,13 +235,12 @@ func (n *NodeService) RestoreNodeFromDB() {
 func (n *NodeService) StartFindNodeService() {
 	n.RestoreNodeFromDB()
 	n.FindNode()
-	n.DeleteExpireNode()
 	ticks := time.NewTicker(n.cfg.Interval * time.Second)
 	tick := ticks.C
 	go func() {
 		for range tick {
-			n.FindNode()
 			n.DeleteExpireNode()
+			n.FindNode()
 			_, ok := <-tick
 			if !ok {
 				break
