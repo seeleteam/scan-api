@@ -54,7 +54,7 @@ func (s *Syncer) txSync(block *rpc.BlockInfo) error {
 		return err
 	}
 	// insert 30 days history transaction number into database
-	s.txHisSync(dbTxs)
+	//s.txHisSync(dbTxs)    // this long-time process should be done in another way
 
 	return nil
 }
