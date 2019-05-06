@@ -1,11 +1,10 @@
 package syncer
 
 import (
-	"sync"
-
 	"github.com/seeleteam/scan-api/database"
 	"github.com/seeleteam/scan-api/log"
 	"github.com/seeleteam/scan-api/rpc"
+	"sync"
 )
 
 const (
@@ -107,14 +106,36 @@ func (s *Syncer) accountSync(b *rpc.BlockInfo) error {
 				continue;
 			}
 		}
-
 		balance, err := s.rpc.GetBalance(address)
 		if err != nil {
 			log.Error(err)
 			balance = 0
 		}
-
 		txCnt, err := s.db.GetTxCntByShardNumberAndAddress(s.shardNumber, address)
+		if err != nil {
+			log.Error(err)
+			txCnt = 0
+		}
+		accounts := &database.DBAccount{
+			AccType:     AccType,
+			ShardNumber: s.shardNumber,
+			Address:     address,
+			TxCount:     txCnt,
+			Balance:     balance,
+			TimeStamp:   b.Timestamp.Int64(),
+		}
+		s.db.UpdateAccount(accounts)
+	}
+
+	for i:=0; i<len(b.Debts); i++ {
+		debts := b.Debts[i]
+		address := debts.To
+		balance, err := s.rpc.GetBalance(address)
+		if err != nil {
+			log.Error(err)
+			balance = 0
+		}
+		txCnt, err := s.db.GetTxCntByShardNumberAndAddress(s.shardNumber,address)
 		if err != nil {
 			log.Error(err)
 			txCnt = 0
