@@ -35,4 +35,5 @@ type Database interface {
 	GetTxHisCntByDate(date string) (uint64, error)
 	RemoveOutDateByDate(date string) error
 	GetTxHis(startDate, today string) ([]*database.DBSimpleTxs, error)
+	GetTxCntByAddressFromAccount(address string) (int64, error)
 }

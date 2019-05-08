@@ -17,7 +17,8 @@ func (s *Syncer) accountUpdateSync() {
 
 	for _, v := range s.updateAccount {
 
-		txCnt, err := s.db.GetTxCntByShardNumberAndAddress(s.shardNumber, v.Address)
+		//txCnt, err := s.db.GetTxCntByShardNumberAndAddress(s.shardNumber, v.Address)
+		txCnt, err := s.db.GetTxCntByAddressFromAccount(v.Address)
 		if err != nil {
 			log.Error(err)
 			txCnt = 0
@@ -74,7 +75,7 @@ func (s *Syncer) accountSync(b *rpc.BlockInfo) error {
 				log.Error(err)
 				balance = 0
 			}
-			txCnt, err := s.db.GetTxCntByShardNumberAndAddress(s.shardNumber, address)
+			txCnt, err := s.db.GetTxCntByAddressFromAccount(address)
 			if err != nil {
 				log.Error(err)
 				txCnt = 0
@@ -111,7 +112,7 @@ func (s *Syncer) accountSync(b *rpc.BlockInfo) error {
 			log.Error(err)
 			balance = 0
 		}
-		txCnt, err := s.db.GetTxCntByShardNumberAndAddress(s.shardNumber, address)
+		txCnt, err := s.db.GetTxCntByAddressFromAccount(address)
 		if err != nil {
 			log.Error(err)
 			txCnt = 0
@@ -135,7 +136,7 @@ func (s *Syncer) accountSync(b *rpc.BlockInfo) error {
 			log.Error(err)
 			balance = 0
 		}
-		txCnt, err := s.db.GetTxCntByShardNumberAndAddress(s.shardNumber,address)
+		txCnt, err := s.db.GetTxCntByAddressFromAccount(address)
 		if err != nil {
 			log.Error(err)
 			txCnt = 0

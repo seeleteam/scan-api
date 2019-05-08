@@ -1371,3 +1371,19 @@ func (c *Client) GetTxHis(startDate, today string) ([]*DBSimpleTxs, error) {
 	}
 	return hisCounts, nil
 }
+// GetTxCnt get current count from account table from mongo
+func (c *Client) GetTxCntByAddressFromAccount(address string) (int64, error) {
+	var txCnt int64
+	accountInfo := new (DBAccount)
+	query := func(c *mgo.Collection) error {
+		return c.Find(bson.M{"address": address}).One(&accountInfo)
+	}
+	err := c.withCollection(accTbl, query)
+	if err !=nil {
+		txCnt = int64(accountInfo.TxCount)
+		log.Info("find txcnt from account table failed",err)
+		return txCnt, err
+	}else {
+		return -1, err
+	}
+}
