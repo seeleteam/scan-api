@@ -32,7 +32,7 @@ func NewLogger(logFile string, logLevel string, writeLog bool) *logrus.Logger {
 
 	// get logLevel
 	level, err := logrus.ParseLevel(logLevel)
-	if err != nil {
+	if err == nil {
 		logs.SetLevel(level)
 	}
 
