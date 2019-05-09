@@ -2,12 +2,15 @@ package syncer
 
 import (
 	"github.com/seeleteam/scan-api/database"
+	"github.com/seeleteam/scan-api/log"
 	"github.com/seeleteam/scan-api/rpc"
+	"time"
 )
 
 func (s *Syncer) blockSync(block *rpc.BlockInfo) error {
 	dbBlock := database.CreateDbBlock(block)
 	var blockgas int64
+	timeBegin := time.Now().Unix()
 	for i := 0; i < len(dbBlock.Txs); i++ {
 		trans := dbBlock.Txs[i]
 		receipt, err := s.rpc.GetReceiptByTxHash(trans.Hash)
@@ -18,17 +21,21 @@ func (s *Syncer) blockSync(block *rpc.BlockInfo) error {
 			return err
 		}
 	}
-
+	log.Debug("seele_syncer block_process getReceiptHash time:%d(s)",time.Now().Unix()-timeBegin )
 	dbBlock.UsedGas = blockgas
 	dbBlock.ShardNumber = s.shardNumber
 	// insert block info into database
+	timeBegin = time.Now().Unix()
 	if err := s.db.AddBlock(dbBlock); err != nil {
 		return err
 	}
+	log.Debug("seele_syncer block_process addBlock to db time:%d(s)",time.Now().Unix()-timeBegin )
 	// insert last block info into database to get final block produce rate
+	timeBegin = time.Now().Unix()
 	if err := storeLastBlocks(s.db, dbBlock); err != nil {
 		return err
 	}
+	log.Debug("seele_syncer block_process storeLastBlocks time:%d(s)",time.Now().Unix()-timeBegin )
 	return nil
 }
 

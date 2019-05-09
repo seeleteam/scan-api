@@ -256,35 +256,42 @@ func (s *Syncer) SyncHandle(i uint64) bool {
 	}
 
 	// sync block
+	timeBegin := time.Now().Unix()
 	if err = s.blockSync(rpcBlock); err != nil {
 		log.Error(err)
 		return true
 	}
+	log.Debug("syncerHandle blockSync time: %d(s)",time.Now().Unix()-timeBegin)
 
 	// sync transactions
+	timeBegin = time.Now().Unix()
 	if err = s.txSync(rpcBlock); err != nil {
 		log.Error(err)
 		return true
 	}
+	log.Debug("syncerHandle txSync time: %d(s)",time.Now().Unix()-timeBegin)
 
 	// sync debts
+	timeBegin = time.Now().Unix()
 	if err = s.debttxSync(rpcBlock); err != nil {
 		log.Error(err)
 		return true
 	}
-
+	log.Debug("syncerHandle debttxSync time: %d(s)",time.Now().Unix()-timeBegin)
 	// sync accounts
+	timeBegin = time.Now().Unix()
 	if err = s.accountSync(rpcBlock); err != nil {
 		log.Error(err)
 		return true
 	}
-
+	log.Debug("syncerHandle accountSync time: %d(s)",time.Now().Unix()-timeBegin)
 	// sync minersaccount
+	timeBegin = time.Now().Unix()
 	if err = s.minersaccountSync(rpcBlock); err != nil {
 		log.Error(err)
 		return true
 	}
-
+	log.Debug("syncerHandle minersaccountSync time: %d(s)",time.Now().Unix()-timeBegin)
 	return false
 }
 
