@@ -93,7 +93,7 @@ func NewDBClient(cfg *common.DataBaseConfig, shardNumber int) *Client {
 func getReplsetSession(replsetName string, connURLs []string) *mgo.Session {
 	info := mgo.DialInfo{
 		Addrs:          connURLs,
-		Timeout:        10 * time.Second,
+		Timeout:        60 * time.Second,
 		ReplicaSetName: replsetName,
 	}
 
@@ -205,8 +205,8 @@ func (c *Client) UpdateLastBlock(height int64, block *DBLastBlock) error {
 		return err
 	}
 	err := c.withCollection(lastBlocksTbl, query)
-	if(err!=nil){
-		log.Info("data not found in lastBlock height:"+ fmt.Sprint(height) +",shardNumber:"+ fmt.Sprint(block.ShardNumber))
+	if err != nil {
+		log.Info("data not found in lastBlock height:" + fmt.Sprint(height) + ",shardNumber:" + fmt.Sprint(block.ShardNumber))
 	}
 	return nil
 }
@@ -710,9 +710,9 @@ func (c *Client) GetMinedBlocksByShardNumberAndAddress(shardNumber int, address 
 		for i := 0; i < len(blocks); i++ {
 			for j := 0; j < len(blocks[i].Txs); j++ {
 				data := blocks[i].Txs[j]
-				if(len(data.DebtTxHash)>0){
-					blockFee += data.Fee/3  // cross shard txs
-				}else{
+				if len(data.DebtTxHash) > 0 {
+					blockFee += data.Fee / 3 // cross shard txs
+				} else {
 					blockFee += data.Fee
 				}
 				//blockAmount += data.Amount
@@ -1371,19 +1371,20 @@ func (c *Client) GetTxHis(startDate, today string) ([]*DBSimpleTxs, error) {
 	}
 	return hisCounts, nil
 }
+
 // GetTxCnt get current count from account table from mongo
 func (c *Client) GetTxCntByAddressFromAccount(address string) (int64, error) {
 	var txCnt int64
-	accountInfo := new (DBAccount)
+	accountInfo := new(DBAccount)
 	query := func(c *mgo.Collection) error {
 		return c.Find(bson.M{"address": address}).One(&accountInfo)
 	}
 	err := c.withCollection(accTbl, query)
-	if err !=nil {
+	if err != nil {
 		txCnt = int64(accountInfo.TxCount)
-		log.Info("find txcnt from account table failed",err)
+		log.Info("find txcnt from account table failed", err)
 		return txCnt, err
-	}else {
+	} else {
 		return -1, err
 	}
 }
