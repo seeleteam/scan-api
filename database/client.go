@@ -333,7 +333,7 @@ func (c *Client) AddTx(tx *DBTx) error {
 	return err
 }
 
-// AddTxs insert a transaction into mongo
+// AddTxs insert batch of transactions into mongo
 func (c *Client) AddTxs(txs ...interface{}) error {
 	query := func(c *mgo.Collection) error {
 		return c.Insert(txs...)
