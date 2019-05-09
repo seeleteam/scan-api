@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	maxInsertConn = 200
+	maxInsertConn = 20 //200
 )
 
 // Syncer is Seele synchronization handler
