@@ -5,6 +5,7 @@ import (
 	"github.com/seeleteam/scan-api/log"
 	"github.com/seeleteam/scan-api/rpc"
 	"sync"
+	"time"
 )
 
 const (
@@ -24,7 +25,7 @@ func (s *Syncer) accountUpdateSync() {
 			txCnt = 0
 		}
 
-		v.TxCount = txCnt
+		v.TxCount = txCnt + 1
 
 		v := v
 
@@ -62,8 +63,8 @@ func (s *Syncer) accountSync(b *rpc.BlockInfo) error {
 	var address string
 	var AccType int
 	txDebtsTo := map[string]int{} // get all the txDebts in block
-	for i:=0 ;i<len(b.TxDebts);i++ {
-		txDebtsTo[b.TxDebts[i].To]=1
+	for i := 0; i < len(b.TxDebts); i++ {
+		txDebtsTo[b.TxDebts[i].To] = 1
 	}
 	s.mu.Lock()
 	for i := 0; i < len(b.Txs); i++ {
@@ -84,7 +85,7 @@ func (s *Syncer) accountSync(b *rpc.BlockInfo) error {
 				AccType:     AccType,
 				ShardNumber: s.shardNumber,
 				Address:     address,
-				TxCount:     txCnt,
+				TxCount:     txCnt+1,
 				Balance:     balance,
 				TimeStamp:   b.Timestamp.Int64(),
 			}
@@ -101,9 +102,9 @@ func (s *Syncer) accountSync(b *rpc.BlockInfo) error {
 				AccType = 1
 			}
 		} else {
-			address = tx.To  // To might be another shard account for cross-shard transaction
+			address = tx.To // To might be another shard account for cross-shard transaction
 			_, ok := txDebtsTo[address]
-			if(ok){ // to is debt account
+			if (ok) { // to is debt account
 				continue;
 			}
 		}
@@ -114,21 +115,25 @@ func (s *Syncer) accountSync(b *rpc.BlockInfo) error {
 		}
 		txCnt, err := s.db.GetTxCntByAddressFromAccount(address)
 		if err != nil {
-			log.Error(err)
-			txCnt = 0
+			if err.Error() == "not found"{
+				txCnt = 0
+			}else{
+				log.Error(err)
+				return err
+			}
 		}
 		accounts := &database.DBAccount{
 			AccType:     AccType,
 			ShardNumber: s.shardNumber,
 			Address:     address,
-			TxCount:     txCnt,
+			TxCount:     txCnt+1,
 			Balance:     balance,
 			TimeStamp:   b.Timestamp.Int64(),
 		}
 		s.db.UpdateAccount(accounts)
 	}
 
-	for i:=0; i<len(b.Debts); i++ {
+	for i := 0; i < len(b.Debts); i++ {
 		debts := b.Debts[i]
 		address := debts.To
 		balance, err := s.rpc.GetBalance(address)
@@ -145,7 +150,7 @@ func (s *Syncer) accountSync(b *rpc.BlockInfo) error {
 			AccType:     AccType,
 			ShardNumber: s.shardNumber,
 			Address:     address,
-			TxCount:     txCnt,
+			TxCount:     txCnt+1,
 			Balance:     balance,
 			TimeStamp:   b.Timestamp.Int64(),
 		}
@@ -158,14 +163,53 @@ func (s *Syncer) accountSync(b *rpc.BlockInfo) error {
 
 func (s *Syncer) minersaccountSync(b *rpc.BlockInfo) error {
 	//exclude genesis block
+	timeBegin := time.Now().Unix()
 	if b.Creator != nullAddress {
 		s.mu.Lock()
-		blockCnt, blockFee, blockAmount, err := s.db.GetMinedBlocksByShardNumberAndAddress(s.shardNumber, b.Creator)
+		defer s.mu.Unlock()
+		blockCnt, blockFee, blockAmount, err := s.db.GetMinedBlocksByShardNumberAndAddress(s.shardNumber, b.Creator) // previous mined block info
+		log.Debug("Seele_syncer account_process mineraccount GetMinedBlocksByShardNumberAndAddress time %d(s)", time.Now().Unix()-timeBegin)
 		if err != nil {
 			log.Error(err)
 			blockCnt = 0
 		}
-
+		// add current mined block info
+		dbBlock := database.CreateDbBlock(b)
+		txDebtsTo := map[string]int{} // get all the txDebts in block
+		for i := 0; i < len(b.TxDebts); i++ {
+			txDebtsTo[b.TxDebts[i].To] = 1
+		}
+		for i := 0; i < len(dbBlock.Txs); i++ {
+			trans := dbBlock.Txs[i]
+			receipt, err := s.rpc.GetReceiptByTxHash(trans.Hash)
+			if err == nil {
+				dbBlock.Txs[i].Fee = receipt.TotalFee
+			}else{
+				return err
+			}
+		}
+		for i := 0; i < len(dbBlock.Debts); i++ {
+			dbTx,err := s.db.GetTxByHash(dbBlock.Debts[i].TxHash) // transaction should be synchronized before this debt block is processed
+			if err == nil {
+				dbBlock.Debts[i].Fee = dbTx.Fee
+			}else{
+				return err
+			}
+		}
+		for j := 0; j < len(dbBlock.Txs); j++ {
+			data := dbBlock.Txs[j]
+			if txDebtsTo[data.To] > 0 {
+				blockFee += data.Fee / 3 // cross shard txs
+			} else {
+				blockFee += data.Fee
+			}
+		}
+		for j := 0; j < len(dbBlock.Debts); j++ {
+			data := dbBlock.Debts[j]
+			blockFee += data.Fee * 2 / 3  //block fee for cross shard destination
+		}
+		blockAmount += dbBlock.Reward
+		blockCnt += 1
 		miners := &database.DBMiner{
 			ShardNumber: s.shardNumber,
 			Address:     b.Creator,
@@ -175,8 +219,9 @@ func (s *Syncer) minersaccountSync(b *rpc.BlockInfo) error {
 			TimeStamp:   b.Timestamp.Int64(),
 			Mined:       blockCnt,
 		}
+		timeBegin = time.Now().Unix()
 		s.db.UpdateMinerAccount(miners)
-		defer s.mu.Unlock()
+		log.Debug("Seele_syncer account_process mineraccount UpdateMinerAccount time %d(s)", time.Now().Unix()-timeBegin)
 	}
 	return nil
 
