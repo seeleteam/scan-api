@@ -210,7 +210,7 @@ ErrContinue:
 
 	log.Info("sync begin-------")
 	log.Info("sync dbBlockHeight[%d]", dbBlockHeight)
-	maxSyncCnt :=(uint64(200)) // 200
+	maxSyncCnt :=(uint64(20)) // 200
 	anum := curHeight - dbBlockHeight
 	if anum >= maxSyncCnt {
 		anum = maxSyncCnt
