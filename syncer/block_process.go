@@ -21,6 +21,15 @@ func (s *Syncer) blockSync(block *rpc.BlockInfo) error {
 			return err
 		}
 	}
+	for i := 0; i < len(dbBlock.Debts); i++ {
+		//receipt, err := s.rpc.GetReceiptByTxHash(dbBlock.Debts[i].TxHash)
+		dbTx,err := s.db.GetTxByHash(dbBlock.Debts[i].TxHash)
+		if err == nil {
+			dbBlock.Debts[i].Fee = dbTx.Fee
+		}else{
+			return err
+		}
+	}
 	log.Debug("seele_syncer block_process getReceiptHash time:%d(s)",time.Now().Unix()-timeBegin )
 	dbBlock.UsedGas = blockgas
 	dbBlock.ShardNumber = s.shardNumber
