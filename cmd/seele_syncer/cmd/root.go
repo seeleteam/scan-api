@@ -42,6 +42,9 @@ var rootCmd = &cobra.Command{
 			fmt.Printf("init database error")
 			return
 		}
+		for i:=1; i<=4; i++ {
+			dbClient.InitTxCntByShardNumber(i)
+		}
 		if serverCfg.DataBase.DataBaseMode == "replset" {
 			dbClient.SetPrimaryMode()
 		}
