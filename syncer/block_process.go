@@ -23,10 +23,13 @@ func (s *Syncer) blockSync(block *rpc.BlockInfo) error {
 	}
 	for i := 0; i < len(dbBlock.Debts); i++ {
 		//receipt, err := s.rpc.GetReceiptByTxHash(dbBlock.Debts[i].TxHash)
-		dbTx,err := s.db.GetTxByHash(dbBlock.Debts[i].TxHash)
+	getDebt:	dbTx,err := s.db.GetTxByHash(dbBlock.Debts[i].TxHash)
 		if err == nil {
 			dbBlock.Debts[i].Fee = dbTx.Fee
 		}else{
+			time.Sleep(10*time.Second)
+			log.Info("Try again to get debt's fee from transaction hash:%s",dbBlock.Debts[i].TxHash)
+			goto getDebt
 			return err
 		}
 	}

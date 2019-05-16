@@ -189,10 +189,13 @@ func (s *Syncer) minersaccountSync(b *rpc.BlockInfo) error {
 			}
 		}
 		for i := 0; i < len(dbBlock.Debts); i++ {
-			dbTx,err := s.db.GetTxByHash(dbBlock.Debts[i].TxHash) // transaction should be synchronized before this debt block is processed
+			getDebt : dbTx,err := s.db.GetTxByHash(dbBlock.Debts[i].TxHash) // transaction should be synchronized before this debt block is processed
 			if err == nil {
 				dbBlock.Debts[i].Fee = dbTx.Fee
 			}else{
+				time.Sleep(10*time.Second)
+				log.Info("Try again to get debt's fee from transaction hash:%s",dbBlock.Debts[i].TxHash)
+				goto getDebt
 				return err
 			}
 		}
