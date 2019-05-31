@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"strings"
 	"sync"
@@ -231,6 +232,33 @@ func (n *NodeService) RestoreNodeFromDB() {
 	}
 }
 
+func (n *NodeService) CheckNodeConnection() {
+	nodes, err := n.nodeDB.GetNodeInfos()
+	if err != nil {
+		return
+	}
+	for i := 0; i < len(nodes); i++ {
+		go func( node *database.DBNodeInfo) {
+			// check if node is still online
+			_, err := net.DialTimeout("tcp", node.Host+":"+node.Port,30*time.Second)
+			if err != nil {
+				// connection not available, doing nothing, will delete node from node list if more than 5 days not connected
+				log.Error("err connect node, Host:%s,Port:%s,err:%s",node.Host,node.Port,err.Error())
+			}else{
+				// connection is valid
+				now := time.Now().Unix()
+				node.LastSeen = now
+				n.nodeDB.AddNodeInfo(node)
+				log.Info("update node time, Host:%s,Port:%s",node.Host,node.Port)
+				key := getNodeKeyByNodeInfo(node)
+				n.nodeMapLock.Lock()
+				n.nodeMap[key] = *node
+				n.nodeMapLock.Unlock()
+			}
+		}(nodes[i])
+	}
+}
+
 //StartFindNodeService start the node map service
 func (n *NodeService) StartFindNodeService() {
 	n.RestoreNodeFromDB()
@@ -240,6 +268,7 @@ func (n *NodeService) StartFindNodeService() {
 	go func() {
 		for range tick {
 			n.DeleteExpireNode()
+			n.CheckNodeConnection()
 			n.FindNode()
 			_, ok := <-tick
 			if !ok {
