@@ -7,6 +7,7 @@ package rpc
 
 import (
 	"github.com/seeleteam/scan-api/log"
+	"runtime"
 	"time"
 )
 
@@ -34,6 +35,7 @@ func (rpc *SeeleRPC) Connect() error {
 	if rpc.conn == nil {
 		conn, err := Dial(rpc.scheme, rpc.url)
 		if err != nil {
+			log.Error(err)
 			return err
 		}
 		rpc.conn = conn
@@ -52,14 +54,34 @@ func (rpc *SeeleRPC) Release() {
 func (rpc *SeeleRPC) call(serviceMethod string, args interface{}, reply interface{}) error {
 	if rpc.conn == nil {
 		log.Error("rpc_client conn is nil, try to reconnect")
+		tryCnt := 0
 		for rpc.Connect() !=nil {
+			if tryCnt >=20 {
+				runtime.Goexit()
+			}
+			tryCnt++
 			time.Sleep(10*time.Second)
 			log.Error("rpc_client conn is nil, try to reconnect")
 			continue;
 		}
 	}
-	err := rpc.conn.Call(serviceMethod, args, &reply)
+ErrCont:	err := rpc.conn.Call(serviceMethod, args, &reply)
 	if err != nil {
+		rpc.conn.Close()
+		rpc.conn = nil
+		rpc = NewRPC(rpc.url)
+		tryCnt := 0
+		for rpc.Connect() !=nil {
+			if tryCnt >=20 {
+				runtime.Goexit()
+			}
+			tryCnt++
+
+			time.Sleep(10*time.Second)
+			log.Error("rpc_client conn err, try to reconnect")
+			continue;
+		}
+		goto ErrCont
 		return err
 	}
 
