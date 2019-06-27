@@ -7,6 +7,7 @@ package rpc
 
 import (
 	"fmt"
+	"github.com/seeleteam/scan-api/log"
 	"math/big"
 )
 
@@ -106,7 +107,11 @@ func (rpc *SeeleRPC) GetBlockByHeight(h uint64, fullTx bool) (block *BlockInfo, 
 	//       ]
 	//     ]
 	//   ]
-
+	if rpcOutputBlock == nil{
+		var err error
+		log.Error("seele_rpc rpcOutputBlock is nil")
+		return nil, err
+	}
 	return getBlockByHeight(rpcOutputBlock, fullTx), err
 }
 
