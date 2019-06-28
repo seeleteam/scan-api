@@ -215,23 +215,24 @@ ErrContinue:
 	if anum >= maxSyncCnt {
 		anum = maxSyncCnt
 	}
-	wg.Add(int(anum))
+	//wg.Add(int(anum))
 	abc := dbBlockHeight + anum
 	var i uint64
 	for i = dbBlockHeight; i < abc; i++ {
 		log.Info("begin to sync block[%d]:", i)
-		go func(i uint64) {
-			defer wg.Done()
+		//go func(i uint64) {
+		//	defer wg.Done()
 			result := s.SyncHandle(i)
 			if(result){
 				log.Error("sync block [%d] failed",i)
+				i = i-1  // try to re-sync failed block
 			}else{
 				log.Info("successfully to sync block[%d]:", i)
 			}
 
-		}(i)
+		//}(i)
 	}
-	wg.Wait()
+	//wg.Wait()
 	if anum >= maxSyncCnt {
 		goto ErrContinue
 	}
@@ -250,7 +251,7 @@ ErrContinue:
 func (s *Syncer) SyncHandle(i uint64) bool {
 	rpcBlock, err := s.rpc.GetBlockByHeight(i, true)
 	if err != nil {
-		s.rpc.Release()
+		//s.rpc.Release()
 		log.Error(err)
 		return true
 	}
