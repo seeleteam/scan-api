@@ -40,6 +40,10 @@ var (
 	// db connect error
 	errDBConnect = errors.New("could not connect to database")
 )
+// in memory variables
+var (
+	txCntForShard = make([]uint64, 5)
+)
 
 // Client warpper for mongodb interactive
 type Client struct {
@@ -93,7 +97,7 @@ func NewDBClient(cfg *common.DataBaseConfig, shardNumber int) *Client {
 func getReplsetSession(replsetName string, connURLs []string) *mgo.Session {
 	info := mgo.DialInfo{
 		Addrs:          connURLs,
-		Timeout:        10 * time.Second,
+		Timeout:        60 * time.Second,
 		ReplicaSetName: replsetName,
 	}
 
@@ -205,8 +209,8 @@ func (c *Client) UpdateLastBlock(height int64, block *DBLastBlock) error {
 		return err
 	}
 	err := c.withCollection(lastBlocksTbl, query)
-	if(err!=nil){
-		log.Info("data not found in lastBlock height:"+ fmt.Sprint(height) +",shardNumber:"+ fmt.Sprint(block.ShardNumber))
+	if err != nil {
+		log.Info("data not found in lastBlock height:" + fmt.Sprint(height) + ",shardNumber:" + fmt.Sprint(block.ShardNumber))
 	}
 	return nil
 }
@@ -330,15 +334,24 @@ func (c *Client) AddTx(tx *DBTx) error {
 		return c.Insert(tx)
 	}
 	err := c.withCollection(txTbl, query)
+	if err ==nil {
+		txCntForShard[tx.ShardNumber] +=1
+	}
 	return err
 }
 
-// AddTxs insert a transaction into mongo
+// AddTxs insert batch of transactions into mongo
 func (c *Client) AddTxs(txs ...interface{}) error {
 	query := func(c *mgo.Collection) error {
 		return c.Insert(txs...)
 	}
 	err := c.withCollection(txTbl, query)
+	if err == nil {
+		for _,tx := range txs {
+			log.Debug("addTx shard %d",tx.(*DBTx).ShardNumber)
+			txCntForShard[tx.(*DBTx).ShardNumber]+=1
+		}
+	}
 	return err
 }
 
@@ -382,12 +395,17 @@ func (c *Client) removeTx(idx uint64) error {
 
 // RemoveTxs Txs by block height
 func (c *Client) RemoveTxs(shard int, blockHeight uint64) error {
+	var changeInfo *mgo.ChangeInfo
+	var err error
 	query := func(c *mgo.Collection) error {
-		_, err := c.RemoveAll(bson.M{"block": blockHeight, "shardNumber": shard})
+		changeInfo, err = c.RemoveAll(bson.M{"block": blockHeight, "shardNumber": shard})
 		return err
 	}
-	err := c.withCollection(txTbl, query)
-	return err
+	err2 := c.withCollection(txTbl, query)
+	if err2 == nil {
+		txCntForShard[shard] = txCntForShard[shard] - uint64(changeInfo.Removed)
+	}
+	return err2
 }
 
 // GetTxByIdx get transaction from mongo by idx
@@ -622,8 +640,7 @@ func (c *Client) GetContractCntByShardNumber(shardNumber int) (uint64, error) {
 	return txCnt, err
 }
 
-// GetTxCntByShardNumber get tx count by shardNumber
-func (c *Client) GetTxCntByShardNumber(shardNumber int) (uint64, error) {
+func (c *Client) InitTxCntByShardNumber(shardNumber int) (error) {
 	var txCnt uint64
 	query := func(c *mgo.Collection) error {
 		var err error
@@ -634,7 +651,23 @@ func (c *Client) GetTxCntByShardNumber(shardNumber int) (uint64, error) {
 		return err
 	}
 	err := c.withCollection(txTbl, query)
-	return txCnt, err
+	if err == nil {
+		txCntForShard[shardNumber] = txCnt
+	}
+	return err
+}
+
+// GetTxCntByShardNumber get tx count by shardNumber
+func (c *Client) GetTxCntByShardNumber(shardNumber int) (uint64, error) {
+	if txCntForShard[shardNumber] !=0 {
+		return txCntForShard[shardNumber],nil
+	}else{
+		err := c.InitTxCntByShardNumber(shardNumber)
+		if err != nil {
+			return 0, err
+		}
+		return txCntForShard[shardNumber],nil
+	}
 }
 
 // GetdebtCntByShardNumber get tx count by shardNumber
@@ -699,32 +732,54 @@ func (c *Client) GetMinedBlocksCntByShardNumberAndAddress(shardNumber int, addre
 }
 
 // GetMinedBlocksByShardNumberAndAddress get the blocks number by the miner
+//func (c *Client) GetMinedBlocksByShardNumberAndAddress(shardNumber int, address string) (int64, int64, int64, error) {
+//	var blockCnt, blockFee, blockAmount int64
+//	var blocks []*DBBlock
+//	query := func(c *mgo.Collection) error {
+//		var err error
+//		c.Find(bson.M{"shardNumber": shardNumber, "creator": address}).All(&blocks)
+//		blockCnt = int64(len(blocks))
+//		blockFee = 0
+//		for i := 0; i < len(blocks); i++ {
+//			for j := 0; j < len(blocks[i].Txs); j++ {
+//				data := blocks[i].Txs[j]
+//				if len(data.DebtTxHash) > 0 {
+//					blockFee += data.Fee / 3 // cross shard txs
+//				} else {
+//					blockFee += data.Fee
+//				}
+//				//blockAmount += data.Amount
+//			}
+//			for j:=0; j< len(blocks[i].Debts); j++ {
+//				data := blocks[i].Debts[j]
+//				blockFee += data.Fee *2/3
+//			}
+//			// TODO: block fee for cross shard destination
+//			blockAmount += blocks[i].Reward
+//		}
+//		return err
+//	}
+//	err := c.withCollection(blockTbl, query)
+//	return blockCnt, blockFee, blockAmount, err
+//}
 func (c *Client) GetMinedBlocksByShardNumberAndAddress(shardNumber int, address string) (int64, int64, int64, error) {
 	var blockCnt, blockFee, blockAmount int64
-	var blocks []*DBBlock
+	var miner *DBMiner
 	query := func(c *mgo.Collection) error {
 		var err error
-		c.Find(bson.M{"shardNumber": shardNumber, "creator": address}).All(&blocks)
-		blockCnt = int64(len(blocks))
-		blockFee = 0
-		for i := 0; i < len(blocks); i++ {
-			for j := 0; j < len(blocks[i].Txs); j++ {
-				data := blocks[i].Txs[j]
-				if(len(data.DebtTxHash)>0){
-					blockFee += data.Fee/3  // cross shard txs
-				}else{
-					blockFee += data.Fee
-				}
-				//blockAmount += data.Amount
-			}
-			blockAmount += blocks[i].Reward
+		c.Find(bson.M{"shardNumber": shardNumber, "address": address}).One(&miner)
+		if miner !=nil {
+			blockCnt = miner.Mined
+			blockFee = miner.TxFee
+			blockAmount = miner.Reward
+		}else{
+			log.Debug("miner info not found,shard:%d, address:%s",shardNumber,address)
 		}
 		return err
 	}
-	err := c.withCollection(blockTbl, query)
+	err := c.withCollection(minerTbl, query)
 	return blockCnt, blockFee, blockAmount, err
 }
-
 // GetBlockfee get the total fee of the block
 func (c *Client) GetBlockfee(block uint64) (int64, error) {
 	var blockFee int64
@@ -1224,7 +1279,8 @@ func (c *Client) GetTopMinerChartByShardNumber(shardNumber int) ([]*DBMinerRankI
 // AddNodeInfo add node info into database
 func (c *Client) AddNodeInfo(nodeInfo *DBNodeInfo) error {
 	query := func(c *mgo.Collection) error {
-		return c.Insert(nodeInfo)
+		_,err := c.Upsert(bson.M{"host":nodeInfo.Host,"port":nodeInfo.Port},nodeInfo)//Insert(nodeInfo)
+		return err
 	}
 	err := c.withCollection(nodeInfoTbl, query)
 	return err
@@ -1371,3 +1427,22 @@ func (c *Client) GetTxHis(startDate, today string) ([]*DBSimpleTxs, error) {
 	}
 	return hisCounts, nil
 }
+
+// GetTxCnt get current count from account table from mongo
+func (c *Client) GetTxCntByAddressFromAccount(address string) (int64, error) {
+	var txCnt int64
+	accountInfo := new(DBAccount)
+	query := func(c *mgo.Collection) error {
+		return c.Find(bson.M{"address": address}).One(&accountInfo)
+	}
+	err := c.withCollection(accTbl, query)
+	if err != nil {
+		log.Info("find txcnt from account table failed,address:%s,err:%s",address, err.Error())
+		return -1, err
+	} else {
+		txCnt = int64(accountInfo.TxCount)
+		return txCnt, err
+	}
+}
+
+

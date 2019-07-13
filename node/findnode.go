@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"strings"
 	"sync"
@@ -151,7 +152,7 @@ func (n *NodeService) DeleteExpireNode() {
 
 func getNodeKey(p *rpc.PeerInfo) string {
 	ipAndPort := strings.Split(p.RemoteAddress, ":")
-	return p.ID + "-" + ipAndPort[0] + "-" + ipAndPort[1]
+	return p.ID + "-" + ipAndPort[0]
 }
 
 func getNodeKeyByNodeInfo(n *database.DBNodeInfo) string {
@@ -201,8 +202,10 @@ func (n *NodeService) FindNode() {
 		key := getNodeKey(&peer)
 		n.nodeMapLock.RLock()
 		if v, ok := n.nodeMap[key]; ok {
-			n.nodeMapLock.RUnlock()
+
 			v.LastSeen = time.Now().Unix()
+			log.Info("update lastseen time,ID:%s,Host:%s,Port:%s",v.ID,v.Host,v.Port)
+			n.nodeMapLock.RUnlock()
 			cnum <- 1
 		} else {
 			n.nodeMapLock.RUnlock()
@@ -228,6 +231,33 @@ func (n *NodeService) RestoreNodeFromDB() {
 		nodes[i].LastSeen = now
 		key := getNodeKeyByNodeInfo(nodes[i])
 		n.nodeMap[key] = *nodes[i]
+	}
+}
+
+func (n *NodeService) CheckNodeConnection() {
+	nodes, err := n.nodeDB.GetNodeInfos()
+	if err != nil {
+		return
+	}
+	for i := 0; i < len(nodes); i++ {
+		go func( node *database.DBNodeInfo) {
+			// check if node is still online
+			_, err := net.DialTimeout("tcp", node.Host+":"+node.Port,30*time.Second)
+			if err != nil {
+				// connection not available, doing nothing, will delete node from node list if more than 5 days not connected
+				log.Error("err connect node, Host:%s,Port:%s,err:%s",node.Host,node.Port,err.Error())
+			}else{
+				// connection is valid
+				now := time.Now().Unix()
+				node.LastSeen = now
+				n.nodeDB.AddNodeInfo(node)
+				log.Info("update node time, Host:%s,Port:%s",node.Host,node.Port)
+				key := getNodeKeyByNodeInfo(node)
+				n.nodeMapLock.Lock()
+				n.nodeMap[key] = *node
+				n.nodeMapLock.Unlock()
+			}
+		}(nodes[i])
 	}
 }
 

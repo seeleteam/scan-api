@@ -201,7 +201,7 @@ func CreateDbTx(t rpc.Transaction) *DBTx {
 	trans.From = t.From
 	trans.To = t.To
 	trans.Amount = t.Amount.Int64()
-	timetxs := time.Unix(int64(t.Timestamp), 0)
+	timetxs := time.Unix(int64(t.Timestamp), 0).UTC()
 	trans.Timetxs = timetxs.Format("2006-01-02")
 	trans.Timestamp = strconv.FormatUint(t.Timestamp, 10)
 	trans.AccountNonce = strconv.FormatUint(t.AccountNonce, 10)

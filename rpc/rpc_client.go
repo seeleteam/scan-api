@@ -5,6 +5,10 @@
 
 package rpc
 
+import (
+	"github.com/seeleteam/scan-api/log"
+)
+
 // SeeleRPC json_rpc client
 type SeeleRPC struct {
 	url    string
@@ -29,6 +33,7 @@ func (rpc *SeeleRPC) Connect() error {
 	if rpc.conn == nil {
 		conn, err := Dial(rpc.scheme, rpc.url)
 		if err != nil {
+			log.Error(err)
 			return err
 		}
 		rpc.conn = conn
@@ -45,10 +50,11 @@ func (rpc *SeeleRPC) Release() {
 }
 
 func (rpc *SeeleRPC) call(serviceMethod string, args interface{}, reply interface{}) error {
-	err := rpc.conn.Call(serviceMethod, args, &reply)
-	if err != nil {
-		return err
+	if rpc != nil && rpc.conn != nil {
+		err := rpc.conn.Call(serviceMethod, args, &reply)
+		if err != nil {
+			return err
+		}
 	}
-
 	return nil
 }

@@ -12,9 +12,12 @@ import (
 
 // txSync insert the transactions into database
 func (s *Syncer) txSync(block *rpc.BlockInfo) error {
+	timeBegin := time.Now().Unix()
 	transIdx, _ := s.db.GetTxCntByShardNumber(s.shardNumber)
+	log.Debug("seele_syncer tx_process GetTxCntByShardNumber time:%d(s)",time.Now().Unix()-timeBegin )
 	txs := []interface{}{}
 	var dbTxs []*database.DBTx
+	timeBegin = time.Now().Unix()
 	for i := 0; i < len(block.Txs); i++ {
 		trans := block.Txs[i]
 		trans.Timestamp = block.Timestamp.Uint64()
@@ -45,16 +48,19 @@ func (s *Syncer) txSync(block *rpc.BlockInfo) error {
 		dbTxs = append(dbTxs, dbTx)
 		txs = append(txs, dbTx)
 	}
+	log.Debug("seele_syncer tx_process prepareTxs time:%d(s)",time.Now().Unix()-timeBegin )
 
 	if len(txs) == 0 {
 		return nil
 	}
-
+	timeBegin = time.Now().Unix()
 	if err := s.db.AddTxs(txs...); err != nil {
 		return err
 	}
+	log.Debug("seele_syncer tx_process AddTxs time:%d(s)",time.Now().Unix()-timeBegin )
+
 	// insert 30 days history transaction number into database
-	s.txHisSync(dbTxs)
+	//s.txHisSync(dbTxs)    // this long-time process should be done in another way
 
 	return nil
 }

@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	maxInsertConn = 200
+	maxInsertConn = 20 //200
 )
 
 // Syncer is Seele synchronization handler
@@ -210,12 +210,16 @@ ErrContinue:
 
 	log.Info("sync begin-------")
 	log.Info("sync dbBlockHeight[%d]", dbBlockHeight)
-	maxSyncCnt :=(uint64(200)) // 200
+	maxSyncCnt :=(uint64(1)) // use single thread; 200
 	anum := curHeight - dbBlockHeight
+	if anum <= 0 {
+		log.Info("block chain height is smaller than scan db block height")
+		return nil
+	}
 	if anum >= maxSyncCnt {
 		anum = maxSyncCnt
 	}
-	wg.Add(int(anum))
+	//wg.Add(int(anum))
 	abc := dbBlockHeight + anum
 	var i uint64
 	for i = dbBlockHeight; i < abc; i++ {
@@ -228,7 +232,6 @@ ErrContinue:
 			}else{
 				log.Info("successfully to sync block[%d]:", i)
 			}
-
 		}(i)
 	}
 	wg.Wait()
@@ -250,41 +253,48 @@ ErrContinue:
 func (s *Syncer) SyncHandle(i uint64) bool {
 	rpcBlock, err := s.rpc.GetBlockByHeight(i, true)
 	if err != nil {
-		s.rpc.Release()
+		//s.rpc.Release()
 		log.Error(err)
 		return true
 	}
 
 	// sync block
+	timeBegin := time.Now().Unix()
 	if err = s.blockSync(rpcBlock); err != nil {
 		log.Error(err)
 		return true
 	}
+	log.Debug("syncerHandle blockSync time: %d(s)",time.Now().Unix()-timeBegin)
 
 	// sync transactions
+	timeBegin = time.Now().Unix()
 	if err = s.txSync(rpcBlock); err != nil {
 		log.Error(err)
 		return true
 	}
+	log.Debug("syncerHandle txSync time: %d(s)",time.Now().Unix()-timeBegin)
 
 	// sync debts
+	timeBegin = time.Now().Unix()
 	if err = s.debttxSync(rpcBlock); err != nil {
 		log.Error(err)
 		return true
 	}
-
+	log.Debug("syncerHandle debttxSync time: %d(s)",time.Now().Unix()-timeBegin)
 	// sync accounts
+	timeBegin = time.Now().Unix()
 	if err = s.accountSync(rpcBlock); err != nil {
 		log.Error(err)
 		return true
 	}
-
+	log.Debug("syncerHandle accountSync time: %d(s)",time.Now().Unix()-timeBegin)
 	// sync minersaccount
+	timeBegin = time.Now().Unix()
 	if err = s.minersaccountSync(rpcBlock); err != nil {
 		log.Error(err)
 		return true
 	}
-
+	log.Debug("syncerHandle minersaccountSync time: %d(s)",time.Now().Unix()-timeBegin)
 	return false
 }
 
