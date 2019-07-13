@@ -219,7 +219,7 @@ ErrContinue:
 	if anum >= maxSyncCnt {
 		anum = maxSyncCnt
 	}
-	//wg.Add(int(anum))
+	wg.Add(int(anum))
 	abc := dbBlockHeight + anum
 	var i uint64
 	for i = dbBlockHeight; i < abc; i++ {
