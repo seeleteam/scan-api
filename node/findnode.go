@@ -152,7 +152,7 @@ func (n *NodeService) DeleteExpireNode() {
 
 func getNodeKey(p *rpc.PeerInfo) string {
 	ipAndPort := strings.Split(p.RemoteAddress, ":")
-	return p.ID + "-" + ipAndPort[0] + "-" + ipAndPort[1]
+	return p.ID + "-" + ipAndPort[0]
 }
 
 func getNodeKeyByNodeInfo(n *database.DBNodeInfo) string {
@@ -202,8 +202,10 @@ func (n *NodeService) FindNode() {
 		key := getNodeKey(&peer)
 		n.nodeMapLock.RLock()
 		if v, ok := n.nodeMap[key]; ok {
-			n.nodeMapLock.RUnlock()
+
 			v.LastSeen = time.Now().Unix()
+			log.Info("update lastseen time,ID:%s,Host:%s,Port:%s",v.ID,v.Host,v.Port)
+			n.nodeMapLock.RUnlock()
 			cnum <- 1
 		} else {
 			n.nodeMapLock.RUnlock()
@@ -268,7 +270,6 @@ func (n *NodeService) StartFindNodeService() {
 	go func() {
 		for range tick {
 			n.DeleteExpireNode()
-			n.CheckNodeConnection()
 			n.FindNode()
 			_, ok := <-tick
 			if !ok {

@@ -1279,7 +1279,8 @@ func (c *Client) GetTopMinerChartByShardNumber(shardNumber int) ([]*DBMinerRankI
 // AddNodeInfo add node info into database
 func (c *Client) AddNodeInfo(nodeInfo *DBNodeInfo) error {
 	query := func(c *mgo.Collection) error {
-		return c.Insert(nodeInfo)
+		_,err := c.Upsert(bson.M{"host":nodeInfo.Host,"port":nodeInfo.Port},nodeInfo)//Insert(nodeInfo)
+		return err
 	}
 	err := c.withCollection(nodeInfoTbl, query)
 	return err
