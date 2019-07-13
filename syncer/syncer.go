@@ -210,8 +210,12 @@ ErrContinue:
 
 	log.Info("sync begin-------")
 	log.Info("sync dbBlockHeight[%d]", dbBlockHeight)
-	maxSyncCnt :=(uint64(20)) // 200
+	maxSyncCnt :=(uint64(1)) // use single thread; 200
 	anum := curHeight - dbBlockHeight
+	if anum <= 0 {
+		log.Info("block chain height is smaller than scan db block height")
+		return nil
+	}
 	if anum >= maxSyncCnt {
 		anum = maxSyncCnt
 	}
@@ -220,19 +224,17 @@ ErrContinue:
 	var i uint64
 	for i = dbBlockHeight; i < abc; i++ {
 		log.Info("begin to sync block[%d]:", i)
-		//go func(i uint64) {
-		//	defer wg.Done()
+		go func(i uint64) {
+			defer wg.Done()
 			result := s.SyncHandle(i)
 			if(result){
 				log.Error("sync block [%d] failed",i)
-				i = i-1  // try to re-sync failed block
 			}else{
 				log.Info("successfully to sync block[%d]:", i)
 			}
-
-		//}(i)
+		}(i)
 	}
-	//wg.Wait()
+	wg.Wait()
 	if anum >= maxSyncCnt {
 		goto ErrContinue
 	}
