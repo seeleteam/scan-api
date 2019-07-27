@@ -207,7 +207,10 @@ ErrContinue:
 		log.Error(err)
 		return err
 	}
-
+	if curHeight <= dbBlockHeight || (curHeight - dbBlockHeight) < 100 {
+		log.Info("not enough block to sync")
+		return nil
+	}
 	log.Info("sync begin-------")
 	log.Info("sync dbBlockHeight[%d]", dbBlockHeight)
 	maxSyncCnt :=(uint64(1)) // use single thread; 200
@@ -253,7 +256,7 @@ ErrContinue:
 func (s *Syncer) SyncHandle(i uint64) bool {
 	rpcBlock, err := s.rpc.GetBlockByHeight(i, true)
 	if err != nil {
-		//s.rpc.Release()
+		s.rpc.Release()
 		log.Error(err)
 		return true
 	}
