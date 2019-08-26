@@ -272,8 +272,11 @@ func (h *AccountHandler) GetAccountByAddressImpl(address string) *RetDetailAccou
 	log.Debug("get ttBalance time:%d(s)",time.Since(begin))
 
 	begin = time.Now()
+	log.Debug("txCount from data object:%d", data.TxCount)
 	data.TxCount, err = dbClient.GetTxCntByShardNumberAndAddress(data.ShardNumber, address)
+	log.Debug("txCount from GetTxCntByShardNumberAndAddress:%d",data.TxCount)
 	log.Debug("get data.TxCount time:%d(s)",time.Since(begin))
+
 	if err != nil {
 		return nil
 	}
