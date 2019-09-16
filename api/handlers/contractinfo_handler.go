@@ -104,7 +104,7 @@ func NewContractHandler(DBClient BlockInfoDB) *ContractHandler {
 }
 
 func (h *ContractHandler) updateImpl() {
-	for i := 1; i < shardCount; i++ {
+	for i := 1; i <= shardCount; i++ {
 		h.contractTbls[i-1].ProcessGContractTable()
 	}
 

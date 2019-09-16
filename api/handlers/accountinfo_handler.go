@@ -236,9 +236,10 @@ func (h *AccountHandler) GetHomeAccounts() gin.HandlerFunc {
 
 //GetAccountByAddressImpl use account info, account tx list and account pending tx list to assembly account information
 func (h *AccountHandler) GetAccountByAddressImpl(address string) *RetDetailAccountInfo {
-	dbClinet := h.DBClient
-
-	data, err := dbClinet.GetAccountByAddress(address)
+	dbClient := h.DBClient
+    begin := time.Now();
+	data, err := dbClient.GetAccountByAddress(address)
+	log.Debug("getAccountByAddress time:%d(s)",time.Since(begin))
 	if err != nil {
 		return nil
 	}
@@ -246,35 +247,48 @@ func (h *AccountHandler) GetAccountByAddressImpl(address string) *RetDetailAccou
 	if data.AccType != 0 {
 		return nil
 	}
+	begin = time.Now()
+	txs, err := dbClient.GetTxsByAddresss(address, txCount, false)
+	log.Debug("getTxsByAddresss time:%d(s)",time.Since(begin))
 
-	txs, err := dbClinet.GetTxsByAddresss(address, txCount, false)
 	if err != nil {
 		return nil
 	}
+	begin = time.Now()
+	pengdingTxs, err := dbClient.GetPendingTxsByAddress(address)
+	log.Debug("GetPendingTxsByAddress time:%d(s)",time.Since(begin))
 
-	pengdingTxs, err := dbClinet.GetPendingTxsByAddress(address)
 	if err != nil {
 		return nil
 	}
 
 	txs = append(pengdingTxs, txs...)
 
+	begin = time.Now()
 	var ttBalance int64
 	if data.ShardNumber >= 1 && data.ShardNumber <= shardCount {
 		ttBalance = h.accTbls[data.ShardNumber-1].totalBalance
 	}
+	log.Debug("get ttBalance time:%d(s)",time.Since(begin))
 
-	data.TxCount, err = dbClinet.GetTxCntByShardNumberAndAddress(data.ShardNumber, address)
+	begin = time.Now()
+	log.Debug("txCount from data object:%d", data.TxCount)
+	data.TxCount, err = dbClient.GetTxCntByShardNumberAndAddress(data.ShardNumber, address)
+	log.Debug("txCount from GetTxCntByShardNumberAndAddress:%d",data.TxCount)
+	log.Debug("get data.TxCount time:%d(s)",time.Since(begin))
+
 	if err != nil {
 		return nil
 	}
 
+	begin = time.Now()
 	if data.ShardNumber >= 1 && data.ShardNumber <= shardCount {
 		account := h.accTbls[data.ShardNumber-1].GetAccountByAddress(data.Address)
 		if account != nil && account.TxCount != data.TxCount {
 			account.TxCount = data.TxCount
 		}
 	}
+	log.Debug("update TxCount time:%d(s)",time.Since(begin))
 
 	detailAccount := createRetDetailAccountInfo(data, txs, ttBalance)
 	return detailAccount
