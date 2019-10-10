@@ -185,10 +185,11 @@ func (n *NodeService) FindNode() {
 		peerInfos, err := rpc.GetPeersInfo()
 
 		if err != nil {
-			log.Fatal(err)
+			log.Error(err)
+			log.Error("rpc GetPeersInfo failed, connurl:%v",rpcURL)
 			continue
 		}
-		log.Info("getPeersInfo cnt: %d",len(peerInfos))
+		log.Info("getPeersInfo cnt: %d, connurl:%v",len(peerInfos),rpcURL)
 		allPeerInfos = append(allPeerInfos, peerInfos...)
 	}
 
