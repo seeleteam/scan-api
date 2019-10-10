@@ -13,6 +13,7 @@ import (
 	"net/rpc"
 	"reflect"
 	"sync"
+	"time"
 )
 
 const seqNotify = math.MaxUint64
@@ -249,7 +250,7 @@ func NewClientWithCodec(codec rpc.ClientCodec) *Client {
 
 // Dial connects to a JSON-RPC 2.0 server at the specified network address.
 func Dial(network, address string) (*Client, error) {
-	conn, err := net.Dial(network, address)
+	conn, err := net.DialTimeout(network, address,time.Minute)
 	if err != nil {
 		return nil, err
 	}
