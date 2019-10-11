@@ -451,6 +451,11 @@ func (c *Client) GetPendingTxsByIdx(shardNumber int, begin uint64, end uint64) (
 // GetTxByHash get transaction info by hash from mongo
 func (c *Client) GetTxByHash(hash string) (*DBTx, error) {
 	tx := new(DBTx)
+	if hash == "0x1a7fe6574649decbfb616deb7b40be87dab56b3a0f01725d9161e888b51b3375" {
+		log.Error("skip query hash 0x1a7fe6574649decbfb616deb7b40be87dab56b3a0f01725d9161e888b51b3375 from shard3")
+		tx.Fee = 0
+		return tx,nil
+	}
 	query := func(c *mgo.Collection) error {
 		return c.Find(bson.M{"hash": hash}).One(tx)
 	}
@@ -1319,10 +1324,11 @@ func (c *Client) GetNodeInfoByID(id string) (*DBNodeInfo, error) {
 func (c *Client) GetNodeInfosByShardNumber(shardNumber int) ([]*DBNodeInfo, error) {
 	var nodeInfos []*DBNodeInfo
 	query := func(c *mgo.Collection) error {
-		return c.Find(bson.M{"shardNumber": shardNumber}).All(&nodeInfos)
+		return c.Find(bson.M{"shardNumber": shardNumber}).Sort("-lastseen").All(&nodeInfos)
 	}
 	err := c.withCollection(nodeInfoTbl, query)
 	return nodeInfos, err
+
 }
 
 // GetNodeInfos get all node infos from database
