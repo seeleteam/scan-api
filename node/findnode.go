@@ -146,8 +146,11 @@ func (n *NodeService) DeleteExpireNode() {
 			n.nodeDB.DeleteNodeInfo(&v)
 			delete(n.nodeMap, k)
 			log.Info("Delete expired nodeInfo from DB, Shard:%d,IP:%s, Port:%s:",v.ShardNumber, v.Host, v.Port)
+		}else{
+			log.Info("node not expired: Shard:%d,IP:%s, Port:%s:",v.ShardNumber, v.Host, v.Port)
 		}
 	}
+	log.Info("check expired nodes finished")
 }
 
 func getNodeKey(p *rpc.PeerInfo) string {
@@ -165,7 +168,7 @@ func (n *NodeService) FindNode() {
 	var allPeerInfos []rpc.PeerInfo
 	for i := 0; i < len(n.cfg.RPCNodes); i++ {
 		rpcURL := n.cfg.RPCNodes[i]
-
+		log.Info("start findNode from rpcNode:%v",rpcURL)
 		rpc := rpc.NewRPC(rpcURL)
 		defer func() {
 			if rpc != nil {
@@ -185,10 +188,11 @@ func (n *NodeService) FindNode() {
 		peerInfos, err := rpc.GetPeersInfo()
 
 		if err != nil {
-			log.Fatal(err)
+			log.Error(err)
+			log.Error("rpc GetPeersInfo failed, connurl:%v",rpcURL)
 			continue
 		}
-		log.Info("getPeersInfo cnt: %d",len(peerInfos))
+		log.Info("getPeersInfo cnt: %d, connurl:%v",len(peerInfos),rpcURL)
 		allPeerInfos = append(allPeerInfos, peerInfos...)
 	}
 
@@ -202,7 +206,6 @@ func (n *NodeService) FindNode() {
 		key := getNodeKey(&peer)
 		n.nodeMapLock.RLock()
 		if v, ok := n.nodeMap[key]; ok {
-
 			v.LastSeen = time.Now().Unix()
 			log.Info("update lastseen time,ID:%s,Host:%s,Port:%s",v.ID,v.Host,v.Port)
 			n.nodeMapLock.RUnlock()
