@@ -680,10 +680,9 @@ func (h *BlockHandler) GetTxsInAccount(c *gin.Context, address string, p, ps uin
 func (h *BlockHandler) GetTxs() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		dbClient := h.DBClient
-
-		p, _ := strconv.ParseUint(c.Query("p"), 10, 64)
-		ps, _ := strconv.ParseUint(c.Query("ps"), 10, 64)
-		s, _ := strconv.ParseInt(c.Query("s"), 10, 64)
+		p, _ := strconv.Atoi(c.Query("p"))
+		ps, _ := strconv.Atoi(c.Query("ps"))
+		s, _ := strconv.Atoi(c.Query("s"))
 		if ps == 0 {
 			ps = transItemNumsPrePage
 		} else if ps > maxItemNumsPrePage {
@@ -698,42 +697,31 @@ func (h *BlockHandler) GetTxs() gin.HandlerFunc {
 			s = 1
 		}
 		shardNumber := int(s)
-
-		block, flag := c.GetQuery("block")
-		if flag {
-			height, err := strconv.ParseUint(block, 10, 64)
-			if err != nil {
-				responseError(c, errParamInvalid, http.StatusBadRequest, apiParmaInvalid)
-			} else {
-				h.GetTxsInBlock(c, shardNumber, height, p, ps)
-				return
-			}
-		}
-
-		address, flag := c.GetQuery("address")
-		if flag {
-			h.GetTxsInAccount(c, address, p, ps)
-			return
-		}
-
 		txCnt, err := dbClient.GetTxCntByShardNumber(shardNumber)
 		if err != nil {
 			responseError(c, errGetTxCountFromDB, http.StatusInternalServerError, apiDBQueryError)
 			return
 		}
-
-		page, begin, end := getBeginAndEndByPage(txCnt, p, ps)
-		txs := h.getTxsByBeginAndEnd(shardNumber, begin, end)
-
+		dbTrans,err := dbClient.GetTxs(shardNumber,"timestamp",true, ps,p*ps)
+		if err != nil {
+			responseError(c, errGetTxCountFromDB, http.StatusInternalServerError, apiDBQueryError)
+			return
+		}
+		var txs []*RetSimpleTxInfo
+		for i := 0; i < len(dbTrans); i++ {
+			data := dbTrans[i]
+			simpleTransaction := createRetSimpleTxInfo(data)
+			txs = append(txs, simpleTransaction)
+		}
 		c.JSON(http.StatusOK, gin.H{
 			"code":    apiOk,
 			"message": "",
 			"data": gin.H{
 				"pageInfo": gin.H{
 					"totalCount": txCnt,
-					"begin":      begin,
-					"end":        end,
-					"curPage":    page + 1,
+					"begin":      p*ps+1,
+					"end":        (p+1)*ps,
+					"curPage":    p + 1,
 				},
 				"list": txs,
 			},

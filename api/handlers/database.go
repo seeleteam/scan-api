@@ -39,6 +39,7 @@ type BlockInfoDB interface {
 	GetblockdebtCntByShardNumber(shardNumber int, height uint64) (uint64, error)
 	GetblockdebtsByIdx(shardNumber int, height uint64, begin uint64, end uint64) ([]*database.Debt, error)
 	GetTxHis(startDate, today string) ([]*database.DBSimpleTxs, error)
+	GetTxs(shardNumber int, sort string, desc bool , limit int, skip int) ([]*database.DBTx, error)
 }
 
 // ChartInfoDB Warpper for access mongodb.
