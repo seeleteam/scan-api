@@ -733,6 +733,7 @@ func (c *Client) GetMinedBlocksCntByShardNumberAndAddress(shardNumber int, addre
 		return err
 	}
 	err := c.withCollection(blockTbl, query)
+
 	return blockCnt, err
 }
 
@@ -1452,3 +1453,46 @@ func (c *Client) GetTxCntByAddressFromAccount(address string) (int64, error) {
 }
 
 
+// GetTxs get transactions from transaction table given shardNumber, sort field, limit and skip
+// if sort is null, the result will not be sort by any fields
+// if limit <=0 , the result will get all the records
+// if skip <=0, the result will get records from the first one
+func (c *Client) GetTxs(shardNumber int, sort string, desc bool , limit int, skip int) ([]*DBTx, error) {
+	var trans []*DBTx
+	query := func(c *mgo.Collection) error {
+		if sort != "" {
+			if desc {
+				sort = "-"+sort
+			}
+			if limit > 0 {
+				if skip > 0{
+					return c.Find(bson.M{"shardNumber": shardNumber}).Sort(sort).Limit(limit).Skip(skip).All(&trans)
+				}else {
+					return c.Find(bson.M{"shardNumber": shardNumber}).Sort(sort).Limit(limit).All(&trans)
+				}
+			}else {
+				if skip > 0{
+					return c.Find(bson.M{"shardNumber": shardNumber}).Sort(sort).Skip(skip).All(&trans)
+				}else {
+					return c.Find(bson.M{"shardNumber": shardNumber}).Sort(sort).All(&trans)
+				}
+			}
+		}else {
+			if limit > 0 {
+				if skip > 0{
+					return c.Find(bson.M{"shardNumber": shardNumber}).Limit(limit).Skip(skip).All(&trans)
+				}else {
+					return c.Find(bson.M{"shardNumber": shardNumber}).Limit(limit).All(&trans)
+				}
+			}else {
+				if skip > 0{
+					return c.Find(bson.M{"shardNumber": shardNumber}).Skip(skip).All(&trans)
+				}else {
+					return c.Find(bson.M{"shardNumber": shardNumber}).All(&trans)
+				}
+			}
+		}
+	}
+	err := c.withCollection(txTbl, query)
+	return trans, err
+}
