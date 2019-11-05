@@ -711,8 +711,11 @@ func (c *Client) GetTxCntByShardNumberAndAddress(shardNumber int, address string
 		var err error
 		//TODO: fix this overflow
 		var temp int
-
-		temp, err = c.Find(bson.M{"shardNumber": shardNumber, "$or": []bson.M{bson.M{"from": address}, bson.M{"to": address}, bson.M{"contractAddress": address}}}).Count()
+		if shardNumber < 0 {
+			temp, err = c.Find(bson.M{"$or": []bson.M{bson.M{"from": address}, bson.M{"to": address}, bson.M{"contractAddress": address}}}).Count()
+		}else{
+			temp, err = c.Find(bson.M{"shardNumber": shardNumber, "$or": []bson.M{bson.M{"from": address}, bson.M{"to": address}, bson.M{"contractAddress": address}}}).Count()
+		}
 		txCnt = int64(temp)
 		return err
 	}
@@ -813,17 +816,34 @@ func (c *Client) removeAccount(address string) error {
 	return err
 }
 
-// GetTxsByAddresss return a tx list by address
-func (c *Client) GetTxsByAddresss(address string, max int, order bool) ([]*DBTx, error) {
+// GetTxsByAddresses return a tx list by address
+func (c *Client) GetTxsByAddresses(address string, asc bool, limit int, skip int) ([]*DBTx, error) {
 	var trans []*DBTx
+	sort1 := "block"
+	sort2 := "idx"
 	query := func(c *mgo.Collection) error {
-		if !order {
-			return c.Find(bson.M{"$or": []bson.M{bson.M{"from": address}, bson.M{"to": address}, bson.M{"contractAddress": address}}}).Sort("-block", "-idx").Limit(max).All(&trans)
+		if !asc { //desc sort
+			sort1 = "-block"
+			sort2 = "-idx"
 		}
-		return c.Find(bson.M{"$or": []bson.M{bson.M{"from": address}, bson.M{"to": address}, bson.M{"contractAddress": address}}}).Sort("block", "idx").Limit(max).All(&trans)
+		if limit > 0 && skip >0 {
+			return c.Find(bson.M{"$or": []bson.M{bson.M{"from": address}, bson.M{"to": address},bson.M{"contractAddress": address}}}).Sort(sort1, sort2).Limit(limit).Skip(skip).All(&trans)
+		}
+		if limit > 0 && skip <= 0 {
+				return c.Find(bson.M{"$or": []bson.M{bson.M{"from": address}, bson.M{"to": address}, bson.M{"contractAddress": address}}}).Sort(sort1, sort2).Limit(limit).All(&trans)
+			}
+		if limit <=0  && skip >0 {
+			return c.Find(bson.M{"$or": []bson.M{bson.M{"from": address}, bson.M{"to": address}, bson.M{"contractAddress": address}}}).Sort(sort1, sort2).Skip(skip).All(&trans)
+		}
+		if limit <=0  && skip <=0 {
+			return c.Find(bson.M{"$or": []bson.M{bson.M{"from": address}, bson.M{"to": address}, bson.M{"contractAddress": address}}}).Sort(sort1, sort2).All(&trans)
+		}
+		return nil
 	}
 	err := c.withCollection(txTbl, query)
 	return trans, err
+
+
 }
 
 // GetPendingTxsByAddress return a pending tx list by address

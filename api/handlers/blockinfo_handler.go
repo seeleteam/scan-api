@@ -607,26 +607,22 @@ func (h *BlockHandler) GetTxsInBlock(c *gin.Context, shardNumber int, height, p,
 }
 
 //GetTxsInAccount get tx list from this account
-func (h *BlockHandler) GetTxsInAccount(c *gin.Context, address string, p, ps uint64) {
+func (h *BlockHandler) GetTxsInAccount(c *gin.Context, address string, p, ps int) {
 	dbClient := h.DBClient
-
-	txs, err := dbClient.GetTxsByAddresss(address, maxAccountTxCnt, false)
+	txCntInAccount,err := dbClient.GetTxCntByShardNumberAndAddress(-1, address)
+	txs, err := dbClient.GetTxsByAddresses(address,false,ps, p*ps)
+	if err != nil {
+		responseError(c, errGetTxFromDB, http.StatusInternalServerError, apiDBQueryError)
+		return
+	}
+// no pending txs for now
+/*	pengdingTxs, err := dbClient.GetPendingTxsByAddress(address)
 	if err != nil {
 		responseError(c, errGetTxFromDB, http.StatusInternalServerError, apiDBQueryError)
 		return
 	}
 
-	pengdingTxs, err := dbClient.GetPendingTxsByAddress(address)
-	if err != nil {
-		responseError(c, errGetTxFromDB, http.StatusInternalServerError, apiDBQueryError)
-		return
-	}
-
-	txs = append(pengdingTxs, txs...)
-
-	txCntInAccount := len(txs)
-	page, begin, end := getBeginAndEndByPageAndOrder(uint64(txCntInAccount), p, ps)
-	txs = txs[begin:end]
+	txs = append(pengdingTxs, txs...)*/
 
 	var retTxs []*RetDetailAccountTxInfo
 	for i := 0; i < len(txs); i++ {
@@ -667,9 +663,9 @@ func (h *BlockHandler) GetTxsInAccount(c *gin.Context, address string, p, ps uin
 		"data": gin.H{
 			"pageInfo": gin.H{
 				"totalCount": txCntInAccount,
-				"begin":      begin,
-				"end":        end,
-				"curPage":    page + 1,
+				"begin":      p*ps+1,
+				"end":        (p+1)*ps,
+				"curPage":    p + 1,
 			},
 			"list": retTxs,
 		},
@@ -712,7 +708,7 @@ func (h *BlockHandler) GetTxs() gin.HandlerFunc {
 		//query transactions for one address
 		address, flag := c.GetQuery("address")
 		if flag {
-			h.GetTxsInAccount(c, address, uint64(p), uint64(ps))
+			h.GetTxsInAccount(c, address, p, ps)
 			return
 		}
 		//query transactions for one shard
