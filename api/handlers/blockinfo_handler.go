@@ -697,6 +697,25 @@ func (h *BlockHandler) GetTxs() gin.HandlerFunc {
 			s = 1
 		}
 		shardNumber := int(s)
+
+		// query transactions  for one block
+		block, flag := c.GetQuery("block")
+		if flag {
+			height, err := strconv.ParseUint(block, 10, 64)
+			if err != nil {
+				responseError(c, errParamInvalid, http.StatusBadRequest, apiParmaInvalid)
+			} else {
+				h.GetTxsInBlock(c, shardNumber, height, uint64(p), uint64(ps))
+				return
+			}
+		}
+		//query transactions for one address
+		address, flag := c.GetQuery("address")
+		if flag {
+			h.GetTxsInAccount(c, address, uint64(p), uint64(ps))
+			return
+		}
+		//query transactions for one shard
 		txCnt, err := dbClient.GetTxCntByShardNumber(shardNumber)
 		if err != nil {
 			responseError(c, errGetTxCountFromDB, http.StatusInternalServerError, apiDBQueryError)
