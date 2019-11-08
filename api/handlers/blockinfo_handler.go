@@ -918,7 +918,7 @@ func (h *BlockHandler) GetPendingTxs() gin.HandlerFunc {
 }
 
 //Search search something by transaction hash or block height
-func (h *BlockHandler) Search(accHandler *AccountHandler, contractHanlder *ContractHandler) gin.HandlerFunc {
+func (h *BlockHandler) Search(accHandler *AccountHandler, contractHandler *ContractHandler) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		dbClient := h.DBClient
 
@@ -992,7 +992,7 @@ func (h *BlockHandler) Search(accHandler *AccountHandler, contractHanlder *Contr
 			return
 		}
 
-		dbContract := contractHanlder.GetContractByAddressImpl(content)
+		dbContract := contractHandler.GetContractByAddressImpl(content)
 		if dbContract != nil {
 			c.JSON(http.StatusOK, gin.H{
 				"code":    apiOk,
