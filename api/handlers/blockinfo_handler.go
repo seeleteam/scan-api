@@ -207,8 +207,8 @@ func (h *BlockHandler) GetBlock() gin.HandlerFunc {
 		} else if heightExist {
 			blockheight, _ := strconv.ParseUint(height, 10, 64)
 			s, _ := strconv.ParseInt(s, 10, 64)
-			shaderNumber := int(s)
-			h.GetBlockDetailByHeight(c, blockheight, shaderNumber)
+			shardNumber := int(s)
+			h.GetBlockDetailByHeight(c, blockheight, shardNumber)
 		} else {
 			responseError(c, errParamInvalid, http.StatusBadRequest, apiParmaInvalid)
 		}
@@ -587,6 +587,8 @@ func (h *BlockHandler) GetTxsInBlock(c *gin.Context, shardNumber int, height, p,
 			From:   data.From,
 			To:     data.To,
 			Value:  data.Amount,
+			Fee:	data.Fee,
+			DebtHash:data.DebtTxHash,
 		}
 		retTxs = append(retTxs, simpleTransaction)
 	}
