@@ -61,6 +61,7 @@ func (s *Syncer) accountUpdateSync() {
 
 func (s *Syncer) accountSync(b *rpc.BlockInfo) error {
 	var address string
+	var AccType int
 	txDebtsTo := map[string]int{} // get all the txDebts in block
 	for i := 0; i < len(b.TxDebts); i++ {
 		txDebtsTo[b.TxDebts[i].To] = 1
@@ -114,8 +115,9 @@ func (s *Syncer) accountSync(b *rpc.BlockInfo) error {
 		}
 		txCnt, accType,err := s.db.GetTxCntAndAccTypeByAddressFromAccount(address)
 		if err != nil {
-			if err.Error() == "not found"{
+			if err.Error() == "not found"{  // new address will use the default AccType: 0 for normal address, 1 for contract
 				txCnt = 0
+				accType = AccType
 			}else{
 				log.Error(err)
 				return err
