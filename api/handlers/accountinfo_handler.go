@@ -248,7 +248,7 @@ func (h *AccountHandler) GetAccountByAddressImpl(address string) *RetDetailAccou
 		return nil
 	}
 	begin = time.Now()
-	txs, err := dbClient.GetTxsByAddresss(address, txCount, false)
+	txs, err := dbClient.GetTxsByAddresses(address,false, txCount, 0)
 	log.Debug("getTxsByAddresss time:%d(s)",time.Since(begin))
 
 	if err != nil {

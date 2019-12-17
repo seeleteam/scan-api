@@ -24,7 +24,7 @@ type BlockInfoDB interface {
 	GetdebtsByIdx(shardNumber int, begin uint64, end uint64) ([]*database.Debt, error)
 	GetPendingTxsByIdx(shardNumber int, begin uint64, end uint64) ([]*database.DBTx, error)
 	GetBlockfee(block uint64) (int64, error)
-	GetTxsByAddresss(address string, max int, order bool) ([]*database.DBTx, error)
+	GetTxsByAddresses(address string, asc bool, limit int, skip int) ([]*database.DBTx, error)
 	GetPendingTxsByAddress(address string) ([]*database.DBTx, error)
 	GetAccountCntByShardNumber(shardNumber int) (uint64, error)
 	GetAccountByAddress(address string) (*database.DBAccount, error)

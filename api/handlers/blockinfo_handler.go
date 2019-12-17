@@ -207,8 +207,8 @@ func (h *BlockHandler) GetBlock() gin.HandlerFunc {
 		} else if heightExist {
 			blockheight, _ := strconv.ParseUint(height, 10, 64)
 			s, _ := strconv.ParseInt(s, 10, 64)
-			shaderNumber := int(s)
-			h.GetBlockDetailByHeight(c, blockheight, shaderNumber)
+			shardNumber := int(s)
+			h.GetBlockDetailByHeight(c, blockheight, shardNumber)
 		} else {
 			responseError(c, errParamInvalid, http.StatusBadRequest, apiParmaInvalid)
 		}
@@ -577,7 +577,7 @@ func (h *BlockHandler) GetTxsInBlock(c *gin.Context, shardNumber int, height, p,
 		timeStamp := big.NewInt(0)
 		var age string
 		if timeStamp.UnmarshalText([]byte(data.Timestamp)) == nil {
-			age = getElpasedTimeDesc(timeStamp.Div(timeStamp, big.NewInt(1e9)))
+			age = getElpasedTimeDesc(timeStamp)
 		}
 
 		simpleTransaction := &RetSimpleTxInfo{
@@ -587,6 +587,9 @@ func (h *BlockHandler) GetTxsInBlock(c *gin.Context, shardNumber int, height, p,
 			From:   data.From,
 			To:     data.To,
 			Value:  data.Amount,
+			Fee:	data.Fee,
+			DebtHash:data.DebtTxHash,
+			Timestamp:data.Timestamp,
 		}
 		retTxs = append(retTxs, simpleTransaction)
 	}
@@ -607,26 +610,22 @@ func (h *BlockHandler) GetTxsInBlock(c *gin.Context, shardNumber int, height, p,
 }
 
 //GetTxsInAccount get tx list from this account
-func (h *BlockHandler) GetTxsInAccount(c *gin.Context, address string, p, ps uint64) {
+func (h *BlockHandler) GetTxsInAccount(c *gin.Context, address string, p, ps int) {
 	dbClient := h.DBClient
-
-	txs, err := dbClient.GetTxsByAddresss(address, maxAccountTxCnt, false)
+	txCntInAccount,err := dbClient.GetTxCntByShardNumberAndAddress(-1, address)
+	txs, err := dbClient.GetTxsByAddresses(address,false,ps, p*ps)
+	if err != nil {
+		responseError(c, errGetTxFromDB, http.StatusInternalServerError, apiDBQueryError)
+		return
+	}
+// no pending txs for now
+/*	pengdingTxs, err := dbClient.GetPendingTxsByAddress(address)
 	if err != nil {
 		responseError(c, errGetTxFromDB, http.StatusInternalServerError, apiDBQueryError)
 		return
 	}
 
-	pengdingTxs, err := dbClient.GetPendingTxsByAddress(address)
-	if err != nil {
-		responseError(c, errGetTxFromDB, http.StatusInternalServerError, apiDBQueryError)
-		return
-	}
-
-	txs = append(pengdingTxs, txs...)
-
-	txCntInAccount := len(txs)
-	page, begin, end := getBeginAndEndByPageAndOrder(uint64(txCntInAccount), p, ps)
-	txs = txs[begin:end]
+	txs = append(pengdingTxs, txs...)*/
 
 	var retTxs []*RetDetailAccountTxInfo
 	for i := 0; i < len(txs); i++ {
@@ -635,7 +634,7 @@ func (h *BlockHandler) GetTxsInAccount(c *gin.Context, address string, p, ps uin
 		timeStamp := big.NewInt(0)
 		var age string
 		if timeStamp.UnmarshalText([]byte(data.Timestamp)) == nil {
-			age = getElpasedTimeDesc(timeStamp.Div(timeStamp, big.NewInt(1e9)))
+			age = getElpasedTimeDesc(timeStamp)
 		}
 
 		var inOrOut bool
@@ -657,6 +656,7 @@ func (h *BlockHandler) GetTxsInAccount(c *gin.Context, address string, p, ps uin
 			Fee:         data.Fee,
 			InOrOut:     inOrOut,
 			Pending:     data.Pending,
+			Timestamp:	data.Timestamp,
 		}
 		retTxs = append(retTxs, simpleTransaction)
 	}
@@ -667,9 +667,9 @@ func (h *BlockHandler) GetTxsInAccount(c *gin.Context, address string, p, ps uin
 		"data": gin.H{
 			"pageInfo": gin.H{
 				"totalCount": txCntInAccount,
-				"begin":      begin,
-				"end":        end,
-				"curPage":    page + 1,
+				"begin":      p*ps+1,
+				"end":        (p+1)*ps,
+				"curPage":    p + 1,
 			},
 			"list": retTxs,
 		},
@@ -712,7 +712,7 @@ func (h *BlockHandler) GetTxs() gin.HandlerFunc {
 		//query transactions for one address
 		address, flag := c.GetQuery("address")
 		if flag {
-			h.GetTxsInAccount(c, address, uint64(p), uint64(ps))
+			h.GetTxsInAccount(c, address, p, ps)
 			return
 		}
 		//query transactions for one shard
@@ -920,7 +920,7 @@ func (h *BlockHandler) GetPendingTxs() gin.HandlerFunc {
 }
 
 //Search search something by transaction hash or block height
-func (h *BlockHandler) Search(accHandler *AccountHandler, contractHanlder *ContractHandler) gin.HandlerFunc {
+func (h *BlockHandler) Search(accHandler *AccountHandler, contractHandler *ContractHandler) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		dbClient := h.DBClient
 
@@ -994,7 +994,7 @@ func (h *BlockHandler) Search(accHandler *AccountHandler, contractHanlder *Contr
 			return
 		}
 
-		dbContract := contractHanlder.GetContractByAddressImpl(content)
+		dbContract := contractHandler.GetContractByAddressImpl(content)
 		if dbContract != nil {
 			c.JSON(http.StatusOK, gin.H{
 				"code":    apiOk,

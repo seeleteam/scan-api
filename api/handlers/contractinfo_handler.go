@@ -148,7 +148,8 @@ func (h *ContractHandler) GetContractByAddressImpl(address string) *RetDetailAcc
 		return nil
 	}
 
-	txs, err := dbClinet.GetTxsByAddresss(address, txCount, false)
+	//txs, err := dbClinet.GetTxsByAddresss(address, txCount, false)
+	txs, err := dbClinet.GetTxsByAddresses(address, false,txCount, -1)
 	if err != nil {
 		return nil
 	}

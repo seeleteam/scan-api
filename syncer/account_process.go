@@ -61,7 +61,6 @@ func (s *Syncer) accountUpdateSync() {
 
 func (s *Syncer) accountSync(b *rpc.BlockInfo) error {
 	var address string
-	var AccType int
 	txDebtsTo := map[string]int{} // get all the txDebts in block
 	for i := 0; i < len(b.TxDebts); i++ {
 		txDebtsTo[b.TxDebts[i].To] = 1
@@ -76,13 +75,13 @@ func (s *Syncer) accountSync(b *rpc.BlockInfo) error {
 				log.Error(err)
 				balance = 0
 			}
-			txCnt, err := s.db.GetTxCntByAddressFromAccount(address)
+			txCnt, accType,err := s.db.GetTxCntAndAccTypeByAddressFromAccount(address)
 			if err != nil {
 				log.Error(err)
 				txCnt = 0
 			}
 			accounts := &database.DBAccount{
-				AccType:     AccType,
+				AccType:     accType,
 				ShardNumber: s.shardNumber,
 				Address:     address,
 				TxCount:     txCnt+1,
@@ -113,7 +112,7 @@ func (s *Syncer) accountSync(b *rpc.BlockInfo) error {
 			log.Error(err)
 			balance = 0
 		}
-		txCnt, err := s.db.GetTxCntByAddressFromAccount(address)
+		txCnt, accType,err := s.db.GetTxCntAndAccTypeByAddressFromAccount(address)
 		if err != nil {
 			if err.Error() == "not found"{
 				txCnt = 0
@@ -123,7 +122,7 @@ func (s *Syncer) accountSync(b *rpc.BlockInfo) error {
 			}
 		}
 		accounts := &database.DBAccount{
-			AccType:     AccType,
+			AccType:     accType,
 			ShardNumber: s.shardNumber,
 			Address:     address,
 			TxCount:     txCnt+1,
@@ -141,13 +140,13 @@ func (s *Syncer) accountSync(b *rpc.BlockInfo) error {
 			log.Error(err)
 			balance = 0
 		}
-		txCnt, err := s.db.GetTxCntByAddressFromAccount(address)
+		txCnt, accType, err := s.db.GetTxCntAndAccTypeByAddressFromAccount(address)
 		if err != nil {
 			log.Error(err)
 			txCnt = 0
 		}
 		accounts := &database.DBAccount{
-			AccType:     AccType,
+			AccType:     accType,
 			ShardNumber: s.shardNumber,
 			Address:     address,
 			TxCount:     txCnt+1,
