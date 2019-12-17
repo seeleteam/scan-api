@@ -1473,6 +1473,21 @@ func (c *Client) GetTxCntByAddressFromAccount(address string) (int64, error) {
 }
 
 
+func (c *Client) GetTxCntAndAccTypeByAddressFromAccount(address string) (int64, int,error) {
+	var txCnt int64
+	accountInfo := new(DBAccount)
+	query := func(c *mgo.Collection) error {
+		return c.Find(bson.M{"address": address}).One(&accountInfo)
+	}
+	err := c.withCollection(accTbl, query)
+	if err != nil {
+		log.Info("find txcnt from account table failed,address:%s,err:%s",address, err.Error())
+		return -1, 0, err
+	} else {
+		txCnt= int64(accountInfo.TxCount)
+		return txCnt, accountInfo.AccType,err
+	}
+}
 // GetTxs get transactions from transaction table given shardNumber, sort field, limit and skip
 // if sort is null, the result will not be sort by any fields
 // if limit <=0 , the result will get all the records
