@@ -577,7 +577,7 @@ func (h *BlockHandler) GetTxsInBlock(c *gin.Context, shardNumber int, height, p,
 		timeStamp := big.NewInt(0)
 		var age string
 		if timeStamp.UnmarshalText([]byte(data.Timestamp)) == nil {
-			age = getElpasedTimeDesc(timeStamp.Div(timeStamp, big.NewInt(1e9)))
+			age = getElpasedTimeDesc(timeStamp)
 		}
 
 		simpleTransaction := &RetSimpleTxInfo{
@@ -589,6 +589,7 @@ func (h *BlockHandler) GetTxsInBlock(c *gin.Context, shardNumber int, height, p,
 			Value:  data.Amount,
 			Fee:	data.Fee,
 			DebtHash:data.DebtTxHash,
+			Timestamp:data.Timestamp,
 		}
 		retTxs = append(retTxs, simpleTransaction)
 	}
@@ -633,7 +634,7 @@ func (h *BlockHandler) GetTxsInAccount(c *gin.Context, address string, p, ps int
 		timeStamp := big.NewInt(0)
 		var age string
 		if timeStamp.UnmarshalText([]byte(data.Timestamp)) == nil {
-			age = getElpasedTimeDesc(timeStamp.Div(timeStamp, big.NewInt(1e9)))
+			age = getElpasedTimeDesc(timeStamp)
 		}
 
 		var inOrOut bool
@@ -655,6 +656,7 @@ func (h *BlockHandler) GetTxsInAccount(c *gin.Context, address string, p, ps int
 			Fee:         data.Fee,
 			InOrOut:     inOrOut,
 			Pending:     data.Pending,
+			Timestamp:	data.Timestamp,
 		}
 		retTxs = append(retTxs, simpleTransaction)
 	}

@@ -82,6 +82,7 @@ type RetSimpleTxInfo struct {
 	Gasprice    int64       `json:"gasprice"`
 	Receipt     rpc.Receipt `json:"receipt"`
 	Nonce       string      `json:"nonce"`
+	Timestamp   string		`json:"timestamp"`
 }
 
 //RetSimpledebtInfo describle the debt info in the debt detail page which send to the frontend
@@ -113,6 +114,7 @@ type RetDetailTxInfo struct {
 	AccountNonce string      `json:"accountNonce"`
 	Payload      string      `json:"payload"`
 	Receipt      rpc.Receipt `json:"receipt"`
+	Timestamp 	 string 	`json:"timestamp"`
 }
 
 //RetSimpleAccountInfo describle the account info in the account list page which send to the frontend
@@ -146,6 +148,7 @@ type RetDetailAccountTxInfo struct {
 	Fee         int64  `json:"fee"`
 	InOrOut     bool   `json:"inorout"`
 	Pending     bool   `json:"pending"`
+	Timestamp   string 	`json:"timestamp"`
 }
 
 //RetDetailAccountInfo describle the detail account info which send to the frontend
@@ -245,6 +248,7 @@ func createRetSimpleTxInfo(transaction *database.DBTx) *RetSimpleTxInfo {
 	ret.UsedGas = transaction.UsedGas
 	ret.Gasprice = transaction.GasPrice
 	ret.Nonce = transaction.AccountNonce
+	ret.Timestamp = transaction.Timestamp
 	timeStamp := big.NewInt(0)
 	if timeStamp.UnmarshalText([]byte(transaction.Timestamp)) == nil {
 		ret.Age = getElpasedTimeDesc(timeStamp)
@@ -280,6 +284,7 @@ func createRetDetailTxInfo(transaction *database.DBTx) *RetDetailTxInfo {
 	ret.Value = transaction.Amount
 	ret.Pending = transaction.Pending
 	ret.Fee = transaction.Fee
+	ret.Timestamp = transaction.Timestamp
 	timeStamp := big.NewInt(0)
 	if timeStamp.UnmarshalText([]byte(transaction.Timestamp)) == nil {
 		ret.Age = getElpasedTimeDesc(timeStamp)
