@@ -300,7 +300,7 @@ func (rpc *SeeleRPC) GetReceiptByTxHash(txhash string) (*Receipt, error) {
 	var request []interface{}
 	abiJSON := ""
 	request = append(request, txhash, abiJSON)
-	if err := rpc.call("txpool_getReceiptByTxHash", request, &receiptMp); err != nil {
+	if err := rpc.call("seele_getReceiptByTxHash", request, &receiptMp); err != nil {
 		return nil, err
 	}
 
@@ -342,7 +342,7 @@ func getReceiptByTxHash(receiptMp map[string]interface{}) *Receipt {
 // GetPendingTransactions get pending transactions on seele node
 func (rpc *SeeleRPC) GetPendingTransactions() ([]Transaction, error) {
 	txsMp := make([]map[string]interface{}, 0)
-	if err := rpc.call("debug_getPendingTransactions", nil, &txsMp); err != nil {
+	if err := rpc.call("txpool_getPendingTxs", nil, &txsMp); err != nil {
 		return nil, err
 	}
 
