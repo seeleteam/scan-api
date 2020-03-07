@@ -1531,3 +1531,21 @@ func (c *Client) GetTxs(shardNumber int, sort string, desc bool , limit int, ski
 	err := c.withCollection(txTbl, query)
 	return trans, err
 }
+
+func (c *Client) UpdateContract(address string, sourceCode string, abiJson string) error {
+	query := func(c *mgo.Collection) error {
+		err := c.Update(bson.M{"address": address},  bson.M{
+			"$set": bson.M{
+				"sourceCode": sourceCode,
+				"abiJSON": abiJson,
+			},
+		})
+		return err
+	}
+	err := c.withCollection(accTbl, query)
+	if err != nil {
+		log.Info("update contract info failed, address:%s",address)
+		return err
+	}
+	return nil
+}
