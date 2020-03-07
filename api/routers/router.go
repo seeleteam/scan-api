@@ -63,6 +63,8 @@ func (r *Router) Init(e *gin.Engine) {
 	v1.GET("/miners", r.AccountHandler.GetMinerAccounts())
 	v1.GET("/contracts", r.ContractHandler.GetContracts())
 	v1.GET("/contract", r.ContractHandler.GetContractByAddress())
+	v1.GET("/verifyContract", r.ContractHandler.VerifyContract())
+
 	v1.GET("/Avegas", r.BlockHandler.GetGasPrice())
 	//v1.GET("/difficulty", r.BlockHandler.GetDifficulty())
 	//v1.GET("/hashrate", r.BlockHandler.GetHashRate())
@@ -80,6 +82,7 @@ func (r *Router) Init(e *gin.Engine) {
 	chartGrp.GET("/blocktime", r.ChartHandler.GetEveryDayBlockTime())
 	chartGrp.GET("/miner", r.ChartHandler.GetTopMiners())
 	chartGrp.GET("/node", r.NodeHandler.GetNodeCntChart())
+
 
 	go r.AccountHandler.Update()
 	go r.ContractHandler.Update()
