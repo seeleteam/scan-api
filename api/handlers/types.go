@@ -161,6 +161,8 @@ type RetDetailAccountInfo struct {
 	TxCount              int64                    `json:"txcount"`
 	ContractCreationCode string                   `json:"contractCreationCode"`
 	Txs                  []RetDetailAccountTxInfo `json:"txs"`
+	SourceCode  		 string 				  `json:"sourceCode"`
+	ABI					 string 				  `bson:"abi"`
 }
 
 //createRetLastblockInfo converts the given dbblock to the Lastblock
@@ -339,6 +341,10 @@ func createRetDetailAccountInfo(account *database.DBAccount, txs []*database.DBT
 	ret.Balance = account.Balance
 	ret.TxCount = account.TxCount
 	ret.Percentage = (float64(ret.Balance) / float64(ttBalance))
+	if account.AccType == 1 {
+		ret.SourceCode = account.SourceCode
+		ret.ABI = account.ABI
+	}
 
 	for i := 0; i < len(txs); i++ {
 		var tx RetDetailAccountTxInfo

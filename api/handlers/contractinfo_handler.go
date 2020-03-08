@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"github.com/pkg/errors"
 	"net/http"
 	"strconv"
 	"sync"
@@ -11,7 +12,7 @@ import (
 	"github.com/seeleteam/scan-api/log"
 )
 
-//ContractTbl describle
+//ContractTbl describe
 type ContractTbl struct {
 	shardNumber   int
 	DBClient      BlockInfoDB
@@ -247,4 +248,41 @@ func (h *ContractHandler) GetContracts() gin.HandlerFunc {
 			},
 		})
 	}
+}
+
+
+func (h *ContractHandler) VerifyContract() gin.HandlerFunc{
+	return func(c *gin.Context) {
+		sourceCode := c.Query("sourceCode")
+		abiJSON := c.Query("abi")
+		address := c.Query("address")
+		err := h.verifyContractImpl(address,sourceCode,abiJSON)
+		if err != nil {
+			log.Error(err.Error())
+			c.JSON(http.StatusOK, gin.H{
+				"code":    apiOk,
+				"message": err.Error(),
+				"data":    false,
+			})
+		}else{
+			c.JSON(http.StatusOK, gin.H{
+				"code":    apiOk,
+				"message": "",
+				"data":    true,
+			})
+		}
+
+	}
+}
+
+func (h *ContractHandler) verifyContractImpl(address string, sourceCode string,abiJSON string)(err error) {
+	if address == "" || sourceCode == "" || abiJSON == "" {
+		return errors.New("missing one or more query parameters")
+	}
+	err = h.DBClient.UpdateContract(address, sourceCode,abiJSON)
+	if err !=nil {
+		log.Error("save contract verification info failed, address:%s", address)
+		return err
+	}
+	return nil
 }
